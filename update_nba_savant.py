@@ -14,6 +14,15 @@ Then drag the 'nba-savant' folder to Netlify to deploy.
 """
 
 import json, time, os, sys, unicodedata
+from datetime import datetime
+
+# ── Work out which NBA season we're in ──
+# NBA seasons start in October. Before October, we're still reporting
+# on the season that began the previous calendar year.
+_now = datetime.now()
+_start_year = _now.year if _now.month >= 10 else _now.year - 1
+SEASON = f"{_start_year}-{str(_start_year + 1)[2:]}"
+SEASON_LABEL = SEASON  # e.g. "2026-27"
 
 try:
     import pandas as pd
@@ -35,7 +44,7 @@ print()
 print("[1/3] Pulling basic per-game stats from NBA.com...")
 try:
     basic = leaguedashplayerstats.LeagueDashPlayerStats(
-        season='2025-26',
+        season=SEASON,
         per_mode_detailed='PerGame',
         season_type_all_star='Regular Season'
     )
@@ -52,7 +61,7 @@ time.sleep(1.5)
 print("[2/3] Pulling advanced stats from NBA.com...")
 try:
     adv = leaguedashplayerstats.LeagueDashPlayerStats(
-        season='2025-26',
+        season=SEASON,
         measure_type_detailed_defense='Advanced',
         per_mode_detailed='PerGame',
         season_type_all_star='Regular Season'
@@ -143,7 +152,7 @@ for idx, p in enumerate(qual_players):
             team_id=0,
             player_id=pid,
             context_measure_simple='FGA',
-            season_nullable='2025-26',
+            season_nullable=SEASON,
             season_type_all_star='Regular Season'
         )
         df_shots = sc.get_data_frames()[0]
@@ -166,19 +175,23 @@ data_json = json.dumps(players, ensure_ascii=True)
 
 HTML_TEMPLATE = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'template.html'), 'r').read()
 
-html_output = HTML_TEMPLATE.replace('__DATA_PLACEHOLDER__', data_json).replace('__SHOTS_PLACEHOLDER__', shots_json)
+html_output = (HTML_TEMPLATE
+    .replace('__DATA_PLACEHOLDER__', data_json)
+    .replace('__SHOTS_PLACEHOLDER__', shots_json)
+    .replace('__SEASON_PLACEHOLDER__', SEASON_LABEL))
+
+# Write index.html next to this script (the repo root), which is what
+# Netlify publishes.
 script_dir = os.path.dirname(os.path.abspath(__file__))
-output_dir = os.path.join(script_dir, 'nba-savant')
-os.makedirs(output_dir, exist_ok=True)
-output_path = os.path.join(output_dir, 'index.html')
+output_path = os.path.join(script_dir, 'index.html')
 with open(output_path, 'w', encoding='utf-8') as f:
     f.write(html_output)
+
 print()
 print("=" * 50)
-print(f"  SUCCESS! Generated: nba-savant/index.html")
-print(f"  Players: {len(players)}")
+print(f"  SUCCESS! Generated: index.html")
+print(f"  Season:   {SEASON_LABEL}")
+print(f"  Players:  {len(players)}")
 print(f"  File size: {os.path.getsize(output_path) / 1024:.0f} KB")
 print("=" * 50)
-print()
-print("  Next: drag the 'nba-savant' folder to Netlify")
 print()
