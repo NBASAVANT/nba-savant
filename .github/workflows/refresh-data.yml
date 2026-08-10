@@ -1,0 +1,41 @@
+name: Refresh NBA Data
+
+on:
+  # Run every day at 11:00 UTC (about 7am Eastern in summer, 6am in winter)
+  schedule:
+    - cron: '0 11 * * *'
+  # Lets you trigger it by hand from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    # NBA.com is slow and there are a few hundred players to fetch
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install nba_api pandas
+
+      - name: Run the updater
+        run: python update_nba_savant.py
+
+      - name: Commit and push if the data changed
+        run: |
+          git config user.name "nba-savant-bot"
+          git config user.email "actions@github.com"
+          git add index.html
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Auto-update NBA data ($(date -u '+%Y-%m-%d'))"
+            git push
+          fi
