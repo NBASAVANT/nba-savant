@@ -40,36 +40,55 @@ print("  NBA SAVANT - Data Updater")
 print("=" * 50)
 print()
 
+
+def with_retries(fn, label, attempts=5, base_wait=20, timeout=90):
+    """NBA.com throttles requests from datacenters, so retry with backoff."""
+    for i in range(1, attempts + 1):
+        try:
+            return fn(timeout)
+        except Exception as e:
+            if i == attempts:
+                print(f"  ERROR: {label} failed after {attempts} attempts: {e}")
+                raise
+            wait = base_wait * i
+            print(f"       attempt {i}/{attempts} failed, retrying in {wait}s...")
+            time.sleep(wait)
+
+
 # ── STEP 1: Pull basic per-game stats ──
 print("[1/3] Pulling basic per-game stats from NBA.com...")
 try:
-    basic = leaguedashplayerstats.LeagueDashPlayerStats(
-        season=SEASON,
-        per_mode_detailed='PerGame',
-        season_type_all_star='Regular Season'
+    df_basic = with_retries(
+        lambda t: leaguedashplayerstats.LeagueDashPlayerStats(
+            season=SEASON,
+            per_mode_detailed='PerGame',
+            season_type_all_star='Regular Season',
+            timeout=t
+        ).get_data_frames()[0],
+        "basic stats"
     )
-    df_basic = basic.get_data_frames()[0]
     print(f"       ✓ {len(df_basic)} players")
-except Exception as e:
-    print(f"  ERROR: {e}")
-    print("  NBA.com may be temporarily unavailable. Try again in a minute.")
+except Exception:
+    print("  NBA.com is not reachable from here.")
     sys.exit(1)
 
-time.sleep(1.5)
+time.sleep(3)
 
 # ── STEP 2: Pull advanced stats ──
 print("[2/3] Pulling advanced stats from NBA.com...")
 try:
-    adv = leaguedashplayerstats.LeagueDashPlayerStats(
-        season=SEASON,
-        measure_type_detailed_defense='Advanced',
-        per_mode_detailed='PerGame',
-        season_type_all_star='Regular Season'
+    df_adv = with_retries(
+        lambda t: leaguedashplayerstats.LeagueDashPlayerStats(
+            season=SEASON,
+            measure_type_detailed_defense='Advanced',
+            per_mode_detailed='PerGame',
+            season_type_all_star='Regular Season',
+            timeout=t
+        ).get_data_frames()[0],
+        "advanced stats"
     )
-    df_adv = adv.get_data_frames()[0]
     print(f"       ✓ {len(df_adv)} players")
-except Exception as e:
-    print(f"  ERROR: {e}")
+except Exception:
     sys.exit(1)
 
 # ── STEP 3: Merge and build ──
@@ -145,6 +164,7 @@ from nba_api.stats.endpoints import shotchartdetail
 shot_data = {}
 qual_players = [p for p in players if int(p.get('G', '0')) >= 20]
 total = len(qual_players)
+failed = 0
 for idx, p in enumerate(qual_players):
     pid = p['nba_id']
     try:
@@ -153,7 +173,8 @@ for idx, p in enumerate(qual_players):
             player_id=pid,
             context_measure_simple='FGA',
             season_nullable=SEASON,
-            season_type_all_star='Regular Season'
+            season_type_all_star='Regular Season',
+            timeout=60
         )
         df_shots = sc.get_data_frames()[0]
         if len(df_shots) > 0:
@@ -164,11 +185,17 @@ for idx, p in enumerate(qual_players):
             shot_data[str(pid)] = shots
         if (idx + 1) % 25 == 0:
             print(f"       ... {idx+1}/{total} players")
-        time.sleep(0.4)  # Be nice to NBA.com
-    except Exception as e:
-        pass  # Skip players with no shot data
+        time.sleep(0.6)
+    except Exception:
+        failed += 1
+        time.sleep(2)  # back off after a failure
 
-print(f"       ✓ Shot charts for {len(shot_data)} players")
+print(f"       ✓ Shot charts for {len(shot_data)} players ({failed} failed)")
+
+if total and len(shot_data) < total * 0.5:
+    print("  ERROR: too many shot chart fetches failed — not writing the page.")
+    print("  This usually means NBA.com is throttling this machine.")
+    sys.exit(1)
 
 shots_json = json.dumps(shot_data, separators=(',', ':'))
 data_json = json.dumps(players, ensure_ascii=True)
