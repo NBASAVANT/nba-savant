@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NBA Savant – Player Percentile Rankings</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%232d8bc9'/><circle cx='50' cy='50' r='22' stroke='%23f0c430' stroke-width='3' fill='none'/><line x1='50' y1='28' x2='50' y2='72' stroke='%23f0c430' stroke-width='2'/><line x1='28' y1='50' x2='72' y2='50' stroke='%23f0c430' stroke-width='2'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--blue:#2d8bc9;--gold:#f0c430;--tx:#111;--tx2:#555;--tx3:#999;--bdr:#e5e7eb;--bg2:#f8f9fb}
+body{font-family:'Inter',system-ui,sans-serif;background:#fff;min-height:100vh;color:var(--tx);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+.hdr{background:var(--blue);padding:10px 28px;display:flex;align-items:center;justify-content:space-between}
+.hdr-logo{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none}
+.hdr-logo svg{width:32px;height:32px}
+.hdr-logo-t{font-weight:700;font-size:1.1em;color:#fff;letter-spacing:1px}
+.hdr-logo-t b{color:var(--gold)}
+.hdr-r{font-size:.7em;font-weight:600;color:rgba(255,255,255,.45);letter-spacing:1.5px;text-transform:uppercase}
+.search-wrap{max-width:760px;margin:28px auto 0;padding:0 24px}
+.search-box{position:relative}
+.search-box input{width:100%;padding:14px 16px 14px 44px;font-size:.92em;font-family:inherit;background:#fff;border:1px solid var(--bdr);border-radius:10px;color:var(--tx);transition:border .15s}
+.search-box input::placeholder{color:#bbb}
+.search-box input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(45,139,201,.1)}
+.s-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#bbb;pointer-events:none}
+.sug{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--bdr);border-radius:10px;max-height:380px;overflow-y:auto;z-index:1000;display:none;box-shadow:0 12px 40px rgba(0,0,0,.08)}
+.sug-i{padding:10px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background .1s}
+.sug-i+.sug-i{border-top:1px solid #f5f5f5}
+.sug-i:hover{background:#f7f9fc}
+.sug-hs{width:34px;height:34px;border-radius:50%;object-fit:cover;background:#eee;flex-shrink:0}
+.sug-n{font-weight:600;font-size:.88em}
+.sug-m{font-size:.75em;color:var(--tx3);margin-left:auto}
+.cmp-bar-area{max-width:760px;margin:10px auto 0;padding:0 24px;display:flex;align-items:center;gap:10px}
+.cmp-btn{padding:7px 16px;border:1px solid var(--bdr);border-radius:8px;background:#fff;font:500 .82em/1 'Inter',sans-serif;color:var(--blue);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
+.cmp-btn:hover{background:var(--bg2);border-color:var(--blue)}
+.cmp-btn svg{width:16px;height:16px}
+.wrap{max-width:760px;margin:0 auto;padding:0 24px 60px}
+/* Compare Modal */
+.cmp-modal{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.4);align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto}
+.cmp-modal.open{display:flex}
+.cmp-panel{background:#fff;border-radius:16px;max-width:920px;width:100%;max-height:calc(100vh - 80px);overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.15)}
+.cmp-top{padding:20px 24px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.cmp-top h2{font-size:1.1em;font-weight:700}
+.cmp-close{width:32px;height:32px;border-radius:50%;border:none;background:var(--bg2);cursor:pointer;font-size:1.1em;display:flex;align-items:center;justify-content:center;color:var(--tx2)}
+.cmp-close:hover{background:#eee}
+.cmp-sr{padding:16px 24px;display:flex;gap:12px}
+.cmp-sr .cs{flex:1;position:relative}
+.cmp-sr input{width:100%;padding:10px 14px;font:.88em 'Inter',sans-serif;border:1px solid var(--bdr);border-radius:8px}
+.cmp-sr input:focus{outline:none;border-color:var(--blue)}
+.cdd{position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:1px solid var(--bdr);border-radius:8px;max-height:240px;overflow-y:auto;z-index:10;display:none;box-shadow:0 8px 24px rgba(0,0,0,.1)}
+.cdd .sug-i{padding:8px 12px;gap:8px}
+.cdd .sug-hs{width:28px;height:28px}
+.cdd .sug-n{font-size:.82em}
+.cmp-body{padding:0 16px 24px}
+.cmp-empty{text-align:center;padding:48px;color:var(--tx3);font-size:.9em}
+.cmp-heads{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:8px}
+.cmp-ph{text-align:center;padding:20px 12px 16px;border-bottom:1px solid var(--bdr)}
+.cmp-ph img{width:72px;height:72px;border-radius:50%;object-fit:cover;object-position:top;margin:0 auto 8px;display:block;background:#eee}
+.cmp-ph .cn{font-size:1em;font-weight:700}
+.cmp-ph .ct{font-size:.75em;font-weight:500;margin-top:2px}
+.cmp-ph .cm{font-size:.7em;color:var(--tx3)}
+/* Compare table rows */
+.ct-cat{padding:14px 0 6px;font-size:.68em;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--blue);text-align:center;border-bottom:2px solid var(--bdr)}
+.ct-row{display:flex;align-items:center;padding:7px 0;border-bottom:1px solid #f3f4f6}
+.ct-left,.ct-right{flex:1;display:flex;align-items:center;gap:8px;min-width:0}
+.ct-left{justify-content:flex-end;padding-right:6px}
+.ct-right{justify-content:flex-start;padding-left:6px}
+.ct-mid{width:100px;text-align:center;flex-shrink:0;padding:0 2px}
+.ct-mn{font-size:.72em;font-weight:600;color:var(--tx2);line-height:1.2}
+.ct-ms{font-size:.55em;font-weight:400;color:var(--tx3);line-height:1}
+.ct-val{font-size:.82em;font-weight:700;flex-shrink:0;min-width:36px}
+.ct-left .ct-val{text-align:right}
+.ct-right .ct-val{text-align:left}
+.ct-val.w{color:var(--tx)}.ct-val.l{color:#c0c0c0}
+.ct-bar{flex:1;height:14px;background:#eef1f5;border-radius:3px;min-width:0;position:relative;overflow:hidden}
+.ct-left .ct-bar{border-radius:3px 0 0 3px}
+.ct-right .ct-bar{border-radius:0 3px 3px 0}
+.ct-bf{height:100%;border-radius:inherit}
+.ct-left .ct-bf{float:right}
+.ct-pct{width:28px;height:28px;border-radius:50%;font-size:.58em;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-shadow:0 1px 2px rgba(0,0,0,.3)}
+.ct-left .ct-pct{order:-1}
+.ct-arrow{font-size:.7em;font-weight:800;flex-shrink:0;width:14px;text-align:center}
+.ct-arrow.aw{color:var(--blue)}.ct-arrow.al{color:#999}
+/* HOME */
+#homePage{max-width:960px;margin:0 auto;padding:0 24px 60px}
+.hero{padding:44px 0 12px;text-align:center}
+.hero h1{font-size:2em;font-weight:800;letter-spacing:-.03em;line-height:1.15}
+.hero h1 b{color:var(--blue)}
+.hero p{color:var(--tx3);font-size:.9em;margin-top:6px;max-width:500px;margin-left:auto;margin-right:auto}
+.section-hd{display:flex;align-items:baseline;gap:8px;margin:28px 0 12px}
+.section-hd h2{font-size:1.05em;font-weight:700}
+.section-hd .badge{font-size:.6em;font-weight:700;background:var(--blue);color:#fff;padding:3px 8px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase}
+.lb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.lb-card{border:1px solid var(--bdr);border-radius:12px;overflow:hidden;transition:box-shadow .15s}
+.lb-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.06)}
+.lb-hd{font-size:.7em;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--blue);padding:14px 16px 6px;display:flex;align-items:center;gap:6px}
+.lb-hd .lb-icon{font-size:1.2em}
+.lb-row{display:flex;align-items:center;gap:8px;padding:6px 16px;cursor:pointer;transition:background .1s}
+.lb-row:hover{background:#f7f9fc}
+.lb-rk{font-size:.72em;font-weight:700;color:var(--tx3);width:16px;text-align:center;flex-shrink:0}
+.lb-rk.g{color:var(--gold);font-weight:800}
+.lb-hs{width:30px;height:30px;border-radius:50%;object-fit:cover;background:#eee;flex-shrink:0}
+.lb-tm-logo{width:18px;height:18px;object-fit:contain;flex-shrink:0;opacity:.7}
+.lb-inf{flex:1;min-width:0}
+.lb-nm{font-size:.8em;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-tm{font-size:.65em;color:var(--tx3);font-weight:500}
+.lb-v{font-size:.85em;font-weight:700;flex-shrink:0}
+.lb-d{height:1px;background:#f3f4f6;margin:0 16px}
+.lb-card .lb-row:last-child{padding-bottom:12px}
+/* PLAYER CARD */
+.card{display:none;border:1px solid var(--bdr);border-radius:14px;overflow:hidden;background:#fff}
+.p-hdr{position:relative;overflow:hidden}
+.p-hdr-bg{position:absolute;inset:0;opacity:.08;pointer-events:none}
+.p-hdr-in{position:relative;display:flex;align-items:center;padding:24px 28px;gap:20px;z-index:1}
+.p-hs-w{flex-shrink:0}
+.p-hs{width:84px;height:84px;border-radius:50%;object-fit:cover;object-position:top;background:var(--bg2);display:block}
+.p-hs-fb{width:84px;height:84px;border-radius:50%;display:none;align-items:center;justify-content:center;overflow:hidden;background:var(--bg2)}
+.p-hs-fb img{width:56px;height:56px;object-fit:contain}
+.p-badge{width:84px;height:84px;border-radius:50%;display:none;align-items:center;justify-content:center;font-weight:700;font-size:1em;color:#fff}
+.p-inf{flex:1;min-width:0}
+.p-name{font-size:1.55em;font-weight:700;line-height:1.15;letter-spacing:-.02em;color:#111}
+.p-tn{font-size:.82em;font-weight:500;margin-top:3px}
+.p-meta{font-size:.74em;font-weight:400;color:var(--tx3);margin-top:1px}
+.p-tl{flex-shrink:0;max-height:72px;max-width:72px;object-fit:contain;opacity:.8}
+.st-wrap{padding:20px 28px;border-bottom:1px solid var(--bdr)}
+.st-title{font-size:.65em;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.st{width:100%;border-collapse:collapse;font-size:.78em}
+.st th{font-weight:600;color:var(--tx3);font-size:.8em;text-transform:uppercase;letter-spacing:.3px;padding:4px 6px;text-align:center;border-bottom:1px solid var(--bdr)}
+.st td{padding:6px;text-align:center;font-weight:600}
+.st .lbl{text-align:left;font-weight:700;color:var(--tx3);font-size:.85em;width:40px}
+.st td.elite{background:rgba(57,255,20,.12);color:#0d6e0d;font-weight:700;border-radius:4px}
+.pct-hdr{padding:24px 28px 0;display:flex;align-items:baseline;gap:6px}
+.pct-yr{font-weight:700;font-size:.95em;color:var(--blue)}
+.pct-t{font-weight:600;font-size:.95em}
+.pct-sub{font-weight:400;font-size:.78em;color:var(--tx3);margin-left:4px}
+.pct-body{padding:8px 28px 32px}
+.scale{display:flex;align-items:center;justify-content:flex-end;padding:8px 0 18px;gap:24px}
+.sc-l{font-size:.65em;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.sc-l.bad{color:#e53e3e}.sc-l.ok{color:#aaa}.sc-l.good{color:#16a34a}
+.sc-dot{color:#ddd;font-size:.4em}
+.cat{margin-bottom:24px}
+.cat-h{display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:2px solid var(--bdr);margin-bottom:4px}
+.cat-icon{font-size:.85em}
+.cat-name{font-weight:700;font-size:.85em;letter-spacing:.3px}
+.sr{display:grid;grid-template-columns:145px 1fr 52px;align-items:center;padding:8px 0;gap:16px}
+.sr+.sr{border-top:1px solid #f0f1f3}
+.sr-lbl{font-size:.82em;font-weight:500;color:var(--tx2);text-align:left;cursor:help;position:relative;line-height:1.3}
+.sr-lbl .sub{display:block;font-size:.78em;font-weight:400;color:var(--tx3);margin-top:1px}
+.sr-lbl .tt{display:none;position:absolute;bottom:calc(100% + 8px);left:0;background:#1e293b;color:#f1f5f9;padding:10px 14px;border-radius:8px;font-size:.82em;font-weight:400;white-space:normal;width:260px;line-height:1.5;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.18);pointer-events:none}
+.sr-lbl .tt::after{content:'';position:absolute;top:100%;left:24px;border:6px solid transparent;border-top-color:#1e293b}
+.sr-lbl:hover .tt{display:block}
+.sr-bar{position:relative;height:26px;border-radius:5px;background:#eef1f5;overflow:visible}
+.sr-fill{position:absolute;left:0;top:0;bottom:0;border-radius:5px;transition:width .6s cubic-bezier(.22,1,.36,1)}
+.sr-circ{position:absolute;top:50%;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72em;font-weight:700;color:#fff;transform:translate(-50%,-50%);transition:left .6s cubic-bezier(.22,1,.36,1);z-index:3;box-shadow:0 1px 4px rgba(0,0,0,.2);text-shadow:0 1px 3px rgba(0,0,0,.4)}
+.sr-val{font-size:.92em;font-weight:700;text-align:right;color:var(--tx)}
+.card-ft{padding:14px 28px;border-top:1px solid var(--bdr);font-size:.65em;color:var(--tx3);text-align:center}
+.sc-sec{padding:24px 28px;border-top:1px solid var(--bdr)}
+.sc-hdr{display:flex;align-items:baseline;gap:8px;margin-bottom:14px}
+.sc-hdr h3{font-size:.9em;font-weight:700}
+.sc-hdr span{font-size:.72em;color:var(--tx3)}
+.sc-court{display:flex;justify-content:center}
+.sc-court canvas{max-width:100%;height:auto}
+.sc-na{text-align:center;padding:20px;color:var(--tx3);font-size:.8em}
+@media(max-width:700px){
+.p-hdr-in{flex-wrap:wrap;padding:18px 16px;gap:14px}
+.p-hs,.p-hs-fb,.p-badge{width:60px;height:60px}
+.p-tl{max-height:48px;max-width:48px}
+.p-name{font-size:1.2em}
+.st-wrap{padding:14px 14px;overflow-x:auto}
+.pct-hdr{padding:18px 14px 0}
+.pct-body{padding:6px 14px 20px}
+.sr{grid-template-columns:105px 1fr 42px;gap:8px}
+.sr-lbl .tt{width:180px;font-size:.72em}
+.sr-circ{width:24px;height:24px;font-size:.6em}
+.sr-bar{height:22px}
+.lb-grid{grid-template-columns:1fr}
+.cmp-sr{flex-direction:column}
+.ct-mid{width:80px}
+.ct-pct{width:24px;height:24px;font-size:.52em}
+.ct-val{font-size:.72em;min-width:28px}
+.hero h1{font-size:1.5em}
+.sc-sec{padding:16px 14px}
+}
+</style>
+</head>
+<body>
+<header class="hdr"><a class="hdr-logo" onclick="goHome()" href="javascript:void(0)"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="18" cy="18" r="16" fill="#f0c430"/><circle cx="18" cy="18" r="16" stroke="#e6b520" stroke-width="0.5"/><path d="M18 2C18 2 18 34 18 34" stroke="#c4740e" stroke-width="1.2" opacity=".35"/><path d="M3.5 13.5C10 13.5 26 13.5 32.5 13.5" stroke="#c4740e" stroke-width="1.2" opacity=".35"/><path d="M3.5 22.5C10 22.5 26 22.5 32.5 22.5" stroke="#c4740e" stroke-width="1.2" opacity=".35"/><path d="M5 7C10 12 10 24 5 29" stroke="#c4740e" stroke-width="1.2" opacity=".35"/><path d="M31 7C26 12 26 24 31 29" stroke="#c4740e" stroke-width="1.2" opacity=".35"/><rect x="7" y="10" width="22" height="16" rx="2" fill="rgba(0,0,0,.55)"/><text x="18" y="21.5" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="9.5" fill="#fff" letter-spacing="0.3">NBA</text></svg><div class="hdr-logo-t"><b>NBA</b> SAVANT</div></a><div class="hdr-r">2025-26 Season</div></header>
+<div class="search-wrap"><div class="search-box"><svg class="s-icon" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="text" id="playerSearch" placeholder="Search for a player..." autocomplete="off"><div class="sug" id="suggestions"></div></div></div>
+<div class="cmp-bar-area"><button class="cmp-btn" onclick="openCmp()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M8 3H3v5M21 3l-7 7M3 3l7 7M16 21h5v-5M8 21H3v-5M21 21l-7-7M3 21l7-7"/></svg>Compare Players</button><span style="flex:1"></span><span id="playerCount" style="font-size:.72em;color:var(--tx3);font-weight:500"></span></div>
+<div class="cmp-modal" id="cmpModal"><div class="cmp-panel"><div class="cmp-top"><h2>Compare Players</h2><button class="cmp-close" onclick="closeCmp()">&times;</button></div><div class="cmp-sr"><div class="cs"><input id="cA" placeholder="Player 1..." autocomplete="off" oninput="cSr(this,0)"><div class="cdd" id="ddA"></div></div><div class="cs"><input id="cB" placeholder="Player 2..." autocomplete="off" oninput="cSr(this,1)"><div class="cdd" id="ddB"></div></div></div><div class="cmp-body" id="cmpBody"><div class="cmp-empty">Search two players to compare side by side.</div></div></div></div>
+<div id="homePage"></div>
+<div class="wrap" id="playerPage" style="display:none"><div class="card" id="playerCard">
+<div class="p-hdr" id="pHdr"><div class="p-hdr-bg" id="pHdrBg"></div><div class="p-hdr-in"><div class="p-hs-w"><img class="p-hs" id="pHs" src="" alt=""><div class="p-hs-fb" id="pHsFb"><img id="pLogo" src="" alt=""></div><div class="p-badge" id="pBadge"></div></div><div class="p-inf"><div class="p-name" id="pName"></div><div class="p-tn" id="pTeam"></div><div class="p-meta" id="pMeta"></div></div><img class="p-tl" id="pTL" src="" alt=""></div></div>
+<div class="st-wrap" id="statsArea"></div>
+<div class="pct-hdr"><span class="pct-yr">2025</span><span class="pct-t">Percentile Rankings</span><span class="pct-sub">among qualified players</span></div>
+<div class="pct-body"><div class="scale"><span class="sc-l bad">Poor</span><span class="sc-dot">&#9679;</span><span class="sc-l ok">Average</span><span class="sc-dot">&#9679;</span><span class="sc-l good">Great</span></div><div id="pctContent"></div></div>
+<div class="sc-sec" id="scSec" style="display:none"><div class="sc-hdr"><h3>Shot Chart</h3><span>2025-26 Regular Season</span></div><div id="scBox"></div></div>
+<div class="card-ft">NBA Savant &middot; Data via NBA.com</div>
+</div></div>
+<script>
+const D=__DATA_PLACEHOLDER__;
+const SD=__SHOTS_PLACEHOLDER__;
+let allP=[],fP=[];
+const T={'ATL':{n:'Atlanta Hawks',a:'ATL',e:'atl',c:'#e03a3e'},'BOS':{n:'Boston Celtics',a:'BOS',e:'bos',c:'#007a33'},'BKN':{n:'Brooklyn Nets',a:'BKN',e:'bkn',c:'#222'},'CHA':{n:'Charlotte Hornets',a:'CHA',e:'cha',c:'#1d1160'},'CHI':{n:'Chicago Bulls',a:'CHI',e:'chi',c:'#ce1141'},'CLE':{n:'Cleveland Cavaliers',a:'CLE',e:'cle',c:'#6f263d'},'DAL':{n:'Dallas Mavericks',a:'DAL',e:'dal',c:'#00538c'},'DEN':{n:'Denver Nuggets',a:'DEN',e:'den',c:'#0e2240'},'DET':{n:'Detroit Pistons',a:'DET',e:'det',c:'#c8102e'},'GSW':{n:'Golden State Warriors',a:'GSW',e:'gs',c:'#1d428a'},'HOU':{n:'Houston Rockets',a:'HOU',e:'hou',c:'#ce1141'},'IND':{n:'Indiana Pacers',a:'IND',e:'ind',c:'#002d62'},'LAC':{n:'LA Clippers',a:'LAC',e:'lac',c:'#c8102e'},'LAL':{n:'Los Angeles Lakers',a:'LAL',e:'lal',c:'#552583'},'MEM':{n:'Memphis Grizzlies',a:'MEM',e:'mem',c:'#5d76a9'},'MIA':{n:'Miami Heat',a:'MIA',e:'mia',c:'#98002e'},'MIL':{n:'Milwaukee Bucks',a:'MIL',e:'mil',c:'#00471b'},'MIN':{n:'Minnesota Timberwolves',a:'MIN',e:'min',c:'#0c2340'},'NOP':{n:'New Orleans Pelicans',a:'NOP',e:'no',c:'#0c2340'},'NYK':{n:'New York Knicks',a:'NYK',e:'ny',c:'#006bb6'},'OKC':{n:'Oklahoma City Thunder',a:'OKC',e:'okc',c:'#007ac1'},'ORL':{n:'Orlando Magic',a:'ORL',e:'orl',c:'#0077c0'},'PHI':{n:'Philadelphia 76ers',a:'PHI',e:'phi',c:'#006bb6'},'PHX':{n:'Phoenix Suns',a:'PHX',e:'phx',c:'#1d1160'},'POR':{n:'Portland Trail Blazers',a:'POR',e:'por',c:'#e03a3e'},'SAC':{n:'Sacramento Kings',a:'SAC',e:'sac',c:'#5a2d81'},'SAS':{n:'San Antonio Spurs',a:'SAS',e:'sa',c:'#c4ced4'},'TOR':{n:'Toronto Raptors',a:'TOR',e:'tor',c:'#ce1141'},'UTA':{n:'Utah Jazz',a:'UTA',e:'uta',c:'#002b5c'},'WAS':{n:'Washington Wizards',a:'WAS',e:'wsh',c:'#002b5c'}};
+function lu(t){const o=T[t];return o&&o.e?'https://a.espncdn.com/i/teamlogos/nba/500/'+o.e+'.png':null;}
+function hu(id){return id?'https://cdn.nba.com/headshots/nba/latest/1040x760/'+id+'.png':null;}
+function sL(c){return c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4);}
+function Ls(c){return c<=0.0031308?12.92*c:1.055*Math.pow(c,1/2.4)-0.055;}
+function oklch(p){const S=[{p:0,r:255,g:0,b:0},{p:15,r:255,g:60,b:0},{p:30,r:255,g:140,b:0},{p:45,r:255,g:200,b:0},{p:55,r:210,g:225,b:0},{p:70,r:140,g:240,b:0},{p:85,r:80,g:250,b:10},{p:100,r:57,g:255,b:20}];let a=S[0],b=S[S.length-1];for(let i=0;i<S.length-1;i++){if(p>=S[i].p&&p<=S[i+1].p){a=S[i];b=S[i+1];break;}}const t=(p-a.p)/(b.p-a.p||1);return 'rgb('+Math.round(Ls(sL(a.r/255)+(sL(b.r/255)-sL(a.r/255))*t)*255)+','+Math.round(Ls(sL(a.g/255)+(sL(b.g/255)-sL(a.g/255))*t)*255)+','+Math.round(Ls(sL(a.b/255)+(sL(b.b/255)-sL(a.b/255))*t)*255)+')';}
+function bG(p){return 'linear-gradient(90deg,'+oklch(Math.max(p-15,0))+','+oklch(p)+')';}
+const cats=[
+{name:'Offense',icon:'\u{1F3C0}',stats:[{k:'PTS_PG',n:'Points',d:'Avg points per game.',h:true},{k:'AST_PG',n:'Assists',d:'Avg assists per game.',h:true},{k:'FG%',n:'Field Goal %',d:'FG attempts made.',f:'pct',h:true},{k:'3P%',n:'3-Point %',d:'3PT attempts made.',f:'pct',h:true},{k:'FT%',n:'Free Throw %',d:'FT attempts made.',f:'pct',h:true},{k:'TOV_PG',n:'Turnovers',d:'Avg turnovers per game.',h:false,inv:true},{k:'AST_TO',n:'AST/TO Ratio',d:'Assists per turnover. Higher is better.',h:true}]},
+{name:'Rebounding',icon:'\u{1F4CA}',stats:[{k:'TRB_PG',n:'Total Rebounds',d:'Avg total rebounds.',h:true},{k:'ORB_PG',n:'Off. Rebounds',d:'Avg offensive rebounds.',h:true},{k:'DRB_PG',n:'Def. Rebounds',d:'Avg defensive rebounds.',h:true}]},
+{name:'Defense',icon:'\u{1F6E1}',stats:[{k:'STL_PG',n:'Steals',d:'Avg steals per game.',h:true},{k:'BLK_PG',n:'Blocks',d:'Avg blocks per game.',h:true}]},
+{name:'Miscellaneous',icon:'\u{1F4CB}',stats:[{k:'MP_PG',n:'Minutes',d:'Avg minutes per game.',h:true},{k:'PM',n:'Plus / Minus',d:'Avg point diff on court.',h:true}]},
+{name:'Advanced',icon:'\u{1F9E0}',stats:[{k:'NET_RTG',n:'Net Rating',d:'Off - Def rating per 100 poss.',h:true},{k:'ORTG',n:'Off. Rating',d:'Points per 100 poss.',h:true},{k:'DRTG',n:'Def. Rating',d:'Pts allowed per 100 poss.',h:false,inv:true},{k:'TS%',n:'True Shooting %',d:'Shooting efficiency.',f:'pct',h:true},{k:'eFG%',n:'Effective FG %',d:'FG% adjusted for 3s.',f:'pct',h:true},{k:'USG%',n:'Usage Rate',d:'% of team plays used.',h:true},{k:'AST%',n:'Assist %',d:'% of teammate FGs assisted.',h:true},{k:'PACE',n:'Pace',d:'Possessions per 48 min.',h:true}]}];
+const lbCats=[{n:'Points',k:'PTS_PG',ic:'\u{1F3C6}',f:null,q:null},{n:'Assists',k:'AST_PG',ic:'\u{1F3AF}',f:null,q:null},{n:'Rebounds',k:'TRB_PG',ic:'\u{1F4CA}',f:null,q:null},{n:'Steals',k:'STL_PG',ic:'\u{1F6E1}',f:null,q:null},{n:'Blocks',k:'BLK_PG',ic:'\u{1F6AB}',f:null,q:null},{n:'3-Point %',k:'3P%',ic:'\u{1F3AF}',f:'pct',q:function(p){return parseFloat(p['3P_PG']||0)>=1.5;}},{n:'Field Goal %',k:'FG%',ic:'\u{1F3C0}',f:'pct',q:function(p){return parseFloat(p.FGA_PG||0)>=8;}},{n:'True Shooting %',k:'TS%',ic:'\u26A1',f:'pct',q:null},{n:'Net Rating',k:'NET_RTG',ic:'\u{1F4C8}',f:null,q:null},{n:'Plus / Minus',k:'PM',ic:'\u2795',f:null,q:null},{n:'Usage Rate',k:'USG%',ic:'\u{1F525}',f:null,q:null},{n:'Assist %',k:'AST%',ic:'\u{1F91D}',f:null,q:null}];
+function init(){allP=D;fP=allP.filter(p=>parseInt(p.G)>=20);document.getElementById('playerCount').textContent=fP.length+' qualified players';buildHome();}
+function fmtV(v,f){const n=parseFloat(v);if(isNaN(n))return'\u2014';if(f==='pct')return(n<1?(n*100).toFixed(1):n.toFixed(1));if(Math.abs(n)<10&&n%1!==0)return n.toFixed(1);return String(n);}
+function buildHome(){let h='<div class="hero"><h1>Player Percentile<br>Rankings on <b>NBA Savant</b></h1><p>Explore every stat for every player in the 2025\u201326 NBA season.</p></div><div class="section-hd"><h2>Leaderboards</h2><div class="badge">2025\u201326</div></div><div class="lb-grid">';lbCats.forEach(lb=>{let pool=fP.slice();if(lb.q)pool=pool.filter(lb.q);const sorted=pool.filter(p=>{const v=parseFloat(p[lb.k]);return!isNaN(v);}).sort((a,b)=>parseFloat(b[lb.k])-parseFloat(a[lb.k])).slice(0,5);h+='<div class="lb-card"><div class="lb-hd"><span class="lb-icon">'+lb.ic+'</span>'+lb.n+'</div>';sorted.forEach((p,i)=>{const dv=fmtV(p[lb.k],lb.f),tm=p.Team||'',info=T[tm]||{c:'#888',e:null},lUrl=lu(tm);if(i)h+='<div class="lb-d"></div>';h+='<div class="lb-row" onclick="pick(\''+p.Player.replace(/'/g,"\\'")+'\')">';h+='<span class="lb-rk'+(i===0?' g':'')+'">'+(i+1)+'</span><img class="lb-hs" src="'+hu(p.nba_id)+'" onerror="this.src=\'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7\';this.style.background=\''+info.c+'\'" alt="">';if(lUrl)h+='<img class="lb-tm-logo" src="'+lUrl+'" onerror="this.style.display=\'none\'" alt="">';h+='<div class="lb-inf"><div class="lb-nm">'+p.Player+'</div><div class="lb-tm">'+tm+'</div></div><span class="lb-v">'+dv+'</span></div>';});h+='</div>';});h+='</div>';document.getElementById('homePage').innerHTML=h;}
+function goHome(){document.getElementById('homePage').style.display='';document.getElementById('playerPage').style.display='none';document.getElementById('playerCard').style.display='none';document.getElementById('playerSearch').value='';window.scrollTo({top:0,behavior:'smooth'});}
+const sI=document.getElementById('playerSearch'),sS=document.getElementById('suggestions');
+sI.addEventListener('input',function(){const t=this.value.toLowerCase();if(!t){sS.style.display='none';return;}const m=allP.filter(p=>p.Player&&p.Player.toLowerCase().includes(t)).slice(0,10);if(m.length){sS.innerHTML=m.map(p=>'<div class="sug-i" onclick="pick(\''+p.Player.replace(/'/g,"\\'")+'\')">'+'<img class="sug-hs" src="'+hu(p.nba_id)+'" onerror="this.style.display=\'none\'" alt="">'+'<span class="sug-n">'+p.Player+'</span><span class="sug-m">'+(p.Team||'')+' \u00B7 '+p.G+'G</span></div>').join('');sS.style.display='block';}else sS.style.display='none';});
+sI.addEventListener('keydown',e=>{if(e.key==='Enter'){const f=sS.querySelector('.sug-i');if(f)f.click();}});
+document.addEventListener('click',e=>{if(!e.target.closest('.search-box')&&!e.target.closest('.cs')){sS.style.display='none';document.querySelectorAll('.cdd').forEach(d=>d.style.display='none');}});
+function pick(n){const p=allP.find(x=>x.Player===n);if(p){showPlayer(p);sI.value=n;sS.style.display='none';closeCmp();}}
+function calcPct(val,key,higher){const nums=fP.map(p=>parseFloat(p[key])).filter(v=>!isNaN(v));const n=parseFloat(val);if(isNaN(n)||!nums.length)return null;return Math.round(((higher?nums.filter(v=>v<n):nums.filter(v=>v>n)).length/nums.length)*100);}
+function fv(val,s){if(val===''||val===undefined)return'\u2014';const n=parseFloat(val);if(isNaN(n))return val;if(s.f==='pct')return(n<1?(n*100).toFixed(1):n.toFixed(1));if(Math.abs(n)<10&&n%1!==0)return n.toFixed(1);return val;}
+function fp(v){const n=parseFloat(v);return isNaN(n)?'\u2014':(n<1?(n*100).toFixed(1):n.toFixed(1));}
+function isE(v,k,h){const p=calcPct(v,k,h);return p!==null&&p>=95;}
+function ec(v,k,h,d){if(d==='\u2014')return'<td>\u2014</td>';return isE(v,k,h)?'<td class="elite">'+d+'</td>':'<td>'+d+'</td>';}
+function showPlayer(player){
+document.getElementById('homePage').style.display='none';document.getElementById('playerPage').style.display='block';
+const tm=player.Team||'',info=T[tm]||{n:tm,a:tm||'?',e:null,c:'#555'},pc=info.c;
+document.getElementById('pHdrBg').style.background=pc;document.getElementById('pHdr').style.borderBottom='2px solid '+pc;
+const hs=hu(player.nba_id),hsE=document.getElementById('pHs'),fbE=document.getElementById('pHsFb'),bdE=document.getElementById('pBadge');
+hsE.style.border='3px solid '+pc;
+if(hs){hsE.src=hs;hsE.style.display='block';fbE.style.display='none';bdE.style.display='none';hsE.onerror=function(){this.style.display='none';doFB(tm,info);};}else{hsE.style.display='none';doFB(tm,info);}
+document.getElementById('pName').textContent=player.Player;
+const te=document.getElementById('pTeam');te.textContent=info.n;te.style.color=pc;
+document.getElementById('pMeta').textContent='Age '+(player.Age||'?')+' \u00B7 '+(player.G||'?')+' Games';
+const tl=document.getElementById('pTL'),ls=lu(tm);if(ls){tl.src=ls;tl.style.display='block';tl.onerror=function(){this.style.display='none';};}else tl.style.display='none';
+var h='<div class="st-title">Per-Game Averages & Advanced</div><table class="st"><tr><th></th><th>GP</th><th>MPG</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TOV</th><th>FG%</th><th>3P%</th><th>FT%</th></tr><tr><td class="lbl">2025</td><td>'+player.G+'</td>';
+h+=ec(player.MP_PG,'MP_PG',true,player.MP_PG||'\u2014')+ec(player.PTS_PG,'PTS_PG',true,player.PTS_PG||'\u2014')+ec(player.TRB_PG,'TRB_PG',true,player.TRB_PG||'\u2014')+ec(player.AST_PG,'AST_PG',true,player.AST_PG||'\u2014')+ec(player.STL_PG,'STL_PG',true,player.STL_PG||'\u2014')+ec(player.BLK_PG,'BLK_PG',true,player.BLK_PG||'\u2014')+ec(player.TOV_PG,'TOV_PG',false,player.TOV_PG||'\u2014')+ec(player['FG%'],'FG%',true,fp(player['FG%']))+ec(player['3P%'],'3P%',true,fp(player['3P%']))+ec(player['FT%'],'FT%',true,fp(player['FT%']));
+h+='</tr></table><table class="st" style="margin-top:8px"><tr><th></th><th>eFG%</th><th>TS%</th><th>ORTG</th><th>DRTG</th><th>NET</th><th>USG%</th><th>AST%</th><th>+/-</th></tr><tr><td class="lbl">ADV</td>';
+h+=ec(player['eFG%'],'eFG%',true,fp(player['eFG%']))+ec(player['TS%'],'TS%',true,fp(player['TS%']))+ec(player.ORTG,'ORTG',true,player.ORTG||'\u2014')+ec(player.DRTG,'DRTG',false,player.DRTG||'\u2014')+ec(player.NET_RTG,'NET_RTG',true,player.NET_RTG||'\u2014')+ec(player['USG%'],'USG%',true,player['USG%']||'\u2014')+ec(player['AST%'],'AST%',true,player['AST%']||'\u2014')+ec(player.PM,'PM',true,player.PM||'\u2014')+'</tr></table>';
+document.getElementById('statsArea').innerHTML=h;
+let html='';cats.forEach(cat=>{const valid=cat.stats.filter(s=>{const v=player[s.k];return v!==''&&v!==undefined&&!isNaN(parseFloat(v));});if(!valid.length)return;html+='<div class="cat"><div class="cat-h"><div class="cat-icon">'+cat.icon+'</div><div class="cat-name">'+cat.name+'</div></div>';valid.forEach(s=>{const raw=player[s.k],pct=calcPct(raw,s.k,s.h);if(pct===null)return;const dv=fv(raw,s),col=oklch(pct),bg=bG(pct),w=Math.max(pct,5);html+='<div class="sr"><div class="sr-lbl">'+s.n+(s.inv?'<span class="sub">Lower is better</span>':'')+(s.d?'<span class="tt">'+s.d+'</span>':'')+'</div><div class="sr-bar"><div class="sr-fill" style="width:'+w+'%;background:'+bg+'"></div><div class="sr-circ" style="left:'+w+'%;background:'+col+'">'+pct+'</div></div><div class="sr-val">'+dv+'</div></div>';});html+='</div>';});
+document.getElementById('pctContent').innerHTML=html;document.getElementById('playerCard').style.display='block';
+drawSC(player.nba_id);
+setTimeout(function(){document.getElementById('playerCard').scrollIntoView({behavior:'smooth',block:'start'});},60);}
+function doFB(tm,info){var fb=document.getElementById('pHsFb'),bd=document.getElementById('pBadge'),lg=document.getElementById('pLogo'),url=lu(tm);if(url){fb.style.display='flex';fb.style.border='3px solid '+info.c;lg.src=url;lg.style.display='block';bd.style.display='none';lg.onerror=function(){this.parentNode.style.display='none';bd.style.display='flex';bd.style.background=info.c;bd.textContent=info.a;};}else{fb.style.display='none';bd.style.display='flex';bd.style.background=info.c;bd.style.border='3px solid '+info.c;bd.textContent=info.a;}}
+/* SHOT CHART from embedded data */
+function drawSC(pid){
+var sec=document.getElementById('scSec'),box=document.getElementById('scBox');
+var shots=SD[String(pid)];
+if(!shots||!shots.length){sec.style.display='none';return;}
+sec.style.display='block';
+/* NBA half-court: 50ft wide x 47ft long. NBA API coords: X=-250..250, Y=-50..420 (in 1/10th ft) */
+var W=500,H=470,pad=20;
+/* Scale: map NBA coords (-250..250 X, -50..420 Y) to canvas */
+var scX=function(x){return pad+(x+250)/(500)*(W-2*pad);};
+var scY=function(y){return (H-pad)-(y+50)/(470)*(H-2*pad);};
+var ft=function(f){return f/500*(W-2*pad);}; /* feet in tenths to pixels */
+box.innerHTML='<div class="sc-court"><canvas id="scCvs" width="'+W+'" height="'+H+'"></canvas></div>';
+var c=document.getElementById('scCvs').getContext('2d');
+c.fillStyle='#fafbfc';c.fillRect(0,0,W,H);
+c.strokeStyle='#bfc5cc';c.lineWidth=1.3;
+/* Baseline & sidelines (half court box) */
+var bx=scX(-250),bx2=scX(250),bl=scY(-50),tp=scY(420);
+c.strokeRect(bx,tp,bx2-bx,bl-tp);
+/* Paint (16ft wide = 80 units each side, 19ft deep = 190 units) */
+c.strokeRect(scX(-80),scY(190),scX(80)-scX(-80),scY(-50)-scY(190));
+/* Free throw circle (6ft radius = 60 units) */
+c.beginPath();c.arc(scX(0),scY(190),ft(60),0,Math.PI*2);c.stroke();
+/* Restricted area arc (4ft radius = 40 units, from basket) */
+c.beginPath();c.arc(scX(0),scY(0),ft(40),Math.PI,0);c.stroke();
+/* Basket (rim: 9 inches radius ~ 7.5 units) */
+c.beginPath();c.arc(scX(0),scY(0),ft(7.5),0,Math.PI*2);c.lineWidth=1.8;c.stroke();c.lineWidth=1.3;
+/* Backboard (3ft each side = 30 units) */
+c.beginPath();c.moveTo(scX(-30),scY(-7));c.lineTo(scX(30),scY(-7));c.stroke();
+/* 3-point line: corners at 22ft (220 units) from basket center, arc at 23.75ft (237.5 units) */
+/* Corner 3s are straight lines from baseline up to where the arc begins */
+/* Arc center is at the basket (0,0). Corner extends from Y=-50 to where the arc radius intersects X=220 */
+var r3=237.5,cx3=0,cy3=0;
+var cornerX=220;
+/* Y where arc intersects X=220: sqrt(237.5^2 - 220^2) */
+var cornerY=Math.sqrt(r3*r3-cornerX*cornerX);
+c.beginPath();
+c.moveTo(scX(-cornerX),scY(-50));c.lineTo(scX(-cornerX),scY(cornerY));
+/* Arc from left to right */
+var angL=Math.PI-Math.asin(cornerY/r3);var angR=Math.asin(cornerY/r3);
+/* We need the arc in canvas coords. Since Y is flipped, we draw arc in screen space */
+c.save();
+/* Draw arc point by point for accuracy */
+for(var a=Math.PI+Math.acos(cornerX/r3);a>=-Math.acos(cornerX/r3);a-=0.02){
+var ax=r3*Math.cos(a),ay=r3*Math.sin(a);c.lineTo(scX(ax),scY(ay));}
+c.lineTo(scX(cornerX),scY(-50));
+c.restore();c.stroke();
+/* Half-court circle (6ft radius) */
+c.beginPath();c.arc(scX(0),scY(420),ft(60),0,Math.PI);c.stroke();
+/* Half-court line */
+c.beginPath();c.moveTo(bx,scY(420));c.lineTo(bx2,scY(420));c.stroke();
+/* HEATMAP */
+var grid={},gs=11;
+shots.forEach(function(sh){
+var px=scX(sh[0]),py=scY(sh[1]);
+var gx=Math.floor(px/gs),gy=Math.floor(py/gs),k=gx+','+gy;
+if(!grid[k])grid[k]={m:0,t:0,x:gx*gs+gs/2,y:gy*gs+gs/2};
+grid[k].t++;if(sh[2])grid[k].m++;});
+var maxT=0;Object.values(grid).forEach(function(v){if(v.t>maxT)maxT=v.t;});
+Object.values(grid).forEach(function(v){
+var pct=v.t>1?v.m/v.t:0.5;var freq=v.t/maxT;var r=gs*0.45+freq*gs*0.75;
+/* Color: green above .45 FG%, red below, yellow at .45 */
+var hue=pct>=0.45?Math.min(120,120*((pct-0.3)/0.4)):0;
+c.globalAlpha=0.18+freq*0.52;
+c.fillStyle='hsl('+hue+','+(55+freq*30)+'%,46%)';
+c.beginPath();c.arc(v.x,v.y,r,0,Math.PI*2);c.fill();});
+c.globalAlpha=1;
+/* Legend */
+c.font='600 11px Inter,sans-serif';
+c.fillStyle='#16a34a';c.beginPath();c.arc(pad+8,H-10,5,0,Math.PI*2);c.fill();
+c.fillStyle='#666';c.fillText('Above avg FG%',pad+18,H-6);
+c.fillStyle='#dc2626';c.beginPath();c.arc(pad+120,H-10,5,0,Math.PI*2);c.fill();
+c.fillStyle='#666';c.fillText('Below avg',pad+130,H-6);
+c.fillStyle='#999';c.fillText('\u25CF Size = Volume   |   '+shots.length+' shots',pad+200,H-6);}
+/* COMPARE */
+var cPk=[null,null];
+function openCmp(){document.getElementById('cmpModal').classList.add('open');document.body.style.overflow='hidden';}
+function closeCmp(){document.getElementById('cmpModal').classList.remove('open');document.body.style.overflow='';}
+function cSr(inp,idx){var dd=document.getElementById(idx===0?'ddA':'ddB'),t=inp.value.toLowerCase();if(!t){dd.style.display='none';return;}var m=allP.filter(function(p){return p.Player&&p.Player.toLowerCase().includes(t);}).slice(0,8);if(m.length){dd.innerHTML=m.map(function(p){return '<div class="sug-i" onclick="cPi(\''+p.Player.replace(/'/g,"\\'")+'\','+idx+')"><img class="sug-hs" src="'+hu(p.nba_id)+'" onerror="this.style.display=\'none\'" alt=""><span class="sug-n">'+p.Player+'</span></div>';}).join('');dd.style.display='block';}else dd.style.display='none';}
+function cPi(name,idx){var p=allP.find(function(x){return x.Player===name;});if(!p)return;cPk[idx]=p;document.getElementById(idx===0?'cA':'cB').value=name;document.getElementById(idx===0?'ddA':'ddB').style.display='none';if(cPk[0]&&cPk[1])rCmp();}
+function rCmp(){
+var a=cPk[0],b=cPk[1];if(!a||!b)return;
+var ia=T[a.Team]||{n:a.Team,c:'#555'},ib=T[b.Team]||{n:b.Team,c:'#555'};
+var h='<div class="cmp-heads"><div class="cmp-ph"><img src="'+hu(a.nba_id)+'" onerror="this.style.background=\''+ia.c+'\'" alt=""><div class="cn">'+a.Player+'</div><div class="ct" style="color:'+ia.c+'">'+ia.n+'</div><div class="cm">Age '+a.Age+' \u00B7 '+a.G+'G</div></div>';
+h+='<div class="cmp-ph"><img src="'+hu(b.nba_id)+'" onerror="this.style.background=\''+ib.c+'\'" alt=""><div class="cn">'+b.Player+'</div><div class="ct" style="color:'+ib.c+'">'+ib.n+'</div><div class="cm">Age '+b.Age+' \u00B7 '+b.G+'G</div></div></div>';
+cats.forEach(function(cat){
+h+='<div class="ct-cat">'+cat.icon+' '+cat.name+'</div>';
+cat.stats.forEach(function(s){
+var pa=calcPct(a[s.k],s.k,s.h),pb=calcPct(b[s.k],s.k,s.h);
+var da=fv(a[s.k],s),db=fv(b[s.k],s);
+if(pa===null&&pb===null)return;
+var aW=(pa||0)>=(pb||0),bW=(pb||0)>(pa||0);
+var wA=pa!==null?Math.max(pa,5):0,wB=pb!==null?Math.max(pb,5):0;
+h+='<div class="ct-row">';
+/* Left side: value → bar → pctCircle → arrow */
+h+='<div class="ct-left">';
+h+='<span class="ct-val '+(aW?'w':'l')+'">'+da+'</span>';
+h+='<div class="ct-bar"><div class="ct-bf" style="width:'+wA+'%;background:'+bG(pa||0)+'"></div></div>';
+if(pa!==null)h+='<span class="ct-pct" style="background:'+oklch(pa)+'">'+pa+'</span>';
+if(aW&&!bW)h+='<span class="ct-arrow aw">\u25C0</span>';
+else h+='<span class="ct-arrow al">&nbsp;</span>';
+h+='</div>';
+/* Center label */
+h+='<div class="ct-mid"><div class="ct-mn">'+s.n+'</div>'+(s.inv?'<div class="ct-ms">Lower is better</div>':'')+'</div>';
+/* Right side: arrow → pctCircle → bar → value */
+h+='<div class="ct-right">';
+if(bW)h+='<span class="ct-arrow aw">\u25B6</span>';
+else h+='<span class="ct-arrow al">&nbsp;</span>';
+if(pb!==null)h+='<span class="ct-pct" style="background:'+oklch(pb)+'">'+pb+'</span>';
+h+='<div class="ct-bar"><div class="ct-bf" style="width:'+wB+'%;background:'+bG(pb||0)+'"></div></div>';
+h+='<span class="ct-val '+(bW?'w':'l')+'">'+db+'</span>';
+h+='</div>';
+h+='</div>';});});
+document.getElementById('cmpBody').innerHTML=h;}
+init();
+</script>
+</body>
+</html>
