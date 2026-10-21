@@ -17,6 +17,8 @@ new version about a minute later.
 OPTIONAL EXTRAS (type them after the command, separated by spaces):
     2025-26     build a specific season instead of the current one
     noshots     skip shot charts (finishes in under a minute, good for testing)
+    restyle     re-apply template.html to the current index.html without
+                downloading anything (for design changes; takes a second)
 
 WHO APPEARS ON THE SITE:
     A player appears only if they have played MORE than 25% of the games
@@ -388,11 +390,35 @@ def write_atomic(path, text):
     os.replace(tmp, path)
 
 
+def restyle():
+    """Rebuild index.html from its own embedded data with the latest template.html."""
+    path = os.path.join(HERE, 'index.html')
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            old = f.read()
+        grab = lambda name, nxt: re.search(r'var %s=(.*?);\n(?:var %s=)' % (name, nxt), old, re.S).group(1)
+        players = json.loads(grab('D', 'SD'))
+        shots = json.loads(grab('SD', 'META'))
+        meta = json.loads(re.search(r'var META=(\{.*?\});\n', old, re.S).group(1))
+    except Exception as e:  # noqa: BLE001
+        print('Could not read the data inside index.html (%s).' % e)
+        print('Run the normal update instead. Your site was NOT changed.')
+        return 1
+    with open(os.path.join(HERE, 'template.html'), 'r', encoding='utf-8') as f:
+        template = f.read()
+    write_atomic(path, render_page(template, players, shots, meta, meta.get('season', '')))
+    print('Restyled index.html (%d players, data from %s).' % (len(players), meta.get('updated')))
+    print('NEXT: open GitHub Desktop, click "Commit to main", then "Push origin".')
+    return 0
+
+
 # ───────────────────────── Main ─────────────────────────
 
 def main(argv):
     season = current_season()
     skip_shots = False
+    if any(a.lower() == 'restyle' for a in argv):
+        return restyle()
     for a in argv:
         if re.match(r'^\d{4}-\d{2}$', a):
             season = a

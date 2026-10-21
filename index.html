@@ -10,6 +10,12 @@
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='14' fill='%230b1530'/><path d='M22 20h56v52L50 86 22 72z' fill='%231d428a'/><rect x='22' y='28' width='56' height='6' fill='%23fff'/><rect x='22' y='38' width='56' height='2' fill='%23fff'/></svg>">
+<script>
+/* Opening animation: once per browser session, home page only, never with reduced motion */
+(function(){try{var h=location.hash;window.__introT0=performance.now();
+if((h===''||h==='#'||h==='#/')&&!sessionStorage.getItem('introSeen')&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)){
+sessionStorage.setItem('introSeen','1');document.documentElement.classList.add('intro');}}catch(e){}})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
 <style>
@@ -85,7 +91,9 @@ main{flex:1}
 .bn{display:flex;flex-direction:column;cursor:pointer;transition:transform .15s ease;container-type:inline-size;min-width:0}
 .bn:hover{transform:translateY(4px)}
 .bn-wire{height:18px;margin:0 22%;border-left:2px solid var(--navy);border-right:2px solid var(--navy)}
-.bn-body{color:#fff;clip-path:polygon(0 0,100% 0,100% 100%,50% 90%,0 100%);display:flex;flex-direction:column;padding-bottom:34px}
+.bn-body{position:relative;background:#5b6478;color:#fff;clip-path:polygon(0 0,100% 0,100% 100%,50% 90%,0 100%);display:flex;flex-direction:column;padding-bottom:34px}
+.bn-col{position:absolute;inset:0}
+.bn-body>*:not(.bn-col){position:relative}
 .bn-s1{height:5px;background:#fff;margin-top:10px}
 .bn-s2{height:2px;background:#fff;margin-top:3px}
 .bn-cat{padding:14px 8px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center}
@@ -278,6 +286,32 @@ main{flex:1}
 .cx-a{font-weight:800;font-size:11px;color:var(--blue);margin-top:2px;min-height:1em}
 .cx-a.eq{color:var(--t4)}
 
+/* ---------- opening animation ("Tip-Off") ---------- */
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes outUp{to{transform:translateY(-100%)}}
+@keyframes growX{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes drop{0%{transform:translateY(-330px) rotate(0)}55%{transform:translateY(8px) rotate(1.5deg)}75%{transform:translateY(-3px) rotate(-1deg)}90%{transform:translateY(1px) rotate(.4deg)}100%{transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeOut{to{opacity:0;visibility:hidden}}
+.intro-ov{display:none}
+html.intro .intro-ov{display:flex;position:fixed;inset:0;z-index:9999;background:var(--navy);align-items:center;justify-content:center;animation:outUp .6s cubic-bezier(.7,0,.3,1) 3.2s both;--cw:min(92vw,1200px,163vh)}
+.intro-court{width:var(--cw);height:auto;display:block;overflow:visible;stroke-width:2.5}
+.intro-court .ln{fill:none;stroke:#fff;stroke-width:inherit;stroke-dasharray:1;stroke-dashoffset:1;animation:draw var(--d) ease-in-out var(--t) both}
+.intro-mark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.intro-box{background:var(--navy);padding:6px 14px;display:flex;flex-direction:column;align-items:center;gap:6px;animation:fadeUp .5s cubic-bezier(.2,.8,.2,1) 1.9s both}
+.intro-wm{font-weight:900;font-size:clamp(26px,calc(var(--cw) * .056),66px);line-height:.9;font-stretch:66%;text-transform:uppercase;color:#fff;white-space:nowrap}
+.intro-wm span{color:var(--red)}
+.intro-eb{font-weight:600;font-size:clamp(10px,calc(var(--cw) * .0153),17px);letter-spacing:.12em;color:#c9d1e3;white-space:nowrap}
+html.intro .hero-l,html.intro #movers,html.intro #rb,html.intro .ftr{position:relative}
+html.intro .hdr::after,html.intro .hero-l::after,html.intro #movers::after,html.intro #rb::after,html.intro .ftr::after{content:'';position:absolute;inset:0;background:var(--surface);z-index:60;pointer-events:none;animation:fadeOut .4s ease 4.55s both}
+html.intro .hdr::after{bottom:-3px;animation-delay:4.35s}
+html.intro .hero-l::after{right:-3px;animation-delay:4.45s}
+html.intro #movers::after{bottom:-3px}
+html.intro .rafter{transform-origin:left;animation:growX .4s cubic-bezier(.6,0,.2,1) 3.45s both}
+html.intro .bn{transform-origin:50% 0;animation:drop .9s cubic-bezier(.3,.7,.4,1) calc(3.55s + var(--i) * .06s - var(--late,0s)) both}
+html.intro .bn-col{animation:fadeIn .4s ease calc(4.6s + var(--i) * .14s - var(--late,0s)) both}
+
 /* ---------- responsive ---------- */
 @media (max-width:1250px){
   .banners{gap:10px;padding:0 16px}
@@ -373,6 +407,26 @@ main{flex:1}
 </style>
 </head>
 <body>
+<div class="intro-ov" id="introOv" aria-hidden="true">
+  <svg class="intro-court" viewBox="0 0 720 405" preserveAspectRatio="xMidYMid meet">
+    <path class="ln" pathLength="1" style="--t:.08s;--d:1.28s" d="M60 40 H660 V365 H60 Z"/>
+    <path class="ln" pathLength="1" style="--t:.48s;--d:.72s" d="M360 40 V365"/>
+    <circle class="ln" pathLength="1" style="--t:.56s;--d:.96s" cx="360" cy="202.5" r="48"/>
+    <path class="ln" pathLength="1" style="--t:.72s;--d:.96s" d="M60 142 H180 V263 H60"/>
+    <path class="ln" pathLength="1" style="--t:.72s;--d:.96s" d="M660 142 H540 V263 H660"/>
+    <path class="ln" pathLength="1" style="--t:.8s;--d:1.12s" d="M60 62 H140 A160 160 0 0 1 140 343 H60"/>
+    <path class="ln" pathLength="1" style="--t:.8s;--d:1.12s" d="M660 62 H580 A160 160 0 0 0 580 343 H660"/>
+    <circle class="ln" pathLength="1" style="--t:.96s;--d:.96s" cx="180" cy="202.5" r="36"/>
+    <circle class="ln" pathLength="1" style="--t:.96s;--d:.96s" cx="540" cy="202.5" r="36"/>
+  </svg>
+  <script>
+  /* keep the court lines 2.5px wide on screen at any court size */
+  (function(){var svg=document.currentScript.previousElementSibling;
+  function fit(){var w=svg.getBoundingClientRect().width;if(w)svg.style.strokeWidth=(2.5*720/w).toFixed(3);}
+  fit();window.addEventListener('resize',fit);})();
+  </script>
+  <div class="intro-mark"><div class="intro-box"><div class="intro-wm">NBA <span>Savant</span></div><div class="intro-eb">2026-27 PERCENTILE RANKINGS</div></div></div>
+</div>
 <div class="app">
 <header class="hdr">
   <div class="hdr-l">
@@ -615,11 +669,13 @@ function openPlayer(p){if(p)go('#p'+p.nba_id);}
 
 /* ================= HOME ================= */
 function buildBanners(){
+  /* The banners are built after the data loads, so shift their intro timing to stay in sync */
+  $('banners').style.setProperty('--late',Math.max(0,(performance.now()-(window.__introT0||0))/1000).toFixed(3)+'s');
   $('banners').innerHTML=HOME_CATS.map(function(lb,i){
     var p=leaders(lb,1)[0];if(!p)return '';
     var bg=teamOf(p.Team).c,lg=logoUrl(p);
-    return '<div class="bn" data-id="'+p.nba_id+'" title="'+esc(p.Player+' leads in '+lb.n)+'">'
-      +'<div class="bn-wire"></div><div class="bn-body" style="background:'+bg+'">'
+    return '<div class="bn" style="--i:'+i+'" data-id="'+p.nba_id+'" title="'+esc(p.Player+' leads in '+lb.n)+'">'
+      +'<div class="bn-wire"></div><div class="bn-body"><div class="bn-col" style="background:'+bg+'"></div>'
       +'<div class="bn-s1"></div><div class="bn-s2"></div>'
       +'<div class="bn-cat"><div class="bn-lab bn-lab-f">'+lb.n+'</div><div class="bn-lab bn-lab-s">'+lb.sh+'</div><div class="bn-note">'+lb.note.toUpperCase()+'</div></div>'
       +'<div class="bn-v">'+lbVal(lb,p)+'</div>'
@@ -890,6 +946,24 @@ document.addEventListener('click',function(e){var c=e.target.closest('[data-cat]
 $('menuBtn').addEventListener('click',function(){var o=$('nav').classList.toggle('open');this.setAttribute('aria-expanded',o?'true':'false');});
 window.addEventListener('hashchange',route);
 
+/* ================= OPENING ANIMATION ================= */
+function runIntro(){
+  var root=document.documentElement,ov=$('introOv');
+  if(!root.classList.contains('intro')){if(ov)ov.parentNode.removeChild(ov);return;}
+  var done=false,elapsed=(performance.now()-(window.__introT0||0))/1000,EV=['click','keydown','wheel','touchstart'];
+  function finish(){
+    if(done)return;done=true;
+    root.classList.remove('intro');            /* everything jumps to its final state */
+    if(ov&&ov.parentNode)ov.parentNode.removeChild(ov);
+    EV.forEach(function(e){window.removeEventListener(e,finish,true);});
+    window.removeEventListener('scroll',finish);window.removeEventListener('hashchange',finish);
+  }
+  setTimeout(function(){if(ov)ov.style.pointerEvents='none';},Math.max(0,3.8-elapsed)*1000);
+  setTimeout(finish,Math.max(0,5.8-elapsed)*1000);
+  EV.forEach(function(e){window.addEventListener(e,finish,{capture:true,passive:true});});
+  window.addEventListener('scroll',finish,{passive:true});window.addEventListener('hashchange',finish);
+}
+
 /* ================= START ================= */
 $('hdrSeason').textContent=META.season;
 $('hdrUpd').textContent=' · UPDATED '+String(META.updated).toUpperCase();
@@ -897,6 +971,7 @@ $('ftrDate').textContent='DATA THROUGH '+String(META.updated).toUpperCase();
 buildHome();
 if(D.length)wireSearch($('homeQ'),$('homeDD'),6,openPlayer);
 route();
+runIntro();
 })();
 </script>
 </body>
