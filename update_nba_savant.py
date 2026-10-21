@@ -36,13 +36,16 @@ import sys
 import tempfile
 import time
 import unicodedata
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # ───────────────────────── Settings you can change ─────────────────────────
 MIN_GP_FRACTION = 0.25    # player must have played MORE than this share of games so far
-MIN_LEAGUE_GAMES = 3      # don't publish until at least this many games have been played
-MIN_PLAYERS = 100         # sanity check: a healthy pull has far more than this
+MIN_LEAGUE_GAMES = 1      # don't publish until at least this many games have been played
+MIN_PLAYERS = 20          # sanity check (opening night only has a few teams' players)
 MIN_SHOT_SUCCESS = 0.8    # at least this share of shot chart downloads must work
+MOVER_WINDOW_DAYS = 14    # Rising/Falling compares today with this many days ago
+MOVER_MIN_GAMES_THEN = 4  # the "then" snapshot needs this many games, else compare with last season
+MOVER_MIN_MINUTES = 15    # Rising/Falling only lists rotation players (minutes per game)
 # ──────────────────────────────────────────────────────────────────────────
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -64,6 +67,19 @@ ADV_COLS = [
 ]
 
 LG_BINS = 36  # shot distance bins, 1 foot each, last bin = 35 ft and beyond
+
+# Stats used for Rising/Falling: (data key, label, higher is better, qualifier)
+MOVER_STATS = [
+    ('PTS_PG', 'PTS', True, None), ('TRB_PG', 'REB', True, None), ('AST_PG', 'AST', True, None),
+    ('STL_PG', 'STL', True, None), ('BLK_PG', 'BLK', True, None), ('FG%', 'FG%', True, 'shoot'),
+    ('3P%', '3P%', True, 'three'), ('FT%', 'FT%', True, 'ft'), ('TOV_PG', 'TOV', False, None),
+]
+# Must match Q in template.html so percentiles agree with the player pages.
+QUALIFIERS = {
+    'shoot': lambda p: (p.get('FGA_PG') or 0) >= 3,
+    'three': lambda p: (p.get('3PA_PG') or 0) >= 1.5,
+    'ft': lambda p: (p.get('FTA_PG') or 0) >= 1,
+}
 
 
 # ───────────────────────── Small helpers ─────────────────────────
@@ -118,7 +134,8 @@ def dist_bin(x, y):
 
 # ───────────────────────── NBA.com pulls (replaced in tests) ─────────────────────────
 
-def fetch_player_stats(season, advanced=False):
+def fetch_player_stats(season, advanced=False, date_to=None):
+    """date_to (a date) returns the stats as they stood at the end of that day."""
     from nba_api.stats.endpoints import leaguedashplayerstats
     label = 'advanced stats' if advanced else 'basic stats'
 
@@ -127,6 +144,8 @@ def fetch_player_stats(season, advanced=False):
                   season_type_all_star='Regular Season', timeout=t)
         if advanced:
             kw['measure_type_detailed_defense'] = 'Advanced'
+        if date_to is not None:
+            kw['date_to_nullable'] = date_to.strftime('%m/%d/%Y')
         return leaguedashplayerstats.LeagueDashPlayerStats(**kw).get_data_frames()[0]
 
     return with_retries(call, label)
@@ -168,6 +187,9 @@ def build_players(df_basic, df_adv):
             'Team': str(rec.get('TEAM_ABBREVIATION') or ''),
             'G': gp,
         }
+        tid = num(rec.get('TEAM_ID'), 0)
+        if tid:
+            p['tid'] = tid
         age = num(rec.get('AGE'), 0)
         if age is not None:
             p['Age'] = age
@@ -189,6 +211,88 @@ def pick_eligible(players):
     eligible = [p for p in players if p['G'] > cutoff]
     min_needed = int(math.floor(cutoff)) + 1
     return eligible, games_so_far, min_needed
+
+
+def previous_season(season):
+    start = int(season[:4]) - 1
+    return '%d-%s' % (start, str(start + 1)[2:])
+
+
+def fmt_date(d):
+    return '%s %d, %d' % (d.strftime('%b'), d.day, d.year)
+
+
+def percentiles(pool, key, higher, qual):
+    """Percentile (1-99) for each player, same formula as the web page."""
+    vals = [(p['nba_id'], p[key]) for p in pool
+            if p.get(key) is not None and (qual is None or qual(p))]
+    nums = [v for _, v in vals]
+    n = len(nums)
+    out = {}
+    for pid, v in vals:
+        below = sum(1 for x in nums if (x < v if higher else x > v))
+        same = sum(1 for x in nums if x == v)
+        out[pid] = max(1, min(99, int(math.floor((below + same / 2.0) / n * 100 + 0.5))))
+    return out
+
+
+def compute_movers(now_pool, then_pool, limit=8):
+    """Each player's single biggest percentile jump (and drop) between two snapshots."""
+    best_up, best_down = {}, {}
+    for key, label, higher, qname in MOVER_STATS:
+        qual = QUALIFIERS.get(qname)
+        then_p = percentiles(then_pool, key, higher, qual)
+        now_p = percentiles(now_pool, key, higher, qual)
+        for p in now_pool:
+            pid = p['nba_id']
+            if pid not in then_p or pid not in now_p:
+                continue
+            if (p.get('MP_PG') or 0) < MOVER_MIN_MINUTES:
+                continue
+            d = now_p[pid] - then_p[pid]
+            rec = {'id': pid, 'n': p['Player'], 't': p['Team'], 's': label,
+                   'from': then_p[pid], 'to': now_p[pid], 'd': d}
+            if d > 0 and (pid not in best_up or d > best_up[pid]['d']):
+                best_up[pid] = rec
+            if d < 0 and (pid not in best_down or d < best_down[pid]['d']):
+                best_down[pid] = rec
+    rising = sorted(best_up.values(), key=lambda r: (-r['d'], r['n']))[:limit]
+    falling = sorted(best_down.values(), key=lambda r: (r['d'], r['n']))[:limit]
+    return rising, falling
+
+
+def build_movers(season, now_pool, today):
+    """Rising/Falling without saved history.
+
+    NBA.com can return stats "as of" any past date, so we rebuild what the
+    percentiles were 14 days ago. Early in the season (when 14 days ago is
+    before enough games were played) we compare with last season instead.
+    """
+    then_date = today - timedelta(days=MOVER_WINDOW_DAYS)
+    then_pool, then_games = [], 0
+    try:
+        df = fetch_player_stats(season, date_to=then_date)
+        if df is not None and len(df):
+            then_pool, then_games, _ = pick_eligible(build_players(df, None))
+    except Exception:  # noqa: BLE001
+        then_pool = []
+    if then_pool and then_games >= MOVER_MIN_GAMES_THEN:
+        mode, since = 'window', fmt_date(then_date)
+    else:
+        prev = previous_season(season)
+        try:
+            df = fetch_player_stats(prev)
+        except Exception:  # noqa: BLE001
+            return None
+        if df is None or not len(df):
+            return None
+        then_pool = pick_eligible(build_players(df, None))[0]
+        mode, since = 'lastseason', prev
+    rising, falling = compute_movers(now_pool, then_pool)
+    if not rising and not falling:
+        return None
+    return {'mode': mode, 'days': MOVER_WINDOW_DAYS, 'since': since,
+            'rising': rising, 'falling': falling}
 
 
 def league_curve(shot_data):
@@ -313,7 +417,7 @@ def main(argv):
     print()
 
     # 1. Basic stats
-    print('[1/4] Pulling per-game stats from NBA.com...')
+    print('[1/5] Pulling per-game stats from NBA.com...')
     try:
         df_basic = fetch_player_stats(season)
     except Exception:  # noqa: BLE001
@@ -345,7 +449,7 @@ def main(argv):
 
     # 2. Advanced stats
     time.sleep(3)
-    print('[2/4] Pulling advanced stats from NBA.com...')
+    print('[2/5] Pulling advanced stats from NBA.com...')
     try:
         df_adv = fetch_player_stats(season, advanced=True)
     except Exception:  # noqa: BLE001
@@ -353,18 +457,30 @@ def main(argv):
         return 1
 
     # 3. Merge and filter
-    print('[3/4] Building player database...')
+    print('[3/5] Building player database...')
     players_all = build_players(df_basic, df_adv)
     eligible, games_so_far, min_needed = pick_eligible(players_all)
     eligible.sort(key=lambda p: p['Player'])
     print('       %d players on the site.' % len(eligible))
 
-    # 4. Shot charts
+    # 4. Rising / Falling
+    today = datetime.now().date()
+    if season != current_season():   # an old season: measure from its final weeks
+        today = min(today, datetime(int(season[:4]) + 1, 4, 14).date())
+    print('[4/5] Working out who is rising and falling...')
+    movers = build_movers(season, eligible, today)
+    if movers:
+        print('       Compared with %s.' % ('last season' if movers['mode'] == 'lastseason'
+                                           else movers['since']))
+    else:
+        print('       Skipped (not enough data yet). The site will hide that section.')
+
+    # 5. Shot charts
     shot_data, lg = {}, None
     if skip_shots:
-        print('[4/4] Skipping shot charts (noshots).')
+        print('[5/5] Skipping shot charts (noshots).')
     else:
-        print('[4/4] Pulling shot charts (this is the slow part, 10 to 20 minutes)...')
+        print('[5/5] Pulling shot charts (this is the slow part, 10 to 20 minutes)...')
         shot_data, failed = download_shots(eligible, season)
         print('       Shot charts for %d players (%d failed)' % (len(shot_data), failed))
         if len(shot_data) < len(eligible) * MIN_SHOT_SUCCESS:
@@ -382,6 +498,7 @@ def main(argv):
         'minGP': min_needed,
         'pct': int(MIN_GP_FRACTION * 100),
         'lg': lg,
+        'movers': movers,
     }
 
     with open(os.path.join(HERE, 'template.html'), 'r', encoding='utf-8') as f:

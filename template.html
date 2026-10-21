@@ -6,225 +6,436 @@
 <title>NBA Savant | Player Percentile Rankings</title>
 <meta name="description" content="Free NBA player percentile rankings, shot charts, and side by side comparisons for the __SEASON_PLACEHOLDER__ season.">
 <meta property="og:title" content="NBA Savant | Player Percentile Rankings">
-<meta property="og:description" content="Free NBA percentile rankings, shot charts, and player comparisons for the __SEASON_PLACEHOLDER__ season.">
+<meta property="og:description" content="Every stat. Every player. Ranked. Free NBA percentile rankings for the __SEASON_PLACEHOLDER__ season.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%232d8bc9'/><circle cx='50' cy='50' r='22' stroke='%23f0c430' stroke-width='3' fill='none'/><line x1='50' y1='28' x2='50' y2='72' stroke='%23f0c430' stroke-width='2'/><line x1='28' y1='50' x2='72' y2='50' stroke='%23f0c430' stroke-width='2'/></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='14' fill='%230b1530'/><path d='M22 20h56v52L50 86 22 72z' fill='%231d428a'/><rect x='22' y='28' width='56' height='6' fill='%23fff'/><rect x='22' y='38' width='56' height='2' fill='%23fff'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
 <style>
+:root{
+  --navy:#0b1530;--blue:#1d428a;--red:#c8102e;--surface:#eef1f7;--tint:#f1f4fa;
+  --rule:#e4e8ef;--rule2:#d5dae4;--t2:#3a4357;--t3:#5b6478;--t4:#8a93a6;
+  --rise:#1f8a4c;--fall:#c2341f;--court:rgba(11,21,48,.16);
+  --grad:linear-gradient(90deg,hsl(0 88% 47%),hsl(60 88% 47%),hsl(120 88% 47%));
+}
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--blue:#2d8bc9;--gold:#f0c430;--tx:#111;--tx2:#555;--tx3:#767c85;--bdr:#e5e7eb;--bg2:#f8f9fb}
-body{font-family:'Inter',system-ui,sans-serif;background:#fff;min-height:100vh;color:var(--tx);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
-button{font-family:inherit}
-.hdr{background:var(--blue);padding:10px 28px;display:flex;align-items:center;justify-content:space-between}
-.hdr-logo{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none}
-.hdr-logo svg{width:32px;height:32px}
-.hdr-logo-t{font-weight:700;font-size:1.1em;color:#fff;letter-spacing:1px}
-.hdr-logo-t b{color:var(--gold)}
-.hdr-r{font-size:.7em;font-weight:600;color:rgba(255,255,255,.7);letter-spacing:1.5px;text-transform:uppercase}
-.search-wrap{max-width:760px;margin:28px auto 0;padding:0 24px}
-.search-box{position:relative}
-.search-box input{width:100%;padding:14px 16px 14px 44px;font-size:.92em;font-family:inherit;background:#fff;border:1px solid var(--bdr);border-radius:10px;color:var(--tx);transition:border .15s}
-.search-box input::placeholder{color:#aaa}
-.search-box input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(45,139,201,.1)}
-.s-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#aaa;pointer-events:none}
-.sug{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--bdr);border-radius:10px;max-height:380px;overflow-y:auto;z-index:1000;display:none;box-shadow:0 12px 40px rgba(0,0,0,.08)}
-.sug-i{padding:10px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:background .1s}
-.sug-i+.sug-i{border-top:1px solid #f5f5f5}
-.sug-i:hover,.sug-i.act{background:#f7f9fc}
-.sug-hs{width:34px;height:34px;border-radius:50%;object-fit:cover;object-position:top;background:#eee;flex-shrink:0}
-.sug-n{font-weight:600;font-size:.88em}
-.sug-m{font-size:.75em;color:var(--tx3);margin-left:auto}
-.sug-none{padding:14px 16px;font-size:.85em;color:var(--tx3)}
-.cmp-bar-area{max-width:760px;margin:10px auto 0;padding:0 24px;display:flex;align-items:center;gap:10px}
-.cmp-btn{padding:7px 16px;border:1px solid var(--bdr);border-radius:8px;background:#fff;font:500 .82em/1 'Inter',sans-serif;color:var(--blue);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
-.cmp-btn:hover{background:var(--bg2);border-color:var(--blue)}
-.cmp-btn svg{width:16px;height:16px}
-.wrap{max-width:760px;margin:0 auto;padding:0 24px 60px}
+html{background:#fff}
+body{font-family:Archivo,system-ui,sans-serif;color:var(--navy);background:#fff;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;line-height:1.25}
+button,input{font-family:inherit;color:inherit}
+button{background:none;border:none;cursor:pointer}
+a{color:inherit;text-decoration:none}
+[hidden]{display:none!important}
+.app{max-width:1440px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+main{flex:1}
+.ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* ---------- Compare modal ---------- */
-.cmp-modal{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.4);align-items:flex-start;justify-content:center;padding:32px 12px;overflow-y:auto}
+/* ---------- shared bits ---------- */
+.av{position:relative;border-radius:50%;background:var(--rule);overflow:hidden;flex:none;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:10px;color:var(--t3)}
+.av img{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:100%}
+.bb{border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+.eyebrow{font-weight:600;font-size:12px;letter-spacing:.08em;color:var(--red);text-transform:uppercase}
+.sec-t{font-weight:900;font-size:28px;font-stretch:70%;text-transform:uppercase;line-height:1}
+.link{font-weight:600;font-size:14px;color:var(--blue);transition:color .15s}
+.link:hover{color:var(--navy)}
+.srch{height:54px;display:flex;align-items:center;gap:12px;padding:0 16px;background:#fff;border:2px solid var(--navy);border-radius:4px;box-shadow:4px 4px 0 var(--navy)}
+.mag{width:13px;height:13px;border:2px solid var(--navy);border-radius:50%;flex:none}
+.srch input{flex:1;min-width:0;background:transparent;border:none;outline:none;font-weight:500;font-size:17px}
+.srch input::placeholder{color:var(--navy);opacity:.55}
+.dd{position:absolute;left:0;right:0;background:#fff;border:2px solid var(--navy);border-radius:4px;z-index:30;display:none;max-height:380px;overflow-y:auto}
+.dd-i{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .15s}
+.dd-i:last-child{border-bottom:none}
+.dd-i:hover,.dd-i.act{background:var(--surface)}
+.dd-n{flex:1;font-weight:600;font-size:14px}
+.dd-t{font-weight:500;font-size:11px;color:var(--t3)}
+.dd-none{padding:12px;font-size:13px;color:var(--t3);line-height:1.4}
+.btn{height:50px;display:flex;align-items:center;justify-content:center;background:var(--navy);color:#fff;border-radius:4px;font-weight:700;font-size:15px;white-space:nowrap;box-shadow:4px 4px 0 var(--red);transition:background .15s}
+.btn:hover{background:var(--blue)}
+.lgnd{display:flex;flex-direction:column;gap:8px}
+.lgnd-t{font-weight:600;font-size:10px;letter-spacing:.08em;color:var(--t3)}
+.lgnd-bar{height:8px;border-radius:4px;background:var(--grad)}
+.lgnd-l{display:flex;justify-content:space-between;font-weight:500;font-size:10px;color:var(--t3)}
+
+/* ---------- header ---------- */
+.hdr{position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 44px;height:60px;border-bottom:3px solid var(--navy)}
+.hdr-l{display:flex;align-items:center;gap:36px}
+.wm{font-weight:900;font-size:25px;font-stretch:75%;text-transform:uppercase;white-space:nowrap}
+.wm span{color:var(--blue)}
+.nav{display:flex;gap:26px;font-weight:600;font-size:14px;color:var(--t3)}
+.nav a{transition:color .15s}
+.nav a:hover{color:var(--blue)}
+.nav a.on{color:var(--navy)}
+.hdr-r{display:flex;align-items:center;gap:14px;font-weight:500;font-size:12px;color:var(--t3);text-transform:uppercase;white-space:nowrap}
+.menu-btn{display:none;font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;border:1.5px solid var(--navy);border-radius:3px;padding:0 12px;min-height:36px}
+
+/* ---------- hero ---------- */
+.hero{display:grid;grid-template-columns:minmax(360px,1fr) minmax(0,1000px);border-bottom:3px solid var(--navy)}
+.hero-l{padding:36px 32px 32px 44px;display:flex;flex-direction:column;gap:22px;border-right:3px solid var(--navy)}
+.hero-h{font-weight:900;font-size:60px;line-height:.9;font-stretch:66%;text-transform:uppercase;letter-spacing:-.01em}
+.hero-p{font-size:16px;line-height:1.45;color:var(--t2);text-wrap:pretty}
+.srch-wrap{position:relative;display:flex;flex-direction:column;gap:10px}
+.srch-wrap .dd{top:62px}
+.hero .lgnd{margin-top:auto;padding-top:16px;border-top:1px solid var(--navy)}
+
+.stage{position:relative;height:540px;overflow:hidden;background:var(--surface)}
+.court{position:absolute;left:50%;bottom:0;width:1000px;height:540px;transform:translateX(-50%);pointer-events:none}
+.court-m{display:none}
+.rafter{position:absolute;left:0;right:0;top:0;height:3px;background:var(--navy)}
+.banners{position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px;padding:0 28px}
+.bn{display:flex;flex-direction:column;cursor:pointer;transition:transform .15s ease;container-type:inline-size;min-width:0}
+.bn:hover{transform:translateY(4px)}
+.bn-wire{height:18px;margin:0 22%;border-left:2px solid var(--navy);border-right:2px solid var(--navy)}
+.bn-body{color:#fff;clip-path:polygon(0 0,100% 0,100% 100%,50% 90%,0 100%);display:flex;flex-direction:column;padding-bottom:34px}
+.bn-s1{height:5px;background:#fff;margin-top:10px}
+.bn-s2{height:2px;background:#fff;margin-top:3px}
+.bn-cat{padding:14px 8px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center}
+.bn-lab{font-weight:800;font-size:16px;line-height:1;font-stretch:72%;letter-spacing:.08em;text-transform:uppercase}
+.bn-lab-s{display:none}
+.bn-note{font-weight:500;font-size:9px;line-height:1;letter-spacing:.06em;opacity:.85;white-space:nowrap}
+.bn-v{padding:0 6px;font-weight:900;font-size:min(66px,46cqi);line-height:.95;font-stretch:62%;letter-spacing:-.01em;text-align:center;white-space:nowrap}
+.bn-ph{position:relative;height:112px;margin-top:8px;overflow:hidden;border-top:1px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:rgba(255,255,255,.5)}
+.bn-ph .lg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);height:120%;opacity:.2}
+.bn-ph .ini{position:relative}
+.bn-ph .hs{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:100%}
+.bn-name{background:#fff;color:var(--navy);padding:8px 10px 9px;display:flex;align-items:center;gap:8px;min-width:0}
+.bn-name img{width:24px;height:24px;flex:none}
+.bn-nmw{min-width:0;display:flex;flex-direction:column;gap:1px}
+.bn-nm{font-weight:800;font-size:14px;font-stretch:78%;text-transform:uppercase}
+.bn-tm{font-weight:500;font-size:10px;color:var(--t3)}
+@container (max-width:112px){.bn-lab-f{display:none}.bn-lab-s{display:block}.bn-cat{padding-left:4px;padding-right:4px}}
+.stage-cap{position:absolute;right:20px;bottom:14px;font-weight:600;font-size:10px;color:var(--t4);letter-spacing:.08em}
+
+/* ---------- movers ---------- */
+.movers{display:grid;grid-template-columns:minmax(0,1fr) 340px 340px;border-bottom:3px solid var(--navy)}
+.lead{padding:28px 40px 32px 44px;display:flex;flex-direction:column;gap:18px;border-right:1px solid var(--rule2)}
+.lead-eb{font-weight:600;font-size:11px;letter-spacing:.1em;color:var(--red)}
+.lead-h{font-weight:800;font-size:52px;line-height:.95;font-stretch:70%;letter-spacing:-.01em;text-wrap:balance;cursor:pointer}
+.lead-h-s{display:none}
+.lead-g{display:grid;grid-template-columns:220px minmax(0,1fr);gap:28px;align-items:end}
+.lead-ph{position:relative;height:164px;background:var(--surface);border:1px solid var(--navy);overflow:hidden;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:30px;color:var(--t4);cursor:pointer}
+.lead-ph img{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:100%}
+.lead-r{display:flex;flex-direction:column;gap:14px;padding-bottom:4px;min-width:0}
+.lead-meta{display:flex;justify-content:space-between;gap:10px;font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.track{position:relative;height:40px;margin:0 18px}
+.track-bar{position:absolute;left:-18px;right:-18px;top:16px;height:8px;border-radius:4px;background:var(--grad)}
+.track-dash{position:absolute;top:20px;height:0;border-top:2px dashed var(--navy)}
+.b-from{position:absolute;top:6px;transform:translateX(-50%);width:28px;height:28px;border:2px solid #fff;opacity:.6;font-weight:600;font-size:12px}
+.b-to{position:absolute;top:2px;transform:translateX(-50%);width:36px;height:36px;border:2px solid var(--navy);font-weight:700;font-size:14px}
+.lead-copy{font-size:17px;line-height:1.4;color:var(--t2);text-wrap:pretty}
+.mv-col{padding:28px 24px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.mv-col.rise{border-right:1px solid var(--rule2)}
+.mv-col.fall{padding-right:44px}
+.mv-hd{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--navy);padding-bottom:6px}
+.mv-t{font-weight:600;font-size:26px}
+.rise .mv-t{color:var(--rise)}.fall .mv-t{color:var(--fall)}
+.mv-m{font-weight:500;font-size:10px;color:var(--t3);text-transform:uppercase}
+.mv-row{display:grid;grid-template-columns:minmax(0,1fr) 22px 26px 34px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .15s}
+.mv-row:hover{background:var(--surface)}
+.mv-n{font-weight:600;font-size:16px}
+.mv-s{font-weight:500;font-size:10px;color:var(--t3)}
+.bb.f{width:22px;height:22px;opacity:.55;font-weight:600;font-size:10px}
+.bb.t{width:26px;height:26px;font-weight:600;font-size:11px}
+.mv-d{font-weight:600;font-size:13px;text-align:right}
+.mv-d.up{color:var(--rise)}.mv-d.dn{color:var(--fall)}
+.mv-mob{display:none}
+.mv-empty{font-size:13px;color:var(--t3);padding:10px 0;line-height:1.4}
+
+/* ---------- rotation board ---------- */
+.rb{padding:26px 44px 36px;display:flex;flex-direction:column;gap:12px}
+.rb-hd{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.rb-grid{display:grid;grid-template-columns:40px repeat(6,minmax(0,1fr))}
+.rb-head{border-bottom:3px solid var(--navy);padding-bottom:6px}
+.rb-rkh{font-weight:600;font-size:10px;color:var(--t3)}
+.rb-ch{padding-left:12px;display:flex;flex-direction:column;min-width:0}
+.rb-cl{font-weight:800;font-size:16px;font-stretch:72%;text-transform:uppercase}
+.rb-cn{font-weight:500;font-size:9px;color:var(--t3)}
+.rb-row{border-bottom:1px solid var(--rule)}
+.rb-row.top{background:var(--tint)}
+.rk{font-weight:900;font-size:26px;font-stretch:66%;color:var(--t4);display:flex;align-items:center}
+.top .rk,.rk.one{color:var(--red)}
+.rb-c{display:flex;align-items:center;gap:8px;padding:9px 8px 9px 12px;border-left:1px solid var(--rule);cursor:pointer;min-width:0;transition:background .15s}
+.rb-c:hover{background:var(--surface)}
+.rb-who{min-width:0;flex:1}
+.rb-nm{font-weight:700;font-size:13px}
+.rb-tm{font-weight:500;font-size:10px;color:var(--t3)}
+.rb-v{font-weight:600;font-size:15px}
+.rb-m{display:none}
+.rb-m-l{display:none}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{min-height:44px;padding:0 12px;border-radius:3px;font-weight:700;font-size:13px;font-stretch:75%;border:1.5px solid var(--navy);transition:background .15s}
+.chip.on{background:var(--blue);color:#fff}
+.lrow{display:grid;grid-template-columns:22px 34px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .15s}
+.lrow:hover{background:var(--surface)}
+.lrow .rk{font-size:20px}
+.lrow-n{font-weight:700;font-size:15px}
+.lrow-t{font-weight:500;font-size:11px;color:var(--t3)}
+.lrow-v{font-weight:600;font-size:17px}
+
+/* ---------- footer ---------- */
+.ftr{padding:14px 44px;background:var(--navy);color:#bdb4a4;display:flex;justify-content:space-between;gap:12px;font-weight:500;font-size:12px;text-transform:uppercase}
+
+/* ---------- inner pages ---------- */
+.page{padding:28px 44px 48px}
+.page-top{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;padding-bottom:16px;border-bottom:3px solid var(--navy);margin-bottom:24px}
+.page-top .sub{font-size:14px;color:var(--t3);margin-top:8px;line-height:1.4}
+.mini-srch{position:relative;width:min(420px,100%)}
+.mini-srch .srch{height:46px;box-shadow:3px 3px 0 var(--navy)}
+.mini-srch .srch input{font-size:15px}
+.mini-srch .dd{top:54px}
+.lb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:28px 32px}
+.lb-card{display:flex;flex-direction:column;min-width:0}
+.lb-hd{border-bottom:3px solid var(--navy);padding-bottom:6px;margin-bottom:2px}
+.lb-l{font-weight:800;font-size:20px;font-stretch:72%;text-transform:uppercase}
+.lb-n{font-weight:500;font-size:10px;color:var(--t3);text-transform:uppercase;min-height:12px}
+.pl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:24px 28px}
+.tm-hd{display:flex;align-items:center;gap:10px;border-bottom:3px solid var(--navy);padding:0 0 6px 10px;border-left:6px solid var(--navy)}
+.tm-hd img{width:28px;height:28px}
+.tm-n{font-weight:800;font-size:18px;font-stretch:72%;text-transform:uppercase}
+.pl-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .15s}
+.pl-row:hover{background:var(--surface)}
+.pl-n{font-weight:700;font-size:14px}
+.pl-s{font-weight:500;font-size:11px;color:var(--t3);white-space:nowrap}
+.empty{padding:60px 0;text-align:center;color:var(--t3);font-size:15px;line-height:1.6}
+
+/* ---------- player page ---------- */
+.p-hdr{display:grid;grid-template-columns:200px minmax(0,1fr) auto;gap:28px;align-items:end;padding-bottom:22px;border-bottom:3px solid var(--navy)}
+.p-ph{position:relative;height:150px;border:1px solid var(--navy);overflow:hidden;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:34px;color:rgba(255,255,255,.55)}
+.p-ph .lg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);height:120%;opacity:.2}
+.p-ph .ini{position:relative}
+.p-ph .hs{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:100%}
+.p-name{font-weight:900;font-size:58px;line-height:.9;font-stretch:66%;text-transform:uppercase;letter-spacing:-.01em;margin-top:8px}
+.p-team{font-weight:700;font-size:15px;margin-top:10px}
+.p-meta{font-weight:500;font-size:12px;color:var(--t3);margin-top:4px;text-transform:uppercase;letter-spacing:.06em}
+.p-logo{width:96px;height:96px;object-fit:contain}
+.p-sec{padding:24px 0;border-bottom:3px solid var(--navy)}
+.p-sec-hd{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.p-sec-hd .sec-t{font-size:24px}
+.p-sec-hd .note{font-size:12px;color:var(--t3)}
+.st-wrap{overflow-x:auto}
+.st{width:100%;border-collapse:collapse;min-width:620px}
+.st th{font-weight:600;font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;padding:6px;text-align:center;border-bottom:2px solid var(--navy)}
+.st td{padding:9px 6px;text-align:center;font-weight:600;font-size:15px;border-bottom:1px solid var(--rule)}
+.st .lbl{text-align:left;font-weight:700;font-size:11px;color:var(--t3);white-space:nowrap}
+.st td.elite{background:rgba(31,138,76,.12);color:var(--rise);font-weight:800}
+.scale{display:flex;align-items:center;gap:12px;font-weight:600;font-size:10px;letter-spacing:.08em;color:var(--t3)}
+.scale .lgnd-bar{width:120px}
+.cat{margin-bottom:22px}
+.cat:last-child{margin-bottom:0}
+.cat-h{font-weight:800;font-size:16px;font-stretch:72%;letter-spacing:.06em;text-transform:uppercase;padding-bottom:6px;border-bottom:2px solid var(--navy)}
+.sr{display:grid;grid-template-columns:170px minmax(0,1fr) 64px;align-items:center;gap:18px;padding:8px 0;border-bottom:1px solid var(--rule)}
+.sr-lbl{font-weight:600;font-size:14px;color:var(--navy);position:relative;cursor:help}
+.sr-lbl .sub{display:block;font-weight:500;font-size:10px;color:var(--t3);margin-top:2px;text-transform:uppercase;letter-spacing:.04em}
+.sr-lbl .tt{display:none;position:absolute;bottom:calc(100% + 8px);left:0;background:var(--navy);color:#fff;padding:10px 12px;border-radius:4px;font-weight:400;font-size:12px;width:250px;line-height:1.45;z-index:40;box-shadow:3px 3px 0 var(--red)}
+.sr-lbl:hover .tt{display:block}
+.sr-bar{position:relative;height:22px;margin-right:16px}
+.sr-trk{position:absolute;inset:0 -16px 0 0;background:var(--surface);border-radius:4px}
+.sr-fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px;transition:width .6s cubic-bezier(.22,1,.36,1)}
+.sr-circ{position:absolute;top:50%;width:32px;height:32px;transform:translate(-50%,-50%);border:2px solid #fff;box-shadow:0 0 0 1.5px var(--navy);font-weight:700;font-size:12px;transition:left .6s cubic-bezier(.22,1,.36,1);z-index:2}
+.sr-na{font-size:12px;color:var(--t3);font-style:italic}
+.sr-val{font-weight:600;font-size:16px;text-align:right}
+.sc-court{display:flex;justify-content:center}
+.sc-court canvas{width:100%;max-width:560px;height:auto;border:1px solid var(--navy);display:block}
+.sc-leg{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 10px;margin-top:12px;font-size:12px;color:var(--t2);font-weight:500}
+.sc-leg .lgnd-bar{width:120px}
+.sc-sz{color:var(--t3);width:100%;text-align:center;font-size:11px}
+.p-foot{padding-top:16px;font-size:12px;color:var(--t3);line-height:1.6}
+
+/* ---------- compare modal ---------- */
+.cmp-modal{display:none;position:fixed;inset:0;z-index:2000;background:rgba(11,21,48,.55);align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto}
 .cmp-modal.open{display:flex}
-.cmp-panel{background:#fff;border-radius:16px;max-width:920px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.15)}
-.cmp-top{padding:18px 24px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
-.cmp-top h2{font-size:1.1em;font-weight:700}
-.cmp-close{width:32px;height:32px;border-radius:50%;border:none;background:var(--bg2);cursor:pointer;font-size:1.2em;display:flex;align-items:center;justify-content:center;color:var(--tx2)}
-.cmp-close:hover{background:#eee}
-.cmp-sr{padding:16px 24px;display:flex;gap:12px}
+.cmp-panel{background:#fff;border:3px solid var(--navy);border-radius:4px;max-width:960px;width:100%;box-shadow:8px 8px 0 var(--red)}
+.cmp-top{padding:16px 24px;border-bottom:3px solid var(--navy);display:flex;align-items:center;justify-content:space-between}
+.cmp-x{width:44px;height:44px;border:2px solid var(--navy);border-radius:4px;font-size:22px;line-height:1;transition:background .15s}
+.cmp-x:hover{background:var(--surface)}
+.cmp-sr{padding:18px 24px;display:flex;gap:16px}
 .cmp-sr .cs{flex:1;position:relative}
-.cmp-sr input{width:100%;padding:10px 14px;font:.88em 'Inter',sans-serif;border:1px solid var(--bdr);border-radius:8px}
-.cmp-sr input:focus{outline:none;border-color:var(--blue)}
-.cdd{position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:1px solid var(--bdr);border-radius:8px;max-height:240px;overflow-y:auto;z-index:10;display:none;box-shadow:0 8px 24px rgba(0,0,0,.1)}
-.cdd .sug-i{padding:8px 12px;gap:8px}
-.cdd .sug-hs{width:28px;height:28px}
-.cdd .sug-n{font-size:.82em}
-.cmp-body{padding:0 20px 24px;--vw:48px;--lw:112px}
-.cmp-empty{text-align:center;padding:48px 16px;color:var(--tx3);font-size:.9em}
-.cmp-heads{display:grid;grid-template-columns:1fr 1fr;margin-bottom:6px}
-.cmp-ph{text-align:center;padding:16px 8px 14px;border-bottom:1px solid var(--bdr)}
-.cmp-ph img{width:76px;height:76px;border-radius:50%;object-fit:cover;object-position:top;margin:0 auto 8px;display:block;background:#eee;border:3px solid #ddd}
-.cmp-ph .cn{font-size:1em;font-weight:700}
-.cmp-ph .ct{font-size:.75em;font-weight:600;margin-top:2px}
-.cmp-ph .cm{font-size:.7em;color:var(--tx3);margin-top:1px}
-.cx-cat{padding:16px 0 6px;font-size:.68em;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--blue);text-align:center;border-bottom:2px solid var(--bdr)}
-.cx-row{display:grid;grid-template-columns:var(--vw) minmax(0,1fr) var(--lw) minmax(0,1fr) var(--vw);align-items:center;padding:6px 0;border-bottom:1px solid #f3f4f6}
-.cx-v{font-size:.84em;font-weight:700;color:var(--tx3);white-space:nowrap}
-.cx-v.w{color:var(--tx)}
+.cmp-sr .srch{height:46px;box-shadow:3px 3px 0 var(--navy)}
+.cmp-sr .srch input{font-size:15px}
+.cmp-sr .dd{top:54px}
+.cmp-body{padding:0 24px 28px;--vw:52px;--lw:118px}
+.cmp-empty{text-align:center;padding:48px 16px;color:var(--t3);font-size:15px}
+.cmp-heads{display:grid;grid-template-columns:1fr 1fr;border-bottom:3px solid var(--navy)}
+.cmp-ph{display:flex;flex-direction:column;align-items:center;text-align:center;padding:14px 8px 16px;cursor:pointer}
+.cmp-ph .av{width:84px;height:84px;margin-bottom:8px;font-size:18px}
+.cmp-ph .cn{font-weight:900;font-size:26px;font-stretch:66%;text-transform:uppercase;line-height:1}
+.cmp-ph .ct{font-weight:700;font-size:12px;margin-top:4px}
+.cmp-ph .cm{font-weight:500;font-size:11px;color:var(--t3);margin-top:2px;text-transform:uppercase}
+.cx-cat{padding:18px 0 6px;font-weight:800;font-size:15px;font-stretch:72%;letter-spacing:.08em;text-transform:uppercase;text-align:center;border-bottom:2px solid var(--navy)}
+.cx-row{display:grid;grid-template-columns:var(--vw) minmax(0,1fr) var(--lw) minmax(0,1fr) var(--vw);align-items:center;padding:6px 0;border-bottom:1px solid var(--rule)}
+.cx-v{font-weight:600;font-size:15px;color:var(--t4);white-space:nowrap}
+.cx-v.w{color:var(--navy);font-weight:800}
 .cx-v:first-child{text-align:left}
 .cx-v:last-child{text-align:right}
-.cx-t{position:relative;height:22px}
-.cx-t.L{margin-left:14px}
-.cx-t.R{margin-right:14px}
-.cx-bg{position:absolute;inset:0;background:#eef1f5;border-radius:4px}
+.cx-t{position:relative;height:20px}
+.cx-t.L{margin-left:15px}.cx-t.R{margin-right:15px}
+.cx-bg{position:absolute;inset:0;background:var(--surface);border-radius:4px}
 .cx-f{position:absolute;top:0;bottom:0;border-radius:4px;transition:width .5s ease}
-.cx-t.L .cx-f{right:0}
-.cx-t.R .cx-f{left:0}
-.cx-b{position:absolute;top:50%;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.64em;font-weight:700;color:#fff;transform:translate(-50%,-50%);box-shadow:0 1px 4px rgba(0,0,0,.25);text-shadow:0 1px 3px rgba(0,0,0,.45);z-index:2}
-.cx-m{text-align:center;padding:0 6px;line-height:1.2}
-.cx-n{font-size:.74em;font-weight:600;color:var(--tx2)}
-.cx-s{font-size:.58em;color:var(--tx3);margin-top:1px}
-.cx-a{font-size:.6em;font-weight:800;color:var(--blue);margin-top:2px;min-height:1em}
-.cx-a.eq{color:#aaa}
+.cx-t.L .cx-f{right:0}.cx-t.R .cx-f{left:0}
+.cx-b{position:absolute;top:50%;width:28px;height:28px;transform:translate(-50%,-50%);border:2px solid #fff;box-shadow:0 0 0 1.5px var(--navy);font-weight:700;font-size:11px;z-index:2}
+.cx-m{text-align:center;padding:0 6px;line-height:1.15}
+.cx-n{font-weight:600;font-size:13px}
+.cx-s{font-weight:500;font-size:9px;color:var(--t3);text-transform:uppercase;margin-top:1px}
+.cx-a{font-weight:800;font-size:11px;color:var(--blue);margin-top:2px;min-height:1em}
+.cx-a.eq{color:var(--t4)}
 
-/* ---------- Home ---------- */
-#homePage{max-width:960px;margin:0 auto;padding:0 24px 60px}
-.hero{padding:44px 0 12px;text-align:center}
-.hero h1{font-size:2em;font-weight:800;letter-spacing:-.03em;line-height:1.15}
-.hero h1 b{color:var(--blue)}
-.hero p{color:var(--tx3);font-size:.9em;margin-top:8px;max-width:520px;margin-left:auto;margin-right:auto;line-height:1.5}
-.hero .hero-meta{font-size:.78em;margin-top:6px}
-.section-hd{display:flex;align-items:baseline;gap:8px;margin:28px 0 12px}
-.section-hd h2{font-size:1.05em;font-weight:700}
-.section-hd .badge{font-size:.6em;font-weight:700;background:var(--blue);color:#fff;padding:3px 8px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase}
-.lb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
-.lb-card{border:1px solid var(--bdr);border-radius:12px;overflow:hidden;transition:box-shadow .15s}
-.lb-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.06)}
-.lb-hd{font-size:.7em;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--blue);padding:14px 16px 2px;display:flex;align-items:center;gap:6px}
-.lb-hd .lb-icon{font-size:1.2em}
-.lb-note{font-size:.62em;color:var(--tx3);padding:0 16px 6px;min-height:1.6em}
-.lb-row{display:flex;align-items:center;gap:8px;padding:6px 16px;cursor:pointer;transition:background .1s}
-.lb-row:hover{background:#f7f9fc}
-.lb-rk{font-size:.72em;font-weight:700;color:var(--tx3);width:16px;text-align:center;flex-shrink:0}
-.lb-rk.g{color:#d4a017;font-weight:800}
-.lb-hs{width:30px;height:30px;border-radius:50%;object-fit:cover;object-position:top;background:#eee;flex-shrink:0}
-.lb-tm-logo{width:20px;height:20px;object-fit:contain;flex-shrink:0}
-.lb-inf{flex:1;min-width:0}
-.lb-nm{font-size:.8em;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lb-tm{font-size:.65em;color:var(--tx3);font-weight:500}
-.lb-v{font-size:.85em;font-weight:700;flex-shrink:0}
-.lb-d{height:1px;background:#f3f4f6;margin:0 16px}
-.lb-card .lb-row:last-child{padding-bottom:12px}
-.empty-msg{text-align:center;padding:80px 20px;color:var(--tx3);font-size:.95em;line-height:1.6}
-
-/* ---------- Player card ---------- */
-.card{display:none;border:1px solid var(--bdr);border-radius:14px;overflow:hidden;background:#fff}
-.p-hdr{position:relative;overflow:hidden}
-.p-hdr-bg{position:absolute;inset:0;opacity:.1;pointer-events:none}
-.p-hdr-in{position:relative;display:flex;align-items:center;padding:24px 28px;gap:20px;z-index:1}
-.p-hs{width:88px;height:88px;border-radius:50%;object-fit:cover;object-position:top;background:var(--bg2);display:block;flex-shrink:0}
-.p-hs.logo-fb{object-fit:contain;padding:12px}
-.p-inf{flex:1;min-width:0}
-.p-name{font-size:1.55em;font-weight:700;line-height:1.15;letter-spacing:-.02em;color:#111}
-.p-tn{font-size:.85em;font-weight:600;margin-top:3px}
-.p-meta{font-size:.76em;font-weight:400;color:var(--tx3);margin-top:2px}
-.p-tl{flex-shrink:0;max-height:88px;max-width:88px;object-fit:contain}
-.st-wrap{padding:20px 28px;border-bottom:1px solid var(--bdr)}
-.st-title{font-size:.65em;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-.st{width:100%;border-collapse:collapse;font-size:.78em}
-.st th{font-weight:600;color:var(--tx3);font-size:.8em;text-transform:uppercase;letter-spacing:.3px;padding:4px 6px;text-align:center;border-bottom:1px solid var(--bdr)}
-.st td{padding:6px;text-align:center;font-weight:600}
-.st .lbl{text-align:left;font-weight:700;color:var(--tx3);font-size:.85em;width:56px;white-space:nowrap}
-.st td.elite{background:rgba(57,255,20,.14);color:#0d6e0d;font-weight:700;border-radius:4px}
-.pct-hdr{padding:24px 28px 0;display:flex;align-items:baseline;flex-wrap:wrap;gap:6px}
-.pct-yr{font-weight:700;font-size:.95em;color:var(--blue)}
-.pct-t{font-weight:600;font-size:.95em}
-.pct-sub{font-weight:400;font-size:.78em;color:var(--tx3);margin-left:4px}
-.pct-body{padding:8px 28px 32px}
-.scale{display:flex;align-items:center;justify-content:flex-end;padding:8px 0 18px;gap:24px}
-.sc-l{font-size:.65em;font-weight:700;letter-spacing:1px;text-transform:uppercase}
-.sc-l.bad{color:#e53e3e}.sc-l.ok{color:#999}.sc-l.good{color:#16a34a}
-.sc-dot{color:#ddd;font-size:.4em}
-.cat{margin-bottom:24px}
-.cat-h{display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:2px solid var(--bdr);margin-bottom:4px}
-.cat-icon{font-size:.85em}
-.cat-name{font-weight:700;font-size:.85em;letter-spacing:.3px}
-.sr{display:grid;grid-template-columns:145px 1fr 52px;align-items:center;padding:8px 0;gap:16px}
-.sr+.sr{border-top:1px solid #f0f1f3}
-.sr-lbl{font-size:.82em;font-weight:500;color:var(--tx2);text-align:left;cursor:help;position:relative;line-height:1.3}
-.sr-lbl .sub{display:block;font-size:.78em;font-weight:400;color:var(--tx3);margin-top:1px}
-.sr-lbl .tt{display:none;position:absolute;bottom:calc(100% + 8px);left:0;background:#1e293b;color:#f1f5f9;padding:10px 14px;border-radius:8px;font-size:.82em;font-weight:400;white-space:normal;width:260px;line-height:1.5;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.18);pointer-events:none}
-.sr-lbl .tt::after{content:'';position:absolute;top:100%;left:24px;border:6px solid transparent;border-top-color:#1e293b}
-.sr-lbl:hover .tt{display:block}
-.sr-bar{position:relative;height:26px;border-radius:5px;background:#eef1f5;overflow:visible}
-.sr-fill{position:absolute;left:0;top:0;bottom:0;border-radius:5px;transition:width .6s cubic-bezier(.22,1,.36,1)}
-.sr-circ{position:absolute;top:50%;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72em;font-weight:700;color:#fff;transform:translate(-50%,-50%);transition:left .6s cubic-bezier(.22,1,.36,1);z-index:3;box-shadow:0 1px 4px rgba(0,0,0,.2);text-shadow:0 1px 3px rgba(0,0,0,.4)}
-.sr-na{font-size:.76em;color:var(--tx3);font-style:italic}
-.sr-val{font-size:.92em;font-weight:700;text-align:right;color:var(--tx)}
-.card-ft{padding:14px 28px;border-top:1px solid var(--bdr);font-size:.68em;color:var(--tx3);text-align:center;line-height:1.6}
-
-/* ---------- Shot chart ---------- */
-.sc-sec{padding:24px 28px;border-top:1px solid var(--bdr)}
-.sc-hdr{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;margin-bottom:14px}
-.sc-hdr h3{font-size:.9em;font-weight:700}
-.sc-hdr span{font-size:.74em;color:var(--tx3)}
-.sc-court{display:flex;justify-content:center}
-.sc-court canvas{width:100%;max-width:528px;height:auto;border:1px solid var(--bdr);border-radius:10px;display:block}
-.sc-leg{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 10px;margin-top:12px;font-size:.72em;color:var(--tx2);font-weight:500}
-.sc-grad{width:120px;height:10px;border-radius:5px;background:linear-gradient(90deg,#ff0000,#ff8c00,#ffc800,#8cf000,#39ff14)}
-.sc-sz{color:var(--tx3);width:100%;text-align:center}
-
-@media(max-width:700px){
-.hdr{padding:10px 16px}
-.search-wrap,.cmp-bar-area{padding:0 16px}
-#homePage{padding:0 16px 48px}
-.wrap{padding:0 12px 48px}
-.p-hdr-in{padding:18px 16px;gap:12px}
-.p-hs{width:64px;height:64px}
-.p-hs.logo-fb{padding:8px}
-.p-tl{max-height:56px;max-width:56px}
-.p-name{font-size:1.2em}
-.st-wrap{padding:14px;overflow-x:auto}
-.pct-hdr{padding:18px 14px 0}
-.pct-body{padding:6px 14px 20px}
-.sr{grid-template-columns:105px 1fr 42px;gap:8px}
-.sr-lbl .tt{width:180px;font-size:.72em}
-.sr-circ{width:24px;height:24px;font-size:.6em}
-.sr-bar{height:22px}
-.lb-grid{grid-template-columns:1fr}
-.cmp-modal{padding:0}
-.cmp-panel{border-radius:0;min-height:100vh}
-.cmp-top{padding:14px 16px}
-.cmp-sr{flex-direction:column;padding:12px 16px}
-.cmp-body{padding:0 10px 24px;--vw:36px;--lw:78px}
-.cmp-ph img{width:56px;height:56px}
-.cmp-ph .cn{font-size:.88em}
-.cx-t{height:20px}
-.cx-t.L{margin-left:11px}
-.cx-t.R{margin-right:11px}
-.cx-b{width:22px;height:22px;font-size:.56em}
-.cx-v{font-size:.74em}
-.cx-m{padding:0 3px}
-.cx-n{font-size:.66em}
-.hero h1{font-size:1.5em}
-.sc-sec{padding:16px 14px}
-.card-ft{padding:14px}
+/* ---------- responsive ---------- */
+@media (max-width:1250px){
+  .banners{gap:10px;padding:0 16px}
+  .hero-h{font-size:52px}
+}
+@media (max-width:1100px){
+  .movers{grid-template-columns:1fr 1fr}
+  .lead{grid-column:1/-1;border-right:none;border-bottom:1px solid var(--rule2);padding:28px 44px}
+  .mv-col.rise{padding-left:44px}
+  .rb-nm{font-size:12px}.rb-v{font-size:14px}
+  .rb-c .av{display:none}
+}
+@media (max-width:900px){
+  .hdr{height:54px;padding:0 18px}
+  .wm{font-size:22px}
+  .nav{display:none;position:absolute;top:54px;right:0;left:0;background:#fff;border-bottom:3px solid var(--navy);flex-direction:column;gap:0;z-index:50}
+  .nav.open{display:flex}
+  .nav a{padding:0 18px;min-height:48px;display:flex;align-items:center;border-top:1px solid var(--rule);font-size:16px}
+  .menu-btn{display:block}
+  .upd{display:none}
+  .hero{grid-template-columns:1fr;border-bottom:none}
+  .hero-l{padding:20px 18px 16px;gap:12px;border-right:none}
+  .hero-l>.eyebrow,.hero-p,.hero .lgnd{display:none}
+  .hero-h{font-size:38px}
+  .srch{height:48px;box-shadow:3px 3px 0 var(--navy);padding:0 14px}
+  .srch input{font-size:16px}
+  .srch-wrap .dd{top:56px}
+  .btn{height:46px;box-shadow:3px 3px 0 var(--red)}
+  .stage{height:auto;border-top:3px solid var(--navy);border-bottom:3px solid var(--navy)}
+  .court{display:none}
+  .court-m{display:block;position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .banners{display:flex;gap:10px;overflow-x:auto;padding:0 18px 16px;scrollbar-width:none}
+  .banners::-webkit-scrollbar{display:none}
+  .bn{flex:none;width:128px}
+  .bn:hover{transform:none}
+  .bn-wire{height:14px}
+  .bn-body{padding-bottom:22px}
+  .bn-s1{height:4px;margin-top:8px}
+  .bn-s2,.bn-note,.bn-tm,.stage-cap,.bn-lab-f{display:none}
+  .bn-lab-s{display:block;font-size:12px}
+  .bn-cat{padding:10px 10px 0}
+  .bn-v{font-size:42px;padding:0 10px}
+  .bn-ph{height:72px;margin-top:6px;font-size:16px}
+  .bn-name{padding:6px 8px;gap:5px}
+  .bn-name img{width:16px;height:16px}
+  .bn-nm{font-size:11px}
+  .movers{grid-template-columns:1fr;border-bottom:1px solid var(--navy)}
+  .lead{padding:18px;gap:12px;border-bottom:none}
+  .lead-eb{font-size:10px}
+  .lead-h{font-size:32px}
+  .lead-h-f,.lead-ph,.lead-meta,.lead-copy,.mv-col{display:none}
+  .lead-g{display:block}
+  .track{height:36px}
+  .track-bar{top:14px}
+  .track-dash{top:18px}
+  .b-from{top:5px;width:26px;height:26px;font-size:11px}
+  .b-to{top:1px;width:32px;height:32px;font-size:13px}
+  .lead-h-s{display:block}
+  .mv-mob{display:flex;flex-direction:column;gap:2px;padding-top:4px}
+  .mv-mob .mv-row{padding:5px 0;min-height:44px}
+  .mv-mob .mv-n{font-size:15px}
+  .rb{padding:18px 18px 26px;gap:10px}
+  .rb-hd .sec-t{font-size:22px}
+  .rb-hd{border-bottom:3px solid var(--navy);padding-bottom:6px}
+  .rb-full-l,.rb-grid{display:none}
+  .rb-m-l{display:inline}
+  .rb-m{display:flex;flex-direction:column;gap:10px}
+  .ftr{padding:14px 18px;font-size:11px;flex-direction:column;gap:4px}
+  .page{padding:18px 18px 36px}
+  .p-hdr{grid-template-columns:120px minmax(0,1fr);gap:16px}
+  .p-ph{height:96px}
+  .p-logo{display:none}
+  .p-name{font-size:36px}
+  .sr{grid-template-columns:104px minmax(0,1fr) 46px;gap:10px}
+  .sr-lbl{font-size:13px}
+  .sr-circ{width:28px;height:28px;font-size:11px}
+  .sr-val{font-size:14px}
+  .sr-lbl .tt{width:200px}
+  .cmp-modal{padding:0}
+  .cmp-panel{border:none;border-radius:0;min-height:100vh;box-shadow:none}
+  .cmp-top{padding:12px 16px}
+  .cmp-sr{flex-direction:column;padding:14px 16px;gap:14px}
+  .cmp-body{padding:0 10px 24px;--vw:38px;--lw:80px}
+  .cmp-ph .av{width:60px;height:60px}
+  .cmp-ph .cn{font-size:20px}
+  .cx-t{height:18px}
+  .cx-t.L{margin-left:12px}.cx-t.R{margin-right:12px}
+  .cx-b{width:24px;height:24px;font-size:10px}
+  .cx-v{font-size:12px}
+  .cx-n{font-size:11px}
+  .cx-m{padding:0 3px}
 }
 </style>
 </head>
 <body>
-<header class="hdr"><a class="hdr-logo" id="logoLink" href="#"><svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="18" cy="18" r="16" fill="#f0c430"/><circle cx="18" cy="18" r="16" stroke="#e6b520" stroke-width="0.5"/><path d="M18 2C18 2 18 34 18 34" stroke="#c4740e" stroke-width="1.2" opacity=".35"/><path d="M3.5 13.5C10 13.5 26 13.5 32.5 13.5" stroke="#c4740e" stroke-width="1.2" opacity=".35"/><path d="M3.5 22.5C10 22.5 26 22.5 32.5 22.5" stroke="#c4740e" stroke-width="1.2" opacity=".35"/><path d="M5 7C10 12 10 24 5 29" stroke="#c4740e" stroke-width="1.2" opacity=".35"/><path d="M31 7C26 12 26 24 31 29" stroke="#c4740e" stroke-width="1.2" opacity=".35"/><rect x="7" y="10" width="22" height="16" rx="2" fill="rgba(0,0,0,.55)"/><text x="18" y="21.5" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="9.5" fill="#fff" letter-spacing="0.3">NBA</text></svg><div class="hdr-logo-t"><b>NBA</b> SAVANT</div></a><div class="hdr-r">__SEASON_PLACEHOLDER__ Season</div></header>
-<div class="search-wrap"><div class="search-box"><svg class="s-icon" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="text" id="playerSearch" placeholder="Search for a player..." autocomplete="off"><div class="sug" id="suggestions"></div></div></div>
-<div class="cmp-bar-area"><button class="cmp-btn" id="openCmp" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M8 3H3v5M21 3l-7 7M3 3l7 7M16 21h5v-5M8 21H3v-5M21 21l-7-7M3 21l7-7"/></svg>Compare Players</button><span style="flex:1"></span><span id="playerCount" style="font-size:.72em;color:var(--tx3);font-weight:500"></span></div>
-<div class="cmp-modal" id="cmpModal"><div class="cmp-panel"><div class="cmp-top"><h2>Compare Players</h2><button class="cmp-close" id="closeCmp" type="button" aria-label="Close">&times;</button></div><div class="cmp-sr"><div class="cs"><input id="cA" placeholder="Player 1..." autocomplete="off"><div class="cdd" id="ddA"></div></div><div class="cs"><input id="cB" placeholder="Player 2..." autocomplete="off"><div class="cdd" id="ddB"></div></div></div><div class="cmp-body" id="cmpBody"><div class="cmp-empty">Search two players to compare side by side.</div></div></div></div>
-<div id="homePage"></div>
-<div class="wrap" id="playerPage" style="display:none"><div class="card" id="playerCard">
-<div class="p-hdr" id="pHdr"><div class="p-hdr-bg" id="pHdrBg"></div><div class="p-hdr-in"><img class="p-hs" id="pHs" src="" alt=""><div class="p-inf"><div class="p-name" id="pName"></div><div class="p-tn" id="pTeam"></div><div class="p-meta" id="pMeta"></div></div><img class="p-tl" id="pTL" src="" alt=""></div></div>
-<div class="st-wrap" id="statsArea"></div>
-<div class="pct-hdr"><span class="pct-yr">__SEASON_PLACEHOLDER__</span><span class="pct-t">Percentile Rankings</span><span class="pct-sub">among qualified players</span></div>
-<div class="pct-body"><div class="scale"><span class="sc-l bad">Poor</span><span class="sc-dot">&#9679;</span><span class="sc-l ok">Average</span><span class="sc-dot">&#9679;</span><span class="sc-l good">Great</span></div><div id="pctContent"></div></div>
-<div class="sc-sec" id="scSec" style="display:none"><div class="sc-hdr"><h3>Shot Chart</h3><span id="scInfo"></span></div><div id="scBox"></div></div>
-<div class="card-ft" id="cardFt"></div>
-</div></div>
+<div class="app">
+<header class="hdr">
+  <div class="hdr-l">
+    <a class="wm" href="#/">NBA <span>Savant</span></a>
+    <nav class="nav" id="nav"><a href="#/" data-nav="home">Home</a><a href="#/leaders" data-nav="leaders">Leaderboards</a><a href="#/players" data-nav="players">Players</a><a href="#/compare" data-nav="compare" id="navCmp">Compare</a></nav>
+  </div>
+  <div class="hdr-r"><span><span id="hdrSeason"></span><span class="upd" id="hdrUpd"></span></span><button class="menu-btn" id="menuBtn" type="button" aria-expanded="false">Menu</button></div>
+</header>
+
+<main id="vHome">
+  <section class="hero">
+    <div class="hero-l">
+      <div class="eyebrow" id="heroEb"></div>
+      <h1 class="hero-h">Every stat. Every player. Ranked.</h1>
+      <p class="hero-p" id="heroP"></p>
+      <div class="srch-wrap">
+        <label class="srch"><span class="mag"></span><input id="homeQ" placeholder="Search a player…" autocomplete="off" aria-label="Search a player"></label>
+        <div class="dd" id="homeDD"></div>
+        <button class="btn" type="button" data-cmp>⇄ Compare Players</button>
+      </div>
+      <div class="lgnd"><div class="lgnd-t">READING THE BUBBLES</div><div class="lgnd-bar"></div><div class="lgnd-l"><div>1st</div><div>50th</div><div>99th</div></div></div>
+    </div>
+    <div class="stage">
+      <svg class="court" viewBox="0 0 1000 540" aria-hidden="true"><defs><clipPath id="arcClip"><rect x="0" y="0" width="1000" height="262"/></clipPath></defs>
+        <path d="M341 540V161H659V540" fill="rgba(29,66,138,.07)" stroke="rgba(11,21,48,.16)" stroke-width="2"/>
+        <circle cx="500" cy="160" r="119" fill="none" stroke="rgba(11,21,48,.16)" stroke-width="2"/>
+        <circle cx="500" cy="435" r="474" fill="none" stroke="rgba(11,21,48,.16)" stroke-width="2" clip-path="url(#arcClip)"/>
+        <line x1="60" y1="260" x2="60" y2="540" stroke="rgba(11,21,48,.16)" stroke-width="2"/>
+        <line x1="940" y1="260" x2="940" y2="540" stroke="rgba(11,21,48,.16)" stroke-width="2"/>
+        <rect x="470" y="458" width="60" height="4" fill="rgba(11,21,48,.25)"/>
+        <circle cx="500" cy="478" r="16.5" fill="none" stroke="#c8102e" stroke-width="3" opacity=".7"/>
+      </svg>
+      <svg class="court-m" viewBox="0 0 390 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+        <path d="M116 300V181H258V300" fill="none" stroke="rgba(11,21,48,.16)" stroke-width="2"/>
+        <circle cx="187" cy="287" r="226" fill="none" stroke="rgba(11,21,48,.16)" stroke-width="2"/>
+      </svg>
+      <div class="rafter"></div>
+      <div class="banners" id="banners"></div>
+      <div class="stage-cap">CATEGORY LEADERS · PER GAME</div>
+    </div>
+  </section>
+  <section class="movers" id="movers"></section>
+  <section class="rb" id="rb"></section>
+</main>
+
+<main id="vLeaders" class="page" hidden></main>
+<main id="vPlayers" class="page" hidden></main>
+<main id="vPlayer" class="page" hidden></main>
+
+<footer class="ftr"><div>NBA SAVANT · PERCENTILES AMONG QUALIFIED PLAYERS</div><div id="ftrDate"></div></footer>
+</div>
+
+<div class="cmp-modal" id="cmpModal" role="dialog" aria-modal="true" aria-label="Compare players">
+  <div class="cmp-panel">
+    <div class="cmp-top"><h2 class="sec-t">⇄ Compare Players</h2><button class="cmp-x" id="cmpX" type="button" aria-label="Close">&times;</button></div>
+    <div class="cmp-sr">
+      <div class="cs"><label class="srch"><span class="mag"></span><input id="cA" placeholder="Player 1…" autocomplete="off"></label><div class="dd" id="ddA"></div></div>
+      <div class="cs"><label class="srch"><span class="mag"></span><input id="cB" placeholder="Player 2…" autocomplete="off"></label><div class="dd" id="ddB"></div></div>
+    </div>
+    <div class="cmp-body" id="cmpBody"><div class="cmp-empty">Search two players to compare side by side.</div></div>
+  </div>
+</div>
+
 <script>
 (function(){
 'use strict';
@@ -237,57 +448,48 @@ var META=__META_PLACEHOLDER__;
 /* ================= HELPERS ================= */
 var $=function(id){return document.getElementById(id);};
 var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
-var BLANK='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 var byId={};D.forEach(function(p){byId[p.nba_id]=p;});
 
-/* Team info: n=name, e=ESPN logo code, c=team color used for the header */
+/* Team info: n=name, id=NBA team id (for logos), c=primary color */
 var T={
-ATL:{n:'Atlanta Hawks',e:'atl',c:'#e03a3e'},BOS:{n:'Boston Celtics',e:'bos',c:'#007a33'},
-BKN:{n:'Brooklyn Nets',e:'bkn',c:'#222222'},CHA:{n:'Charlotte Hornets',e:'cha',c:'#1d1160'},
-CHI:{n:'Chicago Bulls',e:'chi',c:'#ce1141'},CLE:{n:'Cleveland Cavaliers',e:'cle',c:'#6f263d'},
-DAL:{n:'Dallas Mavericks',e:'dal',c:'#00538c'},DEN:{n:'Denver Nuggets',e:'den',c:'#0e2240'},
-DET:{n:'Detroit Pistons',e:'det',c:'#c8102e'},GSW:{n:'Golden State Warriors',e:'gs',c:'#1d428a'},
-HOU:{n:'Houston Rockets',e:'hou',c:'#ce1141'},IND:{n:'Indiana Pacers',e:'ind',c:'#002d62'},
-LAC:{n:'LA Clippers',e:'lac',c:'#c8102e'},LAL:{n:'Los Angeles Lakers',e:'lal',c:'#552583'},
-MEM:{n:'Memphis Grizzlies',e:'mem',c:'#5d76a9'},MIA:{n:'Miami Heat',e:'mia',c:'#98002e'},
-MIL:{n:'Milwaukee Bucks',e:'mil',c:'#00471b'},MIN:{n:'Minnesota Timberwolves',e:'min',c:'#0c2340'},
-NOP:{n:'New Orleans Pelicans',e:'no',c:'#0c2340'},NYK:{n:'New York Knicks',e:'ny',c:'#006bb6'},
-OKC:{n:'Oklahoma City Thunder',e:'okc',c:'#007ac1'},ORL:{n:'Orlando Magic',e:'orl',c:'#0077c0'},
-PHI:{n:'Philadelphia 76ers',e:'phi',c:'#006bb6'},PHX:{n:'Phoenix Suns',e:'phx',c:'#1d1160'},
-POR:{n:'Portland Trail Blazers',e:'por',c:'#e03a3e'},SAC:{n:'Sacramento Kings',e:'sac',c:'#5a2d81'},
-SAS:{n:'San Antonio Spurs',e:'sa',c:'#5f656b'},TOR:{n:'Toronto Raptors',e:'tor',c:'#ce1141'},
-UTA:{n:'Utah Jazz',e:'utah',c:'#002b5c'},WAS:{n:'Washington Wizards',e:'wsh',c:'#002b5c'}
+ATL:{n:'Atlanta Hawks',id:1610612737,c:'#e03a3e'},BOS:{n:'Boston Celtics',id:1610612738,c:'#007a33'},
+BKN:{n:'Brooklyn Nets',id:1610612751,c:'#000000'},CHA:{n:'Charlotte Hornets',id:1610612766,c:'#1d1160'},
+CHI:{n:'Chicago Bulls',id:1610612741,c:'#ce1141'},CLE:{n:'Cleveland Cavaliers',id:1610612739,c:'#860038'},
+DAL:{n:'Dallas Mavericks',id:1610612742,c:'#00538c'},DEN:{n:'Denver Nuggets',id:1610612743,c:'#0e2240'},
+DET:{n:'Detroit Pistons',id:1610612765,c:'#c8102e'},GSW:{n:'Golden State Warriors',id:1610612744,c:'#1d428a'},
+HOU:{n:'Houston Rockets',id:1610612745,c:'#ce1141'},IND:{n:'Indiana Pacers',id:1610612754,c:'#002d62'},
+LAC:{n:'LA Clippers',id:1610612746,c:'#c8102e'},LAL:{n:'Los Angeles Lakers',id:1610612747,c:'#552583'},
+MEM:{n:'Memphis Grizzlies',id:1610612763,c:'#5d76a9'},MIA:{n:'Miami Heat',id:1610612748,c:'#98002e'},
+MIL:{n:'Milwaukee Bucks',id:1610612749,c:'#00471b'},MIN:{n:'Minnesota Timberwolves',id:1610612750,c:'#0c2340'},
+NOP:{n:'New Orleans Pelicans',id:1610612740,c:'#0c2340'},NYK:{n:'New York Knicks',id:1610612752,c:'#006bb6'},
+OKC:{n:'Oklahoma City Thunder',id:1610612760,c:'#007ac1'},ORL:{n:'Orlando Magic',id:1610612753,c:'#0077c0'},
+PHI:{n:'Philadelphia 76ers',id:1610612755,c:'#006bb6'},PHX:{n:'Phoenix Suns',id:1610612756,c:'#1d1160'},
+POR:{n:'Portland Trail Blazers',id:1610612757,c:'#e03a3e'},SAC:{n:'Sacramento Kings',id:1610612758,c:'#5a2d81'},
+SAS:{n:'San Antonio Spurs',id:1610612759,c:'#1a1a1a'},TOR:{n:'Toronto Raptors',id:1610612761,c:'#ce1141'},
+UTA:{n:'Utah Jazz',id:1610612762,c:'#002b5c'},WAS:{n:'Washington Wizards',id:1610612764,c:'#002b5c'}
 };
-function teamOf(t){return T[t]||{n:t||'Unknown team',e:null,c:'#555555'};}
-function logoUrl(t){var o=T[t];return o&&o.e?'https://a.espncdn.com/i/teamlogos/nba/500/'+o.e+'.png':null;}
-function headUrl(id){return 'https://cdn.nba.com/headshots/nba/latest/1040x760/'+id+'.png';}
+function teamOf(t){return T[t]||{n:t||'Unknown team',id:null,c:'#1d428a'};}
+function logoUrl(p){var id=(p&&p.tid)||(T[p&&p.Team]||{}).id;return id?'https://cdn.nba.com/logos/nba/'+id+'/primary/L/logo.svg':'';}
+function logoT(t){var o=T[t];return o?'https://cdn.nba.com/logos/nba/'+o.id+'/primary/L/logo.svg':'';}
+function headSm(id){return 'https://cdn.nba.com/headshots/nba/latest/260x190/'+id+'.png';}
+function headLg(id){return 'https://cdn.nba.com/headshots/nba/latest/1040x760/'+id+'.png';}
+function ini(n){return String(n).split(' ').filter(Boolean).map(function(w){return w[0];}).slice(0,2).join('');}
+function shortName(n){var p=String(n).split(' ');return n.length>16&&p.length>1?p[0][0]+'. '+p.slice(1).join(' '):n;}
+function ord(n){var s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+function img(src,cls){return src?'<img class="'+(cls||'')+'" src="'+src+'" data-hide="1" alt="" loading="lazy">':'';}
+function av(p,size){return '<div class="av" style="width:'+size+'px;height:'+size+'px">'+esc(ini(p.Player))+img(headSm(p.nba_id))+'</div>';}
 
-/* One place handles every broken image on the page */
-document.addEventListener('error',function(e){
-  var t=e.target;if(!t||t.tagName!=='IMG')return;
-  var d=t.dataset;
-  if(d.logo){var u=d.logo;d.logo='';t.classList.add('logo-fb');t.src=u;return;}
-  if(d.hide){t.style.display='none';return;}
-  if(d.color){t.style.background=d.color;d.color='';t.src=BLANK;}
-},true);
+/* Any image that fails to load just disappears, leaving the initials behind it */
+document.addEventListener('error',function(e){var t=e.target;if(t&&t.tagName==='IMG'&&t.dataset.hide)t.style.display='none';},true);
 
-/* ================= COLORS ================= */
-function sL(c){return c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4);}
-function Ls(c){return c<=0.0031308?12.92*c:1.055*Math.pow(c,1/2.4)-0.055;}
-var STOPS=[{p:0,r:255,g:0,b:0},{p:15,r:255,g:60,b:0},{p:30,r:255,g:140,b:0},{p:45,r:255,g:200,b:0},{p:55,r:210,g:225,b:0},{p:70,r:140,g:240,b:0},{p:85,r:80,g:250,b:10},{p:100,r:57,g:255,b:20}];
-/* 0 (red) to 100 (green), blended in linear light so the middle doesn't look muddy */
-function scale(p){
-  p=Math.max(0,Math.min(100,p));
-  var a=STOPS[0],b=STOPS[STOPS.length-1];
-  for(var i=0;i<STOPS.length-1;i++){if(p>=STOPS[i].p&&p<=STOPS[i+1].p){a=STOPS[i];b=STOPS[i+1];break;}}
-  var t=(p-a.p)/(b.p-a.p||1);
-  function mix(x,y){return Math.round(Ls(sL(x/255)+(sL(y/255)-sL(x/255))*t)*255);}
-  return 'rgb('+mix(a.r,b.r)+','+mix(a.g,b.g)+','+mix(a.b,b.b)+')';
-}
-function grad(p){return 'linear-gradient(90deg,'+scale(Math.max(p-15,0))+','+scale(p)+')';}
+/* Percentile bubble colors: red (1st) to yellow to green (99th) */
+function pc(p){return 'hsl('+Math.round(Math.max(0,Math.min(100,p))*1.2)+' 88% 47%)';}
+function pf(p){return (p>=28&&p<=82)?'#0b1530':'#fff';}
+function bub(p,cls,extra){return '<div class="bb '+cls+'" style="background:'+pc(p)+';color:'+pf(p)+';'+(extra||'')+'">'+p+'</div>';}
 
 /* ================= STATS ================= */
-/* k=data key, n=label, d=tooltip, h=higher is better, f=format (pct / d2), q=who counts for this stat, qn=why not */
+/* k=data key, n=label, d=tooltip, h=higher is better, f=format, q=who counts for this stat.
+   Q must stay in sync with QUALIFIERS in update_nba_savant.py */
 var Q={
   shoot:function(p){return (p.FGA_PG||0)>=3;},
   three:function(p){return (p['3PA_PG']||0)>=1.5;},
@@ -295,7 +497,7 @@ var Q={
   tov:function(p){return (p.TOV_PG||0)>=0.5;}
 };
 var cats=[
-{name:'Offense',icon:'\u{1F3C0}',stats:[
+{name:'Offense',stats:[
  {k:'PTS_PG',n:'Points',d:'Average points per game.',h:1},
  {k:'AST_PG',n:'Assists',d:'Average assists per game.',h:1},
  {k:'FG%',n:'Field Goal %',d:'Share of field goal attempts that go in. Needs 3+ attempts per game.',f:'pct',h:1,q:Q.shoot},
@@ -303,17 +505,17 @@ var cats=[
  {k:'FT%',n:'Free Throw %',d:'Share of free throws that go in. Needs 1+ attempts per game.',f:'pct',h:1,q:Q.ft},
  {k:'TOV_PG',n:'Turnovers',d:'Average turnovers per game.',h:0,inv:1},
  {k:'AST_TO',n:'AST/TO Ratio',d:'Assists per turnover. Higher is better.',f:'d2',h:1,q:Q.tov}]},
-{name:'Rebounding',icon:'\u{1F4CA}',stats:[
+{name:'Rebounding',stats:[
  {k:'TRB_PG',n:'Total Rebounds',d:'Average total rebounds.',h:1},
  {k:'ORB_PG',n:'Off. Rebounds',d:'Average offensive rebounds.',h:1},
  {k:'DRB_PG',n:'Def. Rebounds',d:'Average defensive rebounds.',h:1}]},
-{name:'Defense',icon:'\u{1F6E1}',stats:[
+{name:'Defense',stats:[
  {k:'STL_PG',n:'Steals',d:'Average steals per game.',h:1},
  {k:'BLK_PG',n:'Blocks',d:'Average blocks per game.',h:1}]},
-{name:'Miscellaneous',icon:'\u{1F4CB}',stats:[
+{name:'Miscellaneous',stats:[
  {k:'MP_PG',n:'Minutes',d:'Average minutes per game.',h:1},
  {k:'PM',n:'Plus / Minus',d:'Average point difference while on the court.',h:1,sg:1}]},
-{name:'Advanced',icon:'\u{1F9E0}',stats:[
+{name:'Advanced',stats:[
  {k:'NET_RTG',n:'Net Rating',d:'Team point differential per 100 possessions while on the court.',h:1,sg:1},
  {k:'ORTG',n:'Off. Rating',d:'Team points scored per 100 possessions while on the court.',h:1},
  {k:'DRTG',n:'Def. Rating',d:'Team points allowed per 100 possessions while on the court.',h:0,inv:1},
@@ -332,16 +534,12 @@ function fmt(v,s){
   if(s&&s.sg&&n>0)out='+'+out;
   return out;
 }
-
-/* Percentile among players who qualify for that stat. Returns a number 1-99,
-   'na' if this player doesn't have enough attempts, or null if there is no value. */
 var poolCache={};
 function pool(s){
-  if(!poolCache[s.k]){
-    poolCache[s.k]=D.filter(function(p){return !s.q||s.q(p);}).map(function(p){return parseFloat(p[s.k]);}).filter(function(v){return !isNaN(v);});
-  }
+  if(!poolCache[s.k])poolCache[s.k]=D.filter(function(p){return !s.q||s.q(p);}).map(function(p){return parseFloat(p[s.k]);}).filter(function(v){return !isNaN(v);});
   return poolCache[s.k];
 }
+/* 1-99, 'na' if not enough attempts, null if no value. Same formula as the Python updater. */
 function pct(p,s){
   var n=parseFloat(p[s.k]);if(isNaN(n))return null;
   if(s.q&&!s.q(p))return 'na';
@@ -352,145 +550,222 @@ function pct(p,s){
 }
 function isNum(x){return typeof x==='number';}
 
-/* ================= HOME ================= */
+/* ================= LEADERBOARDS ================= */
+var min15=function(p){return (p.MP_PG||0)>=15;};
 var LB=[
-{n:'Points',k:'PTS_PG',ic:'\u{1F3C6}'},
-{n:'Assists',k:'AST_PG',ic:'\u{1F3AF}'},
-{n:'Rebounds',k:'TRB_PG',ic:'\u{1F4CA}'},
-{n:'Steals',k:'STL_PG',ic:'\u{1F6E1}'},
-{n:'Blocks',k:'BLK_PG',ic:'\u{1F6AB}'},
-{n:'3-Point %',k:'3P%',ic:'\u{1F3AF}',q:function(p){return (p['3PA_PG']||0)>=3;},note:'Min. 3 three point attempts per game'},
-{n:'Field Goal %',k:'FG%',ic:'\u{1F3C0}',q:function(p){return (p.FGA_PG||0)>=8;},note:'Min. 8 field goal attempts per game'},
-{n:'True Shooting %',k:'TS%',ic:'⚡',q:function(p){return (p.FGA_PG||0)>=8;},note:'Min. 8 field goal attempts per game'},
-{n:'Net Rating',k:'NET_RTG',ic:'\u{1F4C8}',q:function(p){return (p.MP_PG||0)>=15;},note:'Min. 15 minutes per game'},
-{n:'Plus / Minus',k:'PM',ic:'➕',q:function(p){return (p.MP_PG||0)>=15;},note:'Min. 15 minutes per game'},
-{n:'Usage Rate',k:'USG%',ic:'\u{1F525}',q:function(p){return (p.MP_PG||0)>=15;},note:'Min. 15 minutes per game'},
-{n:'Assist %',k:'AST%',ic:'\u{1F91D}',q:function(p){return (p.MP_PG||0)>=15;},note:'Min. 15 minutes per game'}
+{n:'Points',sh:'PTS',k:'PTS_PG',note:'Per game'},
+{n:'Rebounds',sh:'REB',k:'TRB_PG',note:'Per game'},
+{n:'Assists',sh:'AST',k:'AST_PG',note:'Per game'},
+{n:'Steals',sh:'STL',k:'STL_PG',note:'Per game'},
+{n:'Blocks',sh:'BLK',k:'BLK_PG',note:'Per game'},
+{n:'3-Point %',sh:'3P%',k:'3P%',q:function(p){return (p['3PA_PG']||0)>=3;},note:'Min 3 3PA/G'},
+{n:'Field Goal %',sh:'FG%',k:'FG%',q:function(p){return (p.FGA_PG||0)>=8;},note:'Min 8 FGA/G'},
+{n:'True Shooting %',sh:'TS%',k:'TS%',q:function(p){return (p.FGA_PG||0)>=8;},note:'Min 8 FGA/G'},
+{n:'Net Rating',sh:'NET',k:'NET_RTG',q:min15,note:'Min 15 MPG'},
+{n:'Plus / Minus',sh:'+/-',k:'PM',q:min15,note:'Min 15 MPG'},
+{n:'Usage Rate',sh:'USG%',k:'USG%',q:min15,note:'Min 15 MPG'},
+{n:'Assist %',sh:'AST%',k:'AST%',q:min15,note:'Min 15 MPG'}
 ];
-
+var HOME_CATS=LB.slice(0,6);
+var lbCache={};
+function leaders(lb,count){
+  var key=lb.k+'|'+count;
+  if(!lbCache[key])lbCache[key]=D.filter(function(p){return (!lb.q||lb.q(p))&&!isNaN(parseFloat(p[lb.k]));})
+    .sort(function(a,b){return parseFloat(b[lb.k])-parseFloat(a[lb.k])||a.Player.localeCompare(b.Player);}).slice(0,count);
+  return lbCache[key];
+}
+function lbVal(lb,p){return fmt(p[lb.k],S[lb.k]||{});}
 function qualLine(){
-  return 'Qualified = more than '+META.pct+'% of the '+META.gamesSoFar+' games played so far (at least '+META.minGP+' games).';
+  var g=function(n){return n+(n===1?' game':' games');};
+  return 'Qualified = more than '+META.pct+'% of the '+g(META.gamesSoFar)+' played so far (at least '+g(META.minGP)+').';
 }
 
-function buildHome(){
-  if(!D.length){
-    $('homePage').innerHTML='<div class="empty-msg"><b>No player data yet.</b><br>Check back once the '+esc(META.season)+' season is under way.</div>';
-    return;
-  }
-  var h='<div class="hero"><h1>Player Percentile<br>Rankings on <b>NBA Savant</b></h1><p>Explore every stat for every qualified player in the '+esc(META.season)+' NBA season.</p><p class="hero-meta">Updated '+esc(META.updated)+'. '+qualLine()+'</p></div>';
-  h+='<div class="section-hd"><h2>Leaderboards</h2><div class="badge">'+esc(META.season)+'</div></div><div class="lb-grid">';
-  LB.forEach(function(lb){
-    var s=S[lb.k]||{};
-    var rows=D.filter(function(p){return (!lb.q||lb.q(p))&&!isNaN(parseFloat(p[lb.k]));})
-      .sort(function(a,b){return parseFloat(b[lb.k])-parseFloat(a[lb.k]);}).slice(0,5);
-    h+='<div class="lb-card"><div class="lb-hd"><span class="lb-icon">'+lb.ic+'</span>'+lb.n+'</div><div class="lb-note">'+(lb.note||'')+'</div>';
-    rows.forEach(function(p,i){
-      var info=teamOf(p.Team),lg=logoUrl(p.Team);
-      if(i)h+='<div class="lb-d"></div>';
-      h+='<div class="lb-row" data-id="'+p.nba_id+'"><span class="lb-rk'+(i===0?' g':'')+'">'+(i+1)+'</span>'
-        +'<img class="lb-hs" loading="lazy" src="'+headUrl(p.nba_id)+'" data-color="'+info.c+'" alt="">'
-        +(lg?'<img class="lb-tm-logo" loading="lazy" src="'+lg+'" data-hide="1" alt="">':'')
-        +'<div class="lb-inf"><div class="lb-nm">'+esc(p.Player)+'</div><div class="lb-tm">'+esc(p.Team)+'</div></div>'
-        +'<span class="lb-v">'+fmt(p[lb.k],s)+'</span></div>';
-    });
-    h+='</div>';
-  });
-  h+='</div>';
-  $('homePage').innerHTML=h;
-}
-
-/* ================= NAVIGATION ================= */
-function setHash(v){try{history.replaceState(null,'',v||location.pathname+location.search);}catch(e){}}
-function goHome(){
-  $('homePage').style.display='';$('playerPage').style.display='none';$('playerCard').style.display='none';
-  $('playerSearch').value='';document.title='NBA Savant | Player Percentile Rankings';setHash('');
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-$('logoLink').addEventListener('click',function(e){e.preventDefault();goHome();});
-$('homePage').addEventListener('click',function(e){var r=e.target.closest('[data-id]');if(r)showPlayer(byId[r.dataset.id]);});
-
-/* ================= SEARCH ================= */
+/* ================= SEARCH (shared) ================= */
 function norm(s){return String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();}
 function find(term,limit){
   var t=norm(term);if(!t)return [];
-  return D.map(function(p){return {p:p,i:norm(p.Player).indexOf(t)};})
-    .filter(function(x){return x.i>=0;})
-    .sort(function(a,b){return a.i-b.i||a.p.Player.localeCompare(b.p.Player);})
-    .slice(0,limit).map(function(x){return x.p;});
+  return D.map(function(p){return {p:p,i:norm(p.Player).indexOf(t)};}).filter(function(x){return x.i>=0;})
+    .sort(function(a,b){return a.i-b.i||a.p.Player.localeCompare(b.p.Player);}).slice(0,limit).map(function(x){return x.p;});
 }
-function sugHtml(list,meta){
-  if(!list.length)return '<div class="sug-none">No qualified player found. Players need more than '+META.pct+'% of games played.</div>';
-  return list.map(function(p){
-    return '<div class="sug-i" data-id="'+p.nba_id+'"><img class="sug-hs" src="'+headUrl(p.nba_id)+'" data-color="'+teamOf(p.Team).c+'" alt=""><span class="sug-n">'+esc(p.Player)+'</span>'+(meta?'<span class="sug-m">'+esc(p.Team)+' · '+p.G+'G</span>':'')+'</div>';
+function wireSearch(input,dd,limit,onPick){
+  var act=-1;
+  function render(){
+    var v=input.value;
+    if(!v.trim()){dd.style.display='none';return;}
+    var list=find(v,limit);act=-1;
+    dd.innerHTML=list.length?list.map(function(p){
+      return '<div class="dd-i" data-id="'+p.nba_id+'">'+av(p,28)+'<div class="dd-n ell">'+esc(p.Player)+'</div><div class="dd-t">'+esc(p.Team)+'</div></div>';
+    }).join(''):'<div class="dd-none">No qualified player found. Players need more than '+META.pct+'% of games played.</div>';
+    dd.style.display='block';
+  }
+  function hilite(){[].forEach.call(dd.querySelectorAll('.dd-i'),function(el,i){el.classList.toggle('act',i===act);});}
+  input.addEventListener('input',render);
+  input.addEventListener('focus',function(){if(input.value.trim())render();});
+  input.addEventListener('keydown',function(e){
+    var items=dd.querySelectorAll('.dd-i');
+    if(e.key==='ArrowDown'&&items.length){act=Math.min(items.length-1,act+1);hilite();e.preventDefault();}
+    else if(e.key==='ArrowUp'&&items.length){act=Math.max(0,act-1);hilite();e.preventDefault();}
+    else if(e.key==='Enter'){var el=items[act>=0?act:0];if(el){dd.style.display='none';onPick(byId[el.dataset.id]);}}
+    else if(e.key==='Escape'){dd.style.display='none';}
+  });
+  dd.addEventListener('click',function(e){var r=e.target.closest('[data-id]');if(r){dd.style.display='none';onPick(byId[r.dataset.id]);}});
+  document.addEventListener('click',function(e){if(!e.target.closest('.srch')&&!dd.contains(e.target))dd.style.display='none';});
+}
+function openPlayer(p){if(p)go('#p'+p.nba_id);}
+
+/* ================= HOME ================= */
+function buildBanners(){
+  $('banners').innerHTML=HOME_CATS.map(function(lb,i){
+    var p=leaders(lb,1)[0];if(!p)return '';
+    var bg=teamOf(p.Team).c,lg=logoUrl(p);
+    return '<div class="bn" data-id="'+p.nba_id+'" title="'+esc(p.Player+' leads in '+lb.n)+'">'
+      +'<div class="bn-wire"></div><div class="bn-body" style="background:'+bg+'">'
+      +'<div class="bn-s1"></div><div class="bn-s2"></div>'
+      +'<div class="bn-cat"><div class="bn-lab bn-lab-f">'+lb.n+'</div><div class="bn-lab bn-lab-s">'+lb.sh+'</div><div class="bn-note">'+lb.note.toUpperCase()+'</div></div>'
+      +'<div class="bn-v">'+lbVal(lb,p)+'</div>'
+      +'<div class="bn-ph">'+img(lg,'lg')+'<span class="ini">'+esc(ini(p.Player))+'</span>'+img(headSm(p.nba_id),'hs')+'</div>'
+      +'<div class="bn-name">'+img(lg)+'<div class="bn-nmw"><div class="bn-nm ell">'+esc(shortName(p.Player))+'</div><div class="bn-tm">'+esc(p.Team)+'</div></div></div>'
+      +'</div></div>';
   }).join('');
 }
-var sI=$('playerSearch'),sS=$('suggestions');
-sI.addEventListener('input',function(){
-  if(!this.value.trim()){sS.style.display='none';return;}
-  sS.innerHTML=sugHtml(find(this.value,10),true);sS.style.display='block';
-});
-sI.addEventListener('keydown',function(e){
-  if(e.key==='Enter'){var f=sS.querySelector('.sug-i');if(f)showPlayer(byId[f.dataset.id]);}
-  if(e.key==='Escape'){sS.style.display='none';}
-});
-sS.addEventListener('click',function(e){var r=e.target.closest('[data-id]');if(r)showPlayer(byId[r.dataset.id]);});
-document.addEventListener('click',function(e){
-  if(!e.target.closest('.search-box'))sS.style.display='none';
-  if(!e.target.closest('.cs'))document.querySelectorAll('.cdd').forEach(function(d){d.style.display='none';});
-});
+var GROUP={PTS:'scorers',REB:'rebounders',AST:'passers',STL:'defenders',BLK:'rim protectors','FG%':'shooters','3P%':'shooters','FT%':'shooters',TOV:'ball handlers'};
+function moverRow(m){
+  var d=m.to-m.from;
+  return '<div class="mv-row" data-id="'+m.id+'"><div style="min-width:0"><div class="mv-n ell">'+esc(m.n)+'</div><div class="mv-s">'+esc(m.t)+' · '+esc(m.s)+'</div></div>'
+    +bub(m.from,'f')+bub(m.to,'t')+'<div class="mv-d '+(d>0?'up':'dn')+'">'+(d>0?'+':'')+d+'</div></div>';
+}
+function buildMovers(){
+  var M=META.movers,el=$('movers');
+  if(!M||!M.rising||!M.rising.length){el.hidden=true;return;}
+  var L=M.rising[0],d=L.to-L.from,last=M.mode==='lastseason';
+  var span=last?'VS LAST SEASON':'LAST '+M.days+' DAYS';
+  var colMeta=last?'Δ PCTL · VS '+esc(M.since):'Δ PCTL · '+M.days+' DAYS';
+  var grp=GROUP[L.s]||'players';
+  var copy=last
+    ?'Last season he sat in the '+ord(L.from)+' percentile among qualified '+grp+'. He’s now in the '+ord(L.to)+', the biggest jump from last season in any category.'
+    :(M.days===14?'Two weeks ago':M.days+' days ago')+' he sat in the '+ord(L.from)+' percentile among qualified '+grp+'. He’s now in the '+ord(L.to)+', the biggest jump in any category '+(M.days===14?'this fortnight':'over that stretch')+'.';
+  var p=byId[L.id]||{Player:L.n,nba_id:L.id};
+  var h='<div class="lead"><div class="lead-eb">BIGGEST RISER · '+span+'</div>'
+    +'<div class="lead-h lead-h-f" data-id="'+L.id+'">'+esc(L.n)+' climbs '+d+' percentile points in '+esc(L.s)+'</div>'
+    +'<div class="lead-h lead-h-s" data-id="'+L.id+'">'+esc(L.n)+' climbs '+d+' points in '+esc(L.s)+'</div>'
+    +'<div class="lead-g"><div class="lead-ph" data-id="'+L.id+'">'+esc(ini(L.n))+img(headLg(L.id))+'</div>'
+    +'<div class="lead-r"><div class="lead-meta"><div>'+esc(L.s)+' PERCENTILE · '+esc(L.t)+'</div><div style="color:var(--rise)">+'+d+'</div></div>'
+    +'<div class="track"><div class="track-bar"></div><div class="track-dash" style="left:'+L.from+'%;width:'+(L.to-L.from)+'%"></div>'
+    +bub(L.from,'b-from','left:'+L.from+'%')+bub(L.to,'b-to','left:'+L.to+'%')+'</div>'
+    +'<div class="lead-copy">'+copy+'</div></div></div>';
+  var mob=[M.rising[0],M.rising[1],M.falling[0],M.falling[1]].filter(Boolean);
+  h+='<div class="mv-mob">'+mob.map(moverRow).join('')+'</div></div>';
+  h+='<div class="mv-col rise"><div class="mv-hd"><div class="mv-t">▲ Rising</div><div class="mv-m">'+colMeta+'</div></div>'+M.rising.slice(0,4).map(moverRow).join('')+'</div>';
+  h+='<div class="mv-col fall"><div class="mv-hd"><div class="mv-t">▼ Falling</div><div class="mv-m">'+colMeta+'</div></div>'
+    +(M.falling.length?M.falling.slice(0,4).map(moverRow).join(''):'<div class="mv-empty">Nobody has dropped yet.</div>')+'</div>';
+  el.innerHTML=h;el.hidden=false;
+}
+var mobCat=0;
+function buildRB(){
+  var cols=HOME_CATS.map(function(lb){return leaders(lb,5);});
+  var h='<div class="rb-hd"><div class="sec-t"><span class="rb-full-l">Rotation Board · Top 5</span><span class="rb-m-l"></span></div><a class="link rb-full-l" href="#/leaders">Full leaderboards →</a></div>';
+  h+='<div class="rb-grid rb-head"><div class="rb-rkh">RK</div>'+HOME_CATS.map(function(lb){return '<div class="rb-ch"><div class="rb-cl ell">'+lb.n+'</div><div class="rb-cn">'+lb.note.toUpperCase()+'</div></div>';}).join('')+'</div>';
+  for(var i=0;i<5;i++){
+    h+='<div class="rb-grid rb-row'+(i===0?' top':'')+'"><div class="rk">'+(i+1)+'</div>';
+    cols.forEach(function(col,ci){
+      var p=col[i];
+      h+=p?'<div class="rb-c" data-id="'+p.nba_id+'">'+av(p,30)+'<div class="rb-who"><div class="rb-nm ell">'+esc(shortName(p.Player))+'</div><div class="rb-tm">'+esc(p.Team)+'</div></div><div class="rb-v">'+lbVal(HOME_CATS[ci],p)+'</div></div>':'<div class="rb-c"></div>';
+    });
+    h+='</div>';
+  }
+  h+='<div class="rb-m"><div class="chips" id="chips"></div><div id="mRows"></div><a class="link" href="#/leaders" style="padding:10px 0;min-height:44px;display:flex;align-items:center">Full leaderboards →</a></div>';
+  $('rb').innerHTML=h;
+  $('rb').querySelector('.rb-m-l').textContent='Rotation Board';
+  renderMob();
+}
+function renderMob(){
+  $('chips').innerHTML=HOME_CATS.map(function(lb,i){return '<button type="button" class="chip'+(i===mobCat?' on':'')+'" data-cat="'+i+'">'+lb.sh+'</button>';}).join('');
+  var lb=HOME_CATS[mobCat];
+  $('mRows').innerHTML=leaders(lb,5).map(function(p,i){
+    return '<div class="lrow" data-id="'+p.nba_id+'"><div class="rk'+(i===0?' one':'')+'">'+(i+1)+'</div>'+av(p,34)+'<div style="min-width:0"><div class="lrow-n ell">'+esc(p.Player)+'</div><div class="lrow-t">'+esc(p.Team)+'</div></div><div class="lrow-v">'+lbVal(lb,p)+'</div></div>';
+  }).join('');
+}
+function buildHome(){
+  if(!D.length){
+    $('vHome').innerHTML='<div class="page"><div class="empty"><b>No player data yet.</b><br>Check back once the '+esc(META.season)+' season is under way.</div></div>';
+    return;
+  }
+  $('heroEb').textContent=META.season+' PERCENTILE RANKINGS';
+  $('heroP').textContent='Each player ranked by percentile against '+D.length+' qualified players. Search anyone to see their full card.';
+  buildBanners();buildMovers();buildRB();
+}
+
+/* ================= LEADERBOARDS PAGE ================= */
+function lbRow(lb,p,i){
+  return '<div class="lrow" data-id="'+p.nba_id+'"><div class="rk'+(i===0?' one':'')+'">'+(i+1)+'</div>'+av(p,34)+'<div style="min-width:0"><div class="lrow-n ell">'+esc(p.Player)+'</div><div class="lrow-t">'+esc(p.Team)+'</div></div><div class="lrow-v">'+lbVal(lb,p)+'</div></div>';
+}
+function buildLeaders(){
+  var h='<div class="page-top"><div><div class="eyebrow">'+esc(META.season)+' · TOP 10</div><h1 class="sec-t" style="font-size:44px;margin-top:6px">Leaderboards</h1><div class="sub">'+qualLine()+'</div></div></div>';
+  h+='<div class="lb-grid">'+LB.map(function(lb){
+    return '<div class="lb-card"><div class="lb-hd"><div class="lb-l">'+lb.n+'</div><div class="lb-n">'+lb.note+'</div></div>'+leaders(lb,10).map(function(p,i){return lbRow(lb,p,i);}).join('')+'</div>';
+  }).join('')+'</div>';
+  $('vLeaders').innerHTML=h;
+}
+
+/* ================= PLAYERS PAGE ================= */
+function buildPlayers(){
+  var h='<div class="page-top"><div><div class="eyebrow">'+esc(META.season)+' · '+D.length+' QUALIFIED</div><h1 class="sec-t" style="font-size:44px;margin-top:6px">Players</h1><div class="sub">Every qualified player, by team.</div></div>'
+    +'<div class="mini-srch"><label class="srch"><span class="mag"></span><input id="plFilter" placeholder="Filter by name or team…" autocomplete="off"></label></div></div><div class="pl-grid" id="plGrid"></div>';
+  $('vPlayers').innerHTML=h;
+  var draw=function(){
+    var t=norm($('plFilter').value),groups={};
+    D.forEach(function(p){
+      var tn=teamOf(p.Team).n;
+      if(t&&norm(p.Player).indexOf(t)<0&&norm(p.Team).indexOf(t)<0&&norm(tn).indexOf(t)<0)return;
+      (groups[p.Team]=groups[p.Team]||[]).push(p);
+    });
+    var keys=Object.keys(groups).sort(function(a,b){return teamOf(a).n.localeCompare(teamOf(b).n);});
+    $('plGrid').innerHTML=keys.length?keys.map(function(k){
+      var tm=teamOf(k),list=groups[k].sort(function(a,b){return (b.PTS_PG||0)-(a.PTS_PG||0);});
+      return '<div><div class="tm-hd" style="border-left-color:'+tm.c+'">'+img(logoT(k))+'<div class="tm-n">'+esc(tm.n)+'</div></div>'
+        +list.map(function(p){return '<div class="pl-row" data-id="'+p.nba_id+'">'+av(p,30)+'<div class="pl-n ell">'+esc(p.Player)+'</div><div class="pl-s">'+fmt(p.PTS_PG)+' PTS · '+fmt(p.TRB_PG)+' REB · '+fmt(p.AST_PG)+' AST</div></div>';}).join('')+'</div>';
+    }).join(''):'<div class="empty">No players match.</div>';
+  };
+  $('plFilter').addEventListener('input',draw);draw();
+}
 
 /* ================= PLAYER PAGE ================= */
-function tdCell(p,key,txt){
-  var s=S[key],r=s?pct(p,s):null;
-  return '<td'+(isNum(r)&&r>=95?' class="elite"':'')+'>'+txt+'</td>';
-}
+function tdCell(p,key,txt){var s=S[key],r=s?pct(p,s):null;return '<td'+(isNum(r)&&r>=95?' class="elite"':'')+'>'+txt+'</td>';}
 function showPlayer(p){
-  if(!p)return;
-  closeCmp();$('playerSearch').value=p.Player;sS.style.display='none';
-  $('homePage').style.display='none';$('playerPage').style.display='block';
-  var info=teamOf(p.Team),pc=info.c,lg=logoUrl(p.Team);
-  $('pHdrBg').style.background=pc;$('pHdr').style.borderBottom='2px solid '+pc;
-  var hs=$('pHs');hs.classList.remove('logo-fb');hs.style.background='';
-  hs.dataset.logo=lg||'';hs.dataset.color=pc;hs.style.border='3px solid '+pc;hs.src=headUrl(p.nba_id);
-  $('pName').textContent=p.Player;
-  var te=$('pTeam');te.textContent=info.n;te.style.color=pc;
-  $('pMeta').textContent=(p.Age?'Age '+p.Age+' · ':'')+p.G+' Games';
-  var tl=$('pTL');
-  if(lg){tl.dataset.hide='1';tl.style.display='block';tl.src=lg;}else tl.style.display='none';
-
+  var info=teamOf(p.Team),lg=logoUrl(p);
   var g=function(k){return S[k]?fmt(p[k],S[k]):'N/A';};
-  var h='<div class="st-title">Per-Game Averages &amp; Advanced</div><table class="st"><tr><th></th><th>GP</th><th>MPG</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TOV</th><th>FG%</th><th>3P%</th><th>FT%</th></tr><tr><td class="lbl">'+esc(META.season)+'</td><td>'+p.G+'</td>';
+  var h='<div class="page-top" style="border-bottom:none;margin-bottom:8px;padding-bottom:0"><a class="link" href="#/">← Home</a><div class="mini-srch"><label class="srch"><span class="mag"></span><input id="pQ" placeholder="Search another player…" autocomplete="off"></label><div class="dd" id="pDD"></div></div></div>';
+  h+='<div class="p-hdr"><div class="p-ph" style="background:'+info.c+'">'+img(lg,'lg')+'<span class="ini">'+esc(ini(p.Player))+'</span>'+img(headLg(p.nba_id),'hs')+'</div>'
+    +'<div style="min-width:0"><div class="eyebrow">'+esc(META.season)+' PERCENTILE CARD</div><div class="p-name">'+esc(p.Player)+'</div><div class="p-team" style="color:'+info.c+'">'+esc(info.n)+'</div><div class="p-meta">'+(p.Age?'Age '+p.Age+' · ':'')+p.G+' games</div></div>'
+    +(lg?'<img class="p-logo" src="'+lg+'" data-hide="1" alt="">':'<div></div>')+'</div>';
+  h+='<div class="p-sec"><div class="p-sec-hd"><div class="sec-t">Per Game &amp; Advanced</div><div class="note">Green = top 5% of qualified players</div></div><div class="st-wrap"><table class="st"><tr><th></th><th>GP</th><th>MPG</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TOV</th><th>FG%</th><th>3P%</th><th>FT%</th></tr><tr><td class="lbl">'+esc(META.season)+'</td><td>'+p.G+'</td>';
   ['MP_PG','PTS_PG','TRB_PG','AST_PG','STL_PG','BLK_PG','TOV_PG','FG%','3P%','FT%'].forEach(function(k){h+=tdCell(p,k,g(k));});
-  h+='</tr></table><table class="st" style="margin-top:8px"><tr><th></th><th>eFG%</th><th>TS%</th><th>ORTG</th><th>DRTG</th><th>NET</th><th>USG%</th><th>AST%</th><th>+/-</th></tr><tr><td class="lbl">ADV</td>';
+  h+='</tr></table><table class="st" style="margin-top:10px"><tr><th></th><th>eFG%</th><th>TS%</th><th>ORTG</th><th>DRTG</th><th>NET</th><th>USG%</th><th>AST%</th><th>+/-</th></tr><tr><td class="lbl">ADV</td>';
   ['eFG%','TS%','ORTG','DRTG','NET_RTG','USG%','AST%','PM'].forEach(function(k){h+=tdCell(p,k,g(k));});
-  h+='</tr></table>';
-  $('statsArea').innerHTML=h;
-
-  var html='';
+  h+='</tr></table></div></div>';
+  h+='<div class="p-sec"><div class="p-sec-hd"><div class="sec-t">Percentile Rankings</div><div class="scale"><span>1ST</span><span class="lgnd-bar"></span><span>99TH</span></div></div>';
   cats.forEach(function(cat){
     var rows='';
     cat.stats.forEach(function(s){
       var r=pct(p,s);if(r===null)return;
-      var dv=fmt(p[s.k],s);
       var lbl='<div class="sr-lbl">'+s.n+(s.inv?'<span class="sub">Lower is better</span>':'')+'<span class="tt">'+s.d+'</span></div>';
-      if(r==='na'){rows+='<div class="sr">'+lbl+'<div class="sr-na">Not enough attempts to rank</div><div class="sr-val">'+dv+'</div></div>';return;}
-      var w=Math.max(r,5);
-      rows+='<div class="sr">'+lbl+'<div class="sr-bar"><div class="sr-fill" style="width:'+w+'%;background:'+grad(r)+'"></div><div class="sr-circ" style="left:'+w+'%;background:'+scale(r)+'">'+r+'</div></div><div class="sr-val">'+dv+'</div></div>';
+      if(r==='na'){rows+='<div class="sr">'+lbl+'<div class="sr-na">Not enough attempts to rank</div><div class="sr-val">'+fmt(p[s.k],s)+'</div></div>';return;}
+      var w=Math.max(r,3);
+      rows+='<div class="sr">'+lbl+'<div class="sr-bar"><div class="sr-trk"></div><div class="sr-fill" style="width:'+w+'%;background:'+pc(r)+'"></div>'+bub(r,'sr-circ','left:'+w+'%')+'</div><div class="sr-val">'+fmt(p[s.k],s)+'</div></div>';
     });
-    if(rows)html+='<div class="cat"><div class="cat-h"><div class="cat-icon">'+cat.icon+'</div><div class="cat-name">'+cat.name+'</div></div>'+rows+'</div>';
+    if(rows)h+='<div class="cat"><div class="cat-h">'+cat.name+'</div>'+rows+'</div>';
   });
-  $('pctContent').innerHTML=html;
-  $('cardFt').innerHTML='NBA Savant &middot; Data via NBA.com &middot; Updated '+esc(META.updated)+'<br>'+qualLine();
-  $('playerCard').style.display='block';
+  h+='</div><div class="p-sec" id="scSec" hidden><div class="p-sec-hd"><div class="sec-t">Shot Chart</div><div class="note" id="scInfo"></div></div><div id="scBox"></div></div>';
+  h+='<div class="p-foot">Data via NBA.com · Updated '+esc(META.updated)+' · '+qualLine()+'</div>';
+  $('vPlayer').innerHTML=h;
+  wireSearch($('pQ'),$('pDD'),8,openPlayer);
   drawSC(p);
-  document.title=p.Player+' | NBA Savant';setHash('#p'+p.nba_id);
-  setTimeout(function(){$('playerCard').scrollIntoView({behavior:'smooth',block:'start'});},60);
+  document.title=p.Player+' | NBA Savant';
 }
 
 /* ================= SHOT CHART =================
-   NBA shot coordinates: units of 1/10 foot, the rim is (0,0), x runs sideline to
-   sideline (-250..250), y runs away from the basket. The baseline is 5.25 ft behind
-   the rim (y=-52.5) and half court is 47 ft from the baseline (y=417.5). */
+   NBA shot coordinates: units of 1/10 foot, the rim is (0,0). The baseline is
+   5.25 ft behind the rim (y=-52.5) and half court is 47 ft from the baseline (y=417.5). */
 var BASE_Y=-52.5,HALF_Y=417.5;
 function isThree(x,y){return (Math.abs(x)>=220&&y<=90)||Math.sqrt(x*x+y*y)>=237.5;}
 function expected(x,y){
@@ -500,23 +775,19 @@ function expected(x,y){
 }
 function drawSC(p){
   var sec=$('scSec'),box=$('scBox'),shots=SD[String(p.nba_id)];
-  if(!shots||!shots.length){sec.style.display='none';return;}
-  sec.style.display='block';
+  if(!shots||!shots.length){sec.hidden=true;return;}
+  sec.hidden=false;
   var pad=14,W=500+pad*2,H=470+pad*2,dpr=Math.min(window.devicePixelRatio||1,3);
   box.innerHTML='<div class="sc-court"><canvas id="scCvs" width="'+Math.round(W*dpr)+'" height="'+Math.round(H*dpr)+'"></canvas></div>'
-    +'<div class="sc-leg"><span>Worse than league average</span><span class="sc-grad"></span><span>Better than league average</span><span class="sc-sz">Compared with the league at the same distance. Bigger dot = more shots.</span></div>';
+    +'<div class="sc-leg"><span>Worse than league average</span><span class="lgnd-bar"></span><span>Better than league average</span><span class="sc-sz">Compared with the league from the same distance. Bigger dot = more shots.</span></div>';
   var c=$('scCvs').getContext('2d');c.scale(dpr,dpr);
   var X=function(x){return pad+x+250;},Y=function(y){return pad+(HALF_Y-y);};
-
-  /* floor + painted lane */
-  c.fillStyle='#fbfbf9';c.fillRect(0,0,W,H);
-  c.fillStyle='#f3f1ea';c.fillRect(X(-80),Y(137.5),160,Y(BASE_Y)-Y(137.5));
-
-  /* heat dots: group shots into 1.4 ft squares, color by makes vs. what the league makes from there */
-  var cell=14,grid={},made=0,threes=0,threeMade=0,n=0;
+  c.fillStyle='#ffffff';c.fillRect(0,0,W,H);
+  c.fillStyle='rgba(29,66,138,.07)';c.fillRect(X(-80),Y(137.5),160,Y(BASE_Y)-Y(137.5));
+  var cell=14,grid={},made=0,threeMade=0,n=0;
   shots.forEach(function(s){
     var x=s[0],y=s[1];
-    n++;made+=s[2];if(isThree(x,y)){threes++;threeMade+=s[2];}
+    n++;made+=s[2];if(isThree(x,y))threeMade+=s[2];
     if(x<-250||x>250||y<BASE_Y||y>HALF_Y)return;
     var k=Math.floor((x+250)/cell)+','+Math.floor((y-BASE_Y)/cell),g=grid[k];
     if(!g)g=grid[k]={t:0,m:0,e:0,sx:0,sy:0};
@@ -525,94 +796,107 @@ function drawSC(p){
   var cells=Object.keys(grid).map(function(k){return grid[k];}).sort(function(a,b){return a.t-b.t;});
   var maxT=cells.length?cells[cells.length-1].t:1,K=5;
   cells.forEach(function(g){
-    var e=g.e/g.t,adj=(g.m+K*e)/(g.t+K),diff=adj-e;   /* small samples are pulled toward average */
+    var e=g.e/g.t,adj=(g.m+K*e)/(g.t+K),diff=adj-e;
     var score=50+diff/0.18*50,f=Math.sqrt(g.t/maxT);
-    c.globalAlpha=0.32+0.55*f;c.fillStyle=scale(score);
+    c.globalAlpha=0.32+0.55*f;c.fillStyle=pc(score);
     c.beginPath();c.arc(X(g.sx/g.t),Y(g.sy/g.t),cell*(0.42+0.78*f),0,Math.PI*2);c.fill();
   });
   c.globalAlpha=1;
-
-  /* court lines */
-  c.strokeStyle='#9aa3ad';c.lineWidth=1.4;c.lineJoin='round';
+  c.strokeStyle='rgba(11,21,48,.45)';c.lineWidth=1.4;c.lineJoin='round';
   var line=function(pts){c.beginPath();pts.forEach(function(q,i){if(i)c.lineTo(X(q[0]),Y(q[1]));else c.moveTo(X(q[0]),Y(q[1]));});c.stroke();};
   var arc=function(cx,cy,r,a0,a1){var o=[],N=60;for(var i=0;i<=N;i++){var a=a0+(a1-a0)*i/N;o.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);}return o;};
-  line([[-250,BASE_Y],[250,BASE_Y],[250,HALF_Y],[-250,HALF_Y],[-250,BASE_Y]]);          /* sidelines */
-  line([[-80,BASE_Y],[-80,137.5],[80,137.5],[80,BASE_Y]]);                               /* lane, 16 ft wide, free throw line 19 ft from baseline */
-  line([[-60,BASE_Y],[-60,137.5]]);line([[60,BASE_Y],[60,137.5]]);                       /* inner lane marks */
-  line(arc(0,137.5,60,0,Math.PI));                                                       /* free throw circle, top half */
-  c.setLineDash([5,5]);line(arc(0,137.5,60,Math.PI,2*Math.PI));c.setLineDash([]);        /* bottom half dashed */
-  line([[40,-12.5],[40,0]].concat(arc(0,0,40,0,Math.PI)).concat([[-40,0],[-40,-12.5]])); /* restricted area, 4 ft */
+  line([[-250,BASE_Y],[250,BASE_Y],[250,HALF_Y],[-250,HALF_Y],[-250,BASE_Y]]);
+  line([[-80,BASE_Y],[-80,137.5],[80,137.5],[80,BASE_Y]]);
+  line([[-60,BASE_Y],[-60,137.5]]);line([[60,BASE_Y],[60,137.5]]);
+  line(arc(0,137.5,60,0,Math.PI));
+  c.setLineDash([5,5]);line(arc(0,137.5,60,Math.PI,2*Math.PI));c.setLineDash([]);
+  line([[40,-12.5],[40,0]].concat(arc(0,0,40,0,Math.PI)).concat([[-40,0],[-40,-12.5]]));
   var yc=Math.sqrt(237.5*237.5-220*220),aL=Math.atan2(yc,-220),aR=Math.atan2(yc,220);
-  line([[-220,BASE_Y],[-220,yc]].concat(arc(0,0,237.5,aL,aR)).concat([[220,yc],[220,BASE_Y]])); /* three point line */
-  line(arc(0,HALF_Y,60,Math.PI,2*Math.PI));line(arc(0,HALF_Y,20,Math.PI,2*Math.PI));     /* center circle */
-  c.lineWidth=2.6;c.strokeStyle='#707a85';line([[-30,-12.5],[30,-12.5]]);               /* backboard */
+  line([[-220,BASE_Y],[-220,yc]].concat(arc(0,0,237.5,aL,aR)).concat([[220,yc],[220,BASE_Y]]));
+  line(arc(0,HALF_Y,60,Math.PI,2*Math.PI));line(arc(0,HALF_Y,20,Math.PI,2*Math.PI));
+  c.lineWidth=2.6;c.strokeStyle='#0b1530';line([[-30,-12.5],[30,-12.5]]);
   c.lineWidth=1.4;line([[0,-12.5],[0,-7.5]]);
-  c.strokeStyle='#e0652b';c.lineWidth=1.8;line(arc(0,0,7.5,0,2*Math.PI));               /* rim */
-
+  c.strokeStyle='#c8102e';c.lineWidth=1.8;line(arc(0,0,7.5,0,2*Math.PI));
   var fg=made/n*100,efg=(made+0.5*threeMade)/n*100;
-  $('scInfo').textContent=META.season+' Regular Season · '+n+' shots · '+fg.toFixed(1)+'% FG · '+efg.toFixed(1)+'% eFG';
+  $('scInfo').textContent=META.season+' regular season · '+n+' shots · '+fg.toFixed(1)+'% FG · '+efg.toFixed(1)+'% eFG';
 }
 
 /* ================= COMPARE ================= */
 var cPk=[null,null];
-function openCmp(){$('cmpModal').classList.add('open');document.body.style.overflow='hidden';}
+function openCmp(){$('cmpModal').classList.add('open');document.body.style.overflow='hidden';setTimeout(function(){(cPk[0]?$('cB'):$('cA')).focus();},30);}
 function closeCmp(){$('cmpModal').classList.remove('open');document.body.style.overflow='';}
-$('openCmp').addEventListener('click',openCmp);
-$('closeCmp').addEventListener('click',closeCmp);
+$('cmpX').addEventListener('click',closeCmp);
 $('cmpModal').addEventListener('click',function(e){if(e.target===this)closeCmp();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeCmp();});
+document.addEventListener('click',function(e){var b=e.target.closest('[data-cmp]');if(b){e.preventDefault();openCmp();}});
+$('navCmp').addEventListener('click',function(e){e.preventDefault();$('nav').classList.remove('open');openCmp();});
 [0,1].forEach(function(idx){
-  var inp=$(idx?'cB':'cA'),dd=$(idx?'ddB':'ddA');
-  inp.addEventListener('input',function(){
-    if(!this.value.trim()){dd.style.display='none';return;}
-    dd.innerHTML=sugHtml(find(this.value,8),false);dd.style.display='block';
-  });
-  dd.addEventListener('click',function(e){
-    var r=e.target.closest('[data-id]');if(!r)return;
-    var p=byId[r.dataset.id];cPk[idx]=p;inp.value=p.Player;dd.style.display='none';
-    if(cPk[0]&&cPk[1])renderCmp();
-  });
+  var inp=$(idx?'cB':'cA');
+  wireSearch(inp,$(idx?'ddB':'ddA'),8,function(p){cPk[idx]=p;inp.value=p.Player;if(cPk[0]&&cPk[1])renderCmp();else $(idx?'cA':'cB').focus();});
 });
 function cmpHead(p){
   var i=teamOf(p.Team);
-  return '<div class="cmp-ph"><img src="'+headUrl(p.nba_id)+'" data-color="'+i.c+'" style="border-color:'+i.c+'" alt=""><div class="cn">'+esc(p.Player)+'</div><div class="ct" style="color:'+i.c+'">'+esc(i.n)+'</div><div class="cm">'+(p.Age?'Age '+p.Age+' · ':'')+p.G+' GP</div></div>';
+  return '<div class="cmp-ph" data-id="'+p.nba_id+'"><div class="av" style="border:3px solid '+i.c+'">'+esc(ini(p.Player))+img(headSm(p.nba_id))+'</div><div class="cn">'+esc(p.Player)+'</div><div class="ct" style="color:'+i.c+'">'+esc(i.n)+'</div><div class="cm">'+(p.Age?'Age '+p.Age+' · ':'')+p.G+' GP</div></div>';
 }
 function cmpSide(side,r){
-  /* side: 'L' bars grow leftward from the center, 'R' grow rightward. Bubble sits on the bar end. */
   if(!isNum(r))return '<div class="cx-t '+side+'"><div class="cx-bg"></div></div>';
-  var w=Math.max(r,5);
-  var pos=side==='L'?'left:calc(100% - '+w+'%)':'left:'+w+'%';
-  return '<div class="cx-t '+side+'"><div class="cx-bg"></div><div class="cx-f" style="width:'+w+'%;background:'+grad(r)+'"></div><div class="cx-b" style="'+pos+';background:'+scale(r)+'">'+r+'</div></div>';
+  var w=Math.max(r,4),pos=side==='L'?'left:calc(100% - '+w+'%)':'left:'+w+'%';
+  return '<div class="cx-t '+side+'"><div class="cx-bg"></div><div class="cx-f" style="width:'+w+'%;background:'+pc(r)+'"></div>'+bub(r,'cx-b',pos)+'</div>';
 }
 function cmpRow(a,b,s){
   var va=parseFloat(a[s.k]),vb=parseFloat(b[s.k]);
   if(isNaN(va)&&isNaN(vb))return '';
   var ra=pct(a,s),rb=pct(b,s),win=0;
-  if(isNum(ra)&&isNum(rb)&&va!==vb)win=(s.h?va>vb:va<vb)?-1:1;     /* -1 left wins, 1 right wins */
+  if(isNum(ra)&&isNum(rb)&&va!==vb)win=(s.h?va>vb:va<vb)?-1:1;
   var arrow=win===-1?'◀':win===1?'▶':(isNum(ra)&&isNum(rb)?'=':'');
-  return '<div class="cx-row">'
-    +'<div class="cx-v'+(win===-1?' w':'')+'">'+fmt(a[s.k],s)+'</div>'
-    +cmpSide('L',ra)
+  return '<div class="cx-row"><div class="cx-v'+(win===-1?' w':'')+'">'+fmt(a[s.k],s)+'</div>'+cmpSide('L',ra)
     +'<div class="cx-m"><div class="cx-n">'+s.n+'</div>'+(s.inv?'<div class="cx-s">Lower is better</div>':'')+'<div class="cx-a'+(arrow==='='?' eq':'')+'">'+arrow+'</div></div>'
-    +cmpSide('R',rb)
-    +'<div class="cx-v'+(win===1?' w':'')+'">'+fmt(b[s.k],s)+'</div>'
-    +'</div>';
+    +cmpSide('R',rb)+'<div class="cx-v'+(win===1?' w':'')+'">'+fmt(b[s.k],s)+'</div></div>';
 }
 function renderCmp(){
   var a=cPk[0],b=cPk[1];if(!a||!b)return;
   var h='<div class="cmp-heads">'+cmpHead(a)+cmpHead(b)+'</div>';
   cats.forEach(function(cat){
     var rows=cat.stats.map(function(s){return cmpRow(a,b,s);}).join('');
-    if(rows)h+='<div class="cx-cat">'+cat.icon+' '+cat.name+'</div>'+rows;
+    if(rows)h+='<div class="cx-cat">'+cat.name+'</div>'+rows;
   });
   $('cmpBody').innerHTML=h;
 }
+$('cmpBody').addEventListener('click',function(e){var r=e.target.closest('.cmp-ph[data-id]');if(r){closeCmp();openPlayer(byId[r.dataset.id]);}});
+
+/* ================= ROUTING ================= */
+var VIEWS={home:'vHome',leaders:'vLeaders',players:'vPlayers',player:'vPlayer'};
+var built={};
+function go(h){if(location.hash===h)route();else location.hash=h;}
+function show(view){
+  Object.keys(VIEWS).forEach(function(k){$(VIEWS[k]).hidden=k!==view;});
+  [].forEach.call(document.querySelectorAll('.nav a'),function(a){a.classList.toggle('on',a.dataset.nav===view);});
+  $('nav').classList.remove('open');$('menuBtn').setAttribute('aria-expanded','false');
+}
+function route(){
+  var h=location.hash||'',m=/^#p(\d+)$/.exec(h);
+  if(m&&byId[m[1]]){show('player');showPlayer(byId[m[1]]);}
+  else if(h==='#/leaders'){if(!built.leaders){buildLeaders();built.leaders=1;}show('leaders');document.title='Leaderboards | NBA Savant';}
+  else if(h==='#/players'){if(!built.players){buildPlayers();built.players=1;}show('players');document.title='Players | NBA Savant';}
+  else{show('home');document.title='NBA Savant | Player Percentile Rankings';if(h==='#/compare')openCmp();}
+  window.scrollTo(0,0);
+}
+document.addEventListener('click',function(e){
+  var r=e.target.closest('[data-id]');
+  if(!r||r.closest('.dd')||r.closest('#cmpModal'))return;
+  openPlayer(byId[r.dataset.id]);
+});
+document.addEventListener('click',function(e){var c=e.target.closest('[data-cat]');if(c){mobCat=+c.dataset.cat;renderMob();}});
+$('menuBtn').addEventListener('click',function(){var o=$('nav').classList.toggle('open');this.setAttribute('aria-expanded',o?'true':'false');});
+window.addEventListener('hashchange',route);
 
 /* ================= START ================= */
-$('playerCount').textContent=D.length?D.length+' qualified players':'';
+$('hdrSeason').textContent=META.season;
+$('hdrUpd').textContent=' · UPDATED '+String(META.updated).toUpperCase();
+$('ftrDate').textContent='DATA THROUGH '+String(META.updated).toUpperCase();
 buildHome();
-var m=/^#p(\d+)$/.exec(location.hash||'');
-if(m&&byId[m[1]])showPlayer(byId[m[1]]);
+if(D.length)wireSearch($('homeQ'),$('homeDD'),6,openPlayer);
+route();
 })();
 </script>
 </body>
