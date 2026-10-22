@@ -94,8 +94,8 @@ main{flex:1}
 .bn-body{position:relative;background:#5b6478;color:#fff;clip-path:polygon(0 0,100% 0,100% 100%,50% 90%,0 100%);display:flex;flex-direction:column;padding-bottom:34px}
 .bn-col{position:absolute;inset:0}
 .bn-body>*:not(.bn-col){position:relative}
-.bn-s1{height:5px;background:#fff;margin-top:10px}
-.bn-s2{height:2px;background:#fff;margin-top:3px}
+.bn-s1{height:5px;background:var(--acc,#fff);margin-top:10px}
+.bn-s2{height:2px;background:var(--acc,#fff);margin-top:3px}
 .bn-cat{padding:14px 8px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center}
 .bn-lab{font-weight:800;font-size:16px;line-height:1;font-stretch:72%;letter-spacing:.08em;text-transform:uppercase}
 .bn-lab-s{display:none}
@@ -105,7 +105,7 @@ main{flex:1}
 .bn-ph .lg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);height:120%;opacity:.2}
 .bn-ph .ini{position:relative}
 .bn-ph .hs{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:100%}
-.bn-name{background:#fff;color:var(--navy);padding:8px 10px 9px;display:flex;align-items:center;gap:8px;min-width:0}
+.bn-name{background:#fff;color:var(--navy);border-top:4px solid var(--acc,#fff);padding:8px 10px 9px;display:flex;align-items:center;gap:8px;min-width:0}
 .bn-name img{width:24px;height:24px;flex:none}
 .bn-nmw{min-width:0;display:flex;flex-direction:column;gap:1px}
 .bn-nm{font-weight:800;font-size:14px;font-stretch:78%;text-transform:uppercase}
@@ -311,6 +311,8 @@ html.intro #movers::after{bottom:-3px}
 html.intro .rafter{transform-origin:left;animation:growX .4s cubic-bezier(.6,0,.2,1) 3.45s both}
 html.intro .bn{transform-origin:50% 0;animation:drop .9s cubic-bezier(.3,.7,.4,1) calc(3.55s + var(--i) * .06s - var(--late,0s)) both}
 html.intro .bn-col{animation:fadeIn .4s ease calc(4.6s + var(--i) * .14s - var(--late,0s)) both}
+@keyframes accIn{from{background-color:#fff;border-top-color:#fff}}
+html.intro .bn-s1,html.intro .bn-s2,html.intro .bn-name{animation:accIn .4s ease calc(4.6s + var(--i) * .14s - var(--late,0s)) both}
 
 /* ---------- responsive ---------- */
 @media (max-width:1250px){
@@ -506,23 +508,23 @@ var byId={};D.forEach(function(p){byId[p.nba_id]=p;});
 
 /* Team info: n=name, id=NBA team id (for logos), c=primary color */
 var T={
-ATL:{n:'Atlanta Hawks',id:1610612737,c:'#e03a3e'},BOS:{n:'Boston Celtics',id:1610612738,c:'#007a33'},
-BKN:{n:'Brooklyn Nets',id:1610612751,c:'#000000'},CHA:{n:'Charlotte Hornets',id:1610612766,c:'#1d1160'},
-CHI:{n:'Chicago Bulls',id:1610612741,c:'#ce1141'},CLE:{n:'Cleveland Cavaliers',id:1610612739,c:'#860038'},
-DAL:{n:'Dallas Mavericks',id:1610612742,c:'#00538c'},DEN:{n:'Denver Nuggets',id:1610612743,c:'#0e2240'},
-DET:{n:'Detroit Pistons',id:1610612765,c:'#c8102e'},GSW:{n:'Golden State Warriors',id:1610612744,c:'#1d428a'},
-HOU:{n:'Houston Rockets',id:1610612745,c:'#ce1141'},IND:{n:'Indiana Pacers',id:1610612754,c:'#002d62'},
-LAC:{n:'LA Clippers',id:1610612746,c:'#c8102e'},LAL:{n:'Los Angeles Lakers',id:1610612747,c:'#552583'},
-MEM:{n:'Memphis Grizzlies',id:1610612763,c:'#5d76a9'},MIA:{n:'Miami Heat',id:1610612748,c:'#98002e'},
-MIL:{n:'Milwaukee Bucks',id:1610612749,c:'#00471b'},MIN:{n:'Minnesota Timberwolves',id:1610612750,c:'#0c2340'},
-NOP:{n:'New Orleans Pelicans',id:1610612740,c:'#0c2340'},NYK:{n:'New York Knicks',id:1610612752,c:'#006bb6'},
-OKC:{n:'Oklahoma City Thunder',id:1610612760,c:'#007ac1'},ORL:{n:'Orlando Magic',id:1610612753,c:'#0077c0'},
-PHI:{n:'Philadelphia 76ers',id:1610612755,c:'#006bb6'},PHX:{n:'Phoenix Suns',id:1610612756,c:'#1d1160'},
-POR:{n:'Portland Trail Blazers',id:1610612757,c:'#e03a3e'},SAC:{n:'Sacramento Kings',id:1610612758,c:'#5a2d81'},
-SAS:{n:'San Antonio Spurs',id:1610612759,c:'#1a1a1a'},TOR:{n:'Toronto Raptors',id:1610612761,c:'#ce1141'},
-UTA:{n:'Utah Jazz',id:1610612762,c:'#002b5c'},WAS:{n:'Washington Wizards',id:1610612764,c:'#002b5c'}
+ATL:{n:'Atlanta Hawks',id:1610612737,c:'#e03a3e',s:'#c1d32f'},BOS:{n:'Boston Celtics',id:1610612738,c:'#007a33',s:'#ba9653'},
+BKN:{n:'Brooklyn Nets',id:1610612751,c:'#000000',s:'#ffffff'},CHA:{n:'Charlotte Hornets',id:1610612766,c:'#1d1160',s:'#00788c'},
+CHI:{n:'Chicago Bulls',id:1610612741,c:'#ce1141',s:'#000000'},CLE:{n:'Cleveland Cavaliers',id:1610612739,c:'#860038',s:'#fdbb30'},
+DAL:{n:'Dallas Mavericks',id:1610612742,c:'#00538c',s:'#b8c4ca'},DEN:{n:'Denver Nuggets',id:1610612743,c:'#0e2240',s:'#fec524'},
+DET:{n:'Detroit Pistons',id:1610612765,c:'#c8102e',s:'#1d42ba'},GSW:{n:'Golden State Warriors',id:1610612744,c:'#1d428a',s:'#ffc72c'},
+HOU:{n:'Houston Rockets',id:1610612745,c:'#ce1141',s:'#c4ced4'},IND:{n:'Indiana Pacers',id:1610612754,c:'#002d62',s:'#fdbb30'},
+LAC:{n:'LA Clippers',id:1610612746,c:'#c8102e',s:'#1d428a'},LAL:{n:'Los Angeles Lakers',id:1610612747,c:'#552583',s:'#fdb927'},
+MEM:{n:'Memphis Grizzlies',id:1610612763,c:'#5d76a9',s:'#f5b112'},MIA:{n:'Miami Heat',id:1610612748,c:'#98002e',s:'#f9a01b'},
+MIL:{n:'Milwaukee Bucks',id:1610612749,c:'#00471b',s:'#eee1c6'},MIN:{n:'Minnesota Timberwolves',id:1610612750,c:'#0c2340',s:'#78be20'},
+NOP:{n:'New Orleans Pelicans',id:1610612740,c:'#0c2340',s:'#85714d'},NYK:{n:'New York Knicks',id:1610612752,c:'#006bb6',s:'#f58426'},
+OKC:{n:'Oklahoma City Thunder',id:1610612760,c:'#007ac1',s:'#ef3b24'},ORL:{n:'Orlando Magic',id:1610612753,c:'#0077c0',s:'#c4ced4'},
+PHI:{n:'Philadelphia 76ers',id:1610612755,c:'#006bb6',s:'#ed174c'},PHX:{n:'Phoenix Suns',id:1610612756,c:'#1d1160',s:'#e56020'},
+POR:{n:'Portland Trail Blazers',id:1610612757,c:'#e03a3e',s:'#000000'},SAC:{n:'Sacramento Kings',id:1610612758,c:'#5a2d81',s:'#a3a9ad'},
+SAS:{n:'San Antonio Spurs',id:1610612759,c:'#1a1a1a',s:'#c4ced4'},TOR:{n:'Toronto Raptors',id:1610612761,c:'#ce1141',s:'#000000'},
+UTA:{n:'Utah Jazz',id:1610612762,c:'#4b0a8c',s:'#000000'},WAS:{n:'Washington Wizards',id:1610612764,c:'#002b5c',s:'#e31837'}
 };
-function teamOf(t){return T[t]||{n:t||'Unknown team',id:null,c:'#1d428a'};}
+function teamOf(t){return T[t]||{n:t||'Unknown team',id:null,c:'#1d428a',s:'#ffffff'};}
 function logoUrl(p){var id=(p&&p.tid)||(T[p&&p.Team]||{}).id;return id?'https://cdn.nba.com/logos/nba/'+id+'/primary/L/logo.svg':'';}
 function logoT(t){var o=T[t];return o?'https://cdn.nba.com/logos/nba/'+o.id+'/primary/L/logo.svg':'';}
 function headSm(id){return 'https://cdn.nba.com/headshots/nba/latest/260x190/'+id+'.png';}
@@ -673,9 +675,9 @@ function buildBanners(){
   $('banners').style.setProperty('--late',Math.max(0,(performance.now()-(window.__introT0||0))/1000).toFixed(3)+'s');
   $('banners').innerHTML=HOME_CATS.map(function(lb,i){
     var p=leaders(lb,1)[0];if(!p)return '';
-    var bg=teamOf(p.Team).c,lg=logoUrl(p);
+    var tm=teamOf(p.Team),bg=tm.c,lg=logoUrl(p);
     return '<div class="bn" style="--i:'+i+'" data-id="'+p.nba_id+'" title="'+esc(p.Player+' leads in '+lb.n)+'">'
-      +'<div class="bn-wire"></div><div class="bn-body"><div class="bn-col" style="background:'+bg+'"></div>'
+      +'<div class="bn-wire"></div><div class="bn-body" style="--acc:'+tm.s+'"><div class="bn-col" style="background:'+bg+'"></div>'
       +'<div class="bn-s1"></div><div class="bn-s2"></div>'
       +'<div class="bn-cat"><div class="bn-lab bn-lab-f">'+lb.n+'</div><div class="bn-lab bn-lab-s">'+lb.sh+'</div><div class="bn-note">'+lb.note.toUpperCase()+'</div></div>'
       +'<div class="bn-v">'+lbVal(lb,p)+'</div>'
