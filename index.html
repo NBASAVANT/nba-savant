@@ -310,22 +310,135 @@ main{flex:1}
 .gl tr.avg td{border-top:2px solid var(--navy);border-bottom:none;font-weight:800;background:var(--tint)}
 .gl tbody tr:hover td{background:var(--surface)}
 
-/* ---------- trends ---------- */
-.tr-cols{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:18px}
-.tr-row{display:grid;grid-template-columns:22px minmax(0,1fr) 88px 118px 52px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .15s}
-.tr-row:hover{background:var(--surface)}
-.tr-row .rk{font-size:20px}
-.tr-nm{font-weight:700;font-size:15px}
-.tr-tm{font-weight:500;font-size:11px;color:var(--t3)}
-.tr-vals{font-weight:600;font-size:14px;text-align:right;white-space:nowrap;color:var(--t3)}
-.tr-vals b{color:var(--navy);font-weight:800}
-.tr-d{font-weight:800;font-size:15px;text-align:right}
-.tr-d.up{color:var(--rise)}.tr-d.dn{color:var(--fall)}
-.spark{display:block}
-.tr-note{font-size:13px;color:var(--t3);line-height:1.5;margin-top:10px}
-.tr-sec{margin-top:40px;padding-top:20px;border-top:3px solid var(--navy)}
+/* ---------- shared for leaderboards + trends ---------- */
 .tr-empty{padding:30px 0;color:var(--t3);font-size:15px;line-height:1.6}
 .mv-all{margin-top:10px}
+.spark{display:block}
+.xp{max-width:1352px;margin:0 auto}
+.x-top{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.x-eb{font-weight:600;font-size:12px;letter-spacing:.08em;color:var(--red);text-transform:uppercase}
+.x-h1{margin-top:8px;font-weight:900;font-size:72px;line-height:.88;font-stretch:62%;text-transform:uppercase;letter-spacing:-.01em}
+.x-sub{margin-top:12px;font-size:16px;line-height:1.45;color:var(--t2);max-width:600px}
+.x-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px;padding-bottom:18px;border-bottom:3px solid var(--navy)}
+.x-chip{min-height:44px;padding:0 18px;border-radius:4px;border:2px solid var(--navy);background:#fff;font-weight:800;font-size:15px;font-stretch:80%;letter-spacing:.06em;text-transform:uppercase;transition:background .15s;white-space:nowrap}
+.x-chip:hover{background:var(--surface)}
+.x-chip.on{background:var(--blue);color:#fff;box-shadow:3px 3px 0 var(--navy)}
+.x-h2{font-weight:900;font-size:32px;font-stretch:66%;text-transform:uppercase;line-height:1}
+.x-sechd{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-bottom:8px;border-bottom:3px solid var(--navy)}
+.x-meta{font-weight:600;font-size:11px;letter-spacing:.06em;color:var(--t3);text-transform:uppercase}
+.x-av{position:relative;border-radius:50%;overflow:hidden;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800}
+.x-av img{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:100%}
+
+/* ---------- leaderboards ---------- */
+.lx-legend{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--t3)}
+.lx-legend i{width:34px;height:8px;border-radius:4px;background:var(--red)}
+.lx-feat{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:40px;padding:28px 0 40px}
+.lx-podium{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:end;margin-top:18px;padding:0 12px;border-bottom:3px solid var(--navy)}
+.lx-ped{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0;cursor:pointer}
+.lx-ped .x-av{width:92px;height:92px;font-size:30px;box-shadow:0 0 0 3px var(--navy)}
+.lx-pn{margin-top:12px;font-weight:800;font-size:19px;font-stretch:78%;text-transform:uppercase;max-width:100%}
+.lx-pt{font-weight:600;font-size:12px;color:var(--t3)}
+.lx-pv{margin-top:4px;font-weight:900;font-size:58px;line-height:1;font-stretch:62%}
+.lx-block{margin-top:10px;width:100%;height:var(--h);display:flex;flex-direction:column;align-items:center;transition:filter .15s}
+.lx-ped:hover .lx-block{filter:brightness(1.12)}
+.lx-block .s1{width:100%;height:6px;margin-top:10px}.lx-block .s2{width:100%;height:2px;margin-top:3px}
+.lx-rk{font-weight:900;font-size:96px;line-height:1;font-stretch:62%;color:#fff;margin-top:14px}
+.lx-place{font-weight:700;font-size:11px;letter-spacing:.14em;color:rgba(255,255,255,.85)}
+.lx-chase{display:grid;grid-template-columns:34px 40px minmax(0,200px) minmax(0,1fr) 64px 84px;gap:12px;align-items:center;padding:9px 4px;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .15s}
+.lx-chase:hover{background:var(--tint)}
+.lx-chase .rk{font-size:26px}
+.lx-chase .x-av{width:38px;height:38px;font-size:12px}
+.lx-nm{font-weight:700;font-size:15px}
+.lx-tm{font-weight:500;font-size:11px;color:var(--t3)}
+.lx-bar{position:relative;height:14px;background:var(--surface);border-radius:7px;overflow:hidden}
+.lx-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:7px}
+.lx-v{font-weight:800;font-size:18px;text-align:right}
+.lx-gap{font-weight:600;font-size:12px;color:var(--t3);text-align:right;white-space:nowrap}
+.lx-side{align-self:start;border:3px solid var(--navy);border-radius:4px;box-shadow:6px 6px 0 var(--red);padding:22px 22px 20px;display:flex;flex-direction:column;gap:16px;background:#fff}
+.lx-big{font-weight:900;font-size:84px;line-height:.9;font-stretch:62%}
+.lx-hist{display:flex;align-items:flex-end;gap:4px;height:96px;border-bottom:2px solid var(--navy)}
+.lx-hist i{flex:1;border-radius:2px 2px 0 0;background:#c3cad8}
+.lx-hist i.on{background:var(--red)}
+.lx-axis{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:11px;font-weight:600;color:var(--t3)}
+.lx-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:2px solid var(--navy)}
+.lx-2>div{padding:12px 10px 4px 0}
+.lx-2>div+div{border-left:1px solid var(--rule2);padding-left:14px}
+.lx-2 b{display:block;font-weight:900;font-size:36px;font-stretch:62%}
+.lx-2 span{font-size:12px;color:var(--t3)}
+.lx-all{background:var(--surface);border-top:3px solid var(--navy);border-bottom:3px solid var(--navy);margin:0 -44px -48px;padding:32px 44px 44px}
+.lx-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px;margin-top:18px}
+.lx-card{text-align:left;padding:0;border:3px solid var(--navy);border-radius:4px;background:#fff;box-shadow:4px 4px 0 var(--navy);overflow:hidden;transition:transform .15s,box-shadow .15s}
+.lx-card:hover{transform:translate(-2px,-2px);box-shadow:8px 8px 0 var(--navy)}
+.lx-card.on{box-shadow:4px 4px 0 var(--red)}
+.lx-ch{color:#fff;padding:0 16px 14px}
+.lx-ch .s1{height:5px;margin:0 -16px}.lx-ch .s2{height:2px;margin:3px -16px 0}
+.lx-chl{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:12px}
+.lx-chl b{font-weight:800;font-size:17px;font-stretch:72%;letter-spacing:.08em;text-transform:uppercase}
+.lx-chl span{font-weight:600;font-size:10px;letter-spacing:.08em;opacity:.85;text-transform:uppercase}
+.lx-cl{display:flex;align-items:center;gap:12px;margin-top:10px}
+.lx-cl .x-av{width:48px;height:48px;border:2px solid #fff;font-size:16px;background:rgba(255,255,255,.18)}
+.lx-cn{font-weight:800;font-size:16px;font-stretch:80%;text-transform:uppercase}
+.lx-cv{font-weight:900;font-size:46px;line-height:1;font-stretch:62%}
+.lx-cr{display:grid;grid-template-columns:18px minmax(0,1fr) 70px 46px;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--rule)}
+.lx-cr .rk{font-size:16px}
+.lx-cr div:nth-child(2){font-weight:600;font-size:13px}
+.lx-mini{height:6px;background:var(--surface);border-radius:3px;overflow:hidden}
+.lx-mini i{display:block;height:6px}
+.lx-cr div:last-child{font-weight:700;font-size:13px;text-align:right}
+
+/* ---------- trends ---------- */
+.tx-how{display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--t2);padding:12px 14px;border:2px solid var(--navy);border-radius:4px}
+.tx-how b{font-weight:700;font-size:11px;letter-spacing:.08em;color:var(--t3)}
+.tx-how div{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tx-dot{display:inline-block;border-radius:50%;box-sizing:border-box}
+.tx-heroes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;padding-top:28px}
+.tx-hero{border:3px solid var(--navy);border-radius:4px;padding:22px 24px 20px;display:flex;flex-direction:column;gap:14px;cursor:pointer;transition:transform .15s}
+.tx-hero:hover{transform:translate(-2px,-2px)}
+.tx-hl{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tx-tag{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px;letter-spacing:.12em}
+.tx-hm{display:flex;align-items:center;gap:18px}
+.tx-hm .x-av{width:84px;height:84px;border:3px solid var(--navy);font-size:26px}
+.tx-hn{font-weight:900;font-size:40px;line-height:.92;font-stretch:66%;text-transform:uppercase}
+.tx-hd{font-weight:900;font-size:76px;line-height:.85;font-stretch:62%;text-align:right}
+.tx-hu{font-weight:600;font-size:11px;letter-spacing:.08em;color:var(--t2);margin-top:4px;text-align:right}
+.tx-hb{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:22px;align-items:end}
+.tx-hv{display:flex;justify-content:space-between;font-weight:700;font-size:12px;color:var(--t2);margin-bottom:6px}
+.tx-db{position:relative;height:28px}
+.tx-db .ln{position:absolute;left:0;right:0;top:12px;height:4px;background:rgba(11,21,48,.12);border-radius:2px}
+.tx-db .fill{position:absolute;top:12px;height:4px;opacity:.45}
+.tx-db .b{position:absolute;top:5px;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:#fff;border:3px solid var(--t4);box-sizing:border-box}
+.tx-db .a{position:absolute;top:2px;width:24px;height:24px;margin-left:-12px;border-radius:50%;border:3px solid var(--navy);box-sizing:border-box}
+.tx-spk{display:flex;align-items:flex-end;gap:3px;height:44px;border-bottom:2px solid var(--navy)}
+.tx-spk i{flex:1;border-radius:2px 2px 0 0;background:#c3cad8}
+.tx-spl{font-size:10px;font-weight:600;color:var(--t3);margin-top:4px;letter-spacing:.04em}
+.tx-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px;padding-top:34px}
+.tx-row{display:grid;grid-template-columns:26px 36px minmax(0,170px) minmax(0,1fr) 96px 58px;gap:12px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .15s}
+.tx-row:hover{background:#f6f7fa}
+.tx-row .rk{font-size:22px}
+.tx-row .x-av{width:34px;height:34px;font-size:11px}
+.tx-rdb{position:relative;height:22px}
+.tx-rdb .ln{position:absolute;left:0;right:0;top:10px;height:2px;background:var(--rule)}
+.tx-rdb .fill{position:absolute;top:9px;height:4px;opacity:.4;border-radius:2px}
+.tx-rdb .b{position:absolute;top:4px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:#fff;border:2px solid var(--t4);box-sizing:border-box}
+.tx-rdb .a{position:absolute;top:2px;width:18px;height:18px;margin-left:-9px;border-radius:50%;border:2px solid var(--navy);box-sizing:border-box}
+.tx-vals{font-weight:600;font-size:14px;color:var(--t3);text-align:right;white-space:nowrap}
+.tx-vals b{color:var(--navy);font-weight:800}
+.tx-pill{justify-self:end;min-width:52px;text-align:center;padding:4px 6px;border-radius:4px;color:#fff;font-weight:800;font-size:14px}
+.tx-streaks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-top:18px}
+.tx-st{border:3px solid var(--navy);border-radius:4px;padding:16px;display:flex;flex-direction:column;gap:10px;cursor:pointer;transition:transform .15s}
+.tx-st:hover{transform:translateY(-3px)}
+.tx-sn{font-weight:900;font-size:54px;line-height:.85;font-stretch:62%}
+.tx-sn span{font-size:20px;color:var(--navy)}
+.tx-sw{font-weight:800;font-size:15px;text-transform:uppercase;font-stretch:80%}
+.tx-dots{display:flex;gap:6px;flex-wrap:wrap}
+.tx-dots i{width:14px;height:14px;border-radius:50%;border:2px solid var(--navy);box-sizing:border-box}
+.tx-sp{display:flex;align-items:center;gap:10px;padding-top:10px;border-top:1px solid rgba(11,21,48,.15)}
+.tx-sp .x-av{width:30px;height:30px;font-size:10px}
+.tx-sw2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px;margin-top:8px}
+.tx-sl{font-weight:800;font-size:13px;letter-spacing:.1em;padding:10px 0 4px}
+.tx-sr{display:grid;grid-template-columns:minmax(0,1fr) 30px 18px 34px 52px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .15s}
+.tx-sr:hover{background:var(--surface)}
+.tx-sec{padding-top:40px}
 
 /* ---------- opening animation ("Tip-Off") ---------- */
 @keyframes draw{to{stroke-dashoffset:0}}
@@ -363,6 +476,10 @@ html.intro .bn-s1,html.intro .bn-s2,html.intro .bn-name{animation:accIn .4s ease
   .hero-h{font-size:52px}
 }
 @media (max-width:1100px){
+  .lx-feat{grid-template-columns:1fr}
+  .lx-side{max-width:520px}
+  .tx-heroes,.tx-cols,.tx-sw2{grid-template-columns:1fr}
+  .tx-streaks{grid-template-columns:repeat(2,minmax(0,1fr))}
   .nav{gap:16px}
   .nav-srch .srch{width:150px}
   .tr-cols{grid-template-columns:1fr}
@@ -373,6 +490,60 @@ html.intro .bn-s1,html.intro .bn-s2,html.intro .bn-name{animation:accIn .4s ease
   .rb-c .av{display:none}
 }
 @media (max-width:900px){
+  .x-h1{font-size:50px}
+  .x-sub{font-size:14px}
+  .x-chips{flex-wrap:nowrap;overflow-x:auto;margin:16px -18px 0;padding:0 18px 14px;scrollbar-width:none}
+  .x-chips::-webkit-scrollbar{display:none}
+  .x-chip{flex:none;padding:0 14px;font-size:14px}
+  .x-h2{font-size:26px}
+  .lx-legend{display:none}
+  .lx-feat{padding:18px 0 28px;gap:24px}
+  .lx-podium{gap:8px;padding:0}
+  .lx-ped .x-av{width:56px;height:56px;font-size:18px;box-shadow:0 0 0 2px var(--navy)}
+  .lx-pn{font-size:12px;margin-top:8px}
+  .lx-pt{font-size:10px}
+  .lx-pv{font-size:36px}
+  .lx-rk{font-size:56px;margin-top:8px}
+  .lx-place{display:none}
+  .lx-block{height:calc(var(--h) * .56)}
+  .lx-block .s2{display:none}
+  .lx-chase{grid-template-columns:22px 32px minmax(0,1fr) 50px;gap:10px;padding:9px 0}
+  .lx-chase .rk{font-size:20px}
+  .lx-chase .x-av{width:32px;height:32px;font-size:11px}
+  .lx-chase .lx-bar{grid-column:3;grid-row:2;height:8px;margin-top:-4px}
+  .lx-chase .lx-gap{display:none}
+  .lx-chase .lx-v{grid-column:4;grid-row:1 / span 2;font-size:17px}
+  .lx-side{padding:16px;box-shadow:4px 4px 0 var(--red)}
+  .lx-big{font-size:64px}
+  .lx-all{margin:0 -18px -36px;padding:20px 18px 26px}
+  .lx-cards{grid-template-columns:1fr;gap:12px}
+  .lx-cb{display:none}
+  .tx-how{width:100%;box-sizing:border-box}
+  .tx-heroes{gap:16px;padding-top:18px}
+  .tx-hero{padding:14px;gap:10px}
+  .tx-hm{gap:12px}
+  .tx-hm .x-av{width:54px;height:54px;font-size:17px;border-width:2px}
+  .tx-hn{font-size:26px}
+  .tx-hd{font-size:48px}
+  .tx-hu{display:none}
+  .tx-hb{grid-template-columns:1fr;gap:12px}
+  .tx-spk{height:34px}
+  .tx-cols{gap:24px;padding-top:24px}
+  .tx-row{grid-template-columns:30px minmax(0,1fr) 52px;gap:10px;padding:10px 0}
+  .tx-row .rk{display:none}
+  .tx-row .x-av{width:30px;height:30px;font-size:10px}
+  .tx-row .tx-rdb{grid-column:2;grid-row:2;height:16px;margin-top:-2px}
+  .tx-row .tx-vals{grid-column:2;grid-row:1;justify-self:end;font-size:12px}
+  .tx-row .tx-pill{grid-column:3;grid-row:1 / span 2;font-size:13px}
+  .tx-row .tx-who{grid-column:2;grid-row:1;padding-right:92px}
+  .tx-streaks{gap:12px}
+  .tx-sw2{row-gap:22px}
+  .tx-st{padding:12px;gap:6px}
+  .tx-sn{font-size:40px}
+  .tx-sn span{font-size:15px}
+  .tx-sw{font-size:13px}
+  .tx-dots i{width:11px;height:11px}
+  .tx-sec{padding-top:26px}
   .hdr{height:54px;padding:0 18px}
   .wm{font-size:22px}
   .nav{display:none;position:absolute;top:54px;right:0;left:0;background:#fff;border-bottom:3px solid var(--navy);flex-direction:column;gap:0;z-index:50}
@@ -810,16 +981,69 @@ function buildHome(){
 }
 
 /* ================= LEADERBOARDS PAGE ================= */
-function lbRow(lb,p,i){
-  return '<div class="lrow" data-id="'+p.nba_id+'"><div class="rk'+(i===0?' one':'')+'">'+(i+1)+'</div>'+av(p,34)+'<div style="min-width:0"><div class="lrow-n ell">'+esc(p.Player)+'</div><div class="lrow-t">'+esc(p.Team)+'</div></div><div class="lrow-v">'+lbVal(lb,p)+'</div></div>';
-}
+var lbCat=0;
+function xav(p,extra){return '<div class="x-av" style="background:'+teamOf(p.Team).c+';'+(extra||'')+'">'+esc(ini(p.Player))+img(headSm(p.nba_id))+'</div>';}
+function lbNum(lb,v){var s=S[lb.k]||{};return s.f==='pct'?(v*100).toFixed(1):v.toFixed(1);}
 function buildLeaders(){
-  var h='<div class="page-top"><div><div class="eyebrow">'+esc(META.season)+' · TOP 10</div><h1 class="sec-t" style="font-size:44px;margin-top:6px">Leaderboards</h1><div class="sub">'+qualLine()+'</div></div></div>';
-  h+='<div class="lb-grid">'+LB.map(function(lb){
-    return '<div class="lb-card"><div class="lb-hd"><div class="lb-l">'+lb.n+'</div><div class="lb-n">'+lb.note+'</div></div>'+leaders(lb,10).map(function(p,i){return lbRow(lb,p,i);}).join('')+'</div>';
-  }).join('')+'</div>';
+  var lb=LB[lbCat],top=leaders(lb,10);
+  var h='<div class="xp"><div class="x-top"><div><div class="x-eb">'+esc(META.season)+' · THROUGH '+META.gamesSoFar+(META.gamesSoFar===1?' GAME':' GAMES')+' · '+D.length+' QUALIFIED PLAYERS</div><h1 class="x-h1">Leaderboards</h1><p class="x-sub">Who is on top, by how much, and how far ahead of everyone else. Pick a category.</p></div><div class="lx-legend"><i></i>Bar length = share of the leader’s number</div></div>';
+  h+='<div class="x-chips" role="tablist" aria-label="Category">'+LB.map(function(c,i){return '<button type="button" role="tab" aria-selected="'+(i===lbCat)+'" class="x-chip'+(i===lbCat?' on':'')+'" data-lb="'+i+'">'+c.n+'</button>';}).join('')+'</div>';
+  if(!top.length){$('vLeaders').innerHTML=h+'<div class="tr-empty">No qualified players in this category yet.</div></div>';return;}
+  var lead=top[0],lv=parseFloat(lead[lb.k]);
+  /* podium: 2nd, 1st, 3rd */
+  var HT=['210px','270px','170px'],PL=['2ND PLACE','1ST PLACE','3RD PLACE'];
+  h+='<div class="lx-feat"><div style="min-width:0"><div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px"><h2 class="x-h2">'+lb.n+' <span style="color:var(--t4);font-size:.6em">'+lb.note.toUpperCase()+'</span></h2><div class="x-meta">The Podium</div></div><div class="lx-podium">';
+  [1,0,2].forEach(function(ix,k){
+    var p=top[ix];if(!p){h+='<div></div>';return;}
+    var tm=teamOf(p.Team);
+    h+='<div class="lx-ped" data-id="'+p.nba_id+'">'+xav(p,'border:4px solid '+tm.s)+'<div class="lx-pn ell">'+esc(p.Player)+'</div><div class="lx-pt">'+esc(p.Team)+' · '+p.G+' GP</div><div class="lx-pv">'+lbVal(lb,p)+'</div>'
+      +'<div class="lx-block" style="--h:'+HT[k]+';background:'+tm.c+'"><div class="s1" style="background:'+tm.s+'"></div><div class="s2" style="background:'+tm.s+'"></div><div class="lx-rk">'+(ix+1)+'</div><div class="lx-place">'+PL[k]+'</div></div></div>';
+  });
+  h+='</div>';
+  if(top.length>3){
+    h+='<div class="x-sechd" style="margin-top:30px;border-bottom-width:2px"><div class="x-h2" style="font-size:24px">The Chase</div><div class="x-meta">Ranks 4 to '+top.length+' · gap to #1</div></div>';
+    top.slice(3).forEach(function(p,i){
+      var v=parseFloat(p[lb.k]),w=lv>0?Math.max(2,v/lv*100):0,g=lv-v;
+      h+='<div class="lx-chase" data-id="'+p.nba_id+'"><div class="rk">'+(i+4)+'</div>'+xav(p)+'<div style="min-width:0"><div class="lx-nm ell">'+esc(p.Player)+'</div><div class="lx-tm">'+esc(p.Team)+' · '+p.G+' GP</div></div>'
+        +'<div class="lx-bar"><i style="width:'+w.toFixed(1)+'%;background:'+teamOf(p.Team).c+'"></i></div><div class="lx-v">'+lbVal(lb,p)+'</div><div class="lx-gap">'+(g<1e-9?'tied':lbNum(lb,g)+' back')+'</div></div>';
+    });
+  }
+  h+='</div>';
+  /* how the leader stacks up */
+  var pool=D.filter(function(p){return (!lb.q||lb.q(p))&&!isNaN(parseFloat(p[lb.k]));}),vals=pool.map(function(p){return parseFloat(p[lb.k]);});
+  var avg=vals.reduce(function(a,b){return a+b;},0)/vals.length,st=S[lb.k]||{},ratio=!st.sg&&avg>0.05;
+  var big=ratio?(lv/avg).toFixed(1)+'×':(lv-avg>=0?'+':'')+lbNum(lb,lv-avg);
+  var bigL=(ratio?'the league average':'above the league average')+'<br><b style="color:var(--navy)">('+lbNum(lb,avg)+(ratio?' '+lb.sh:'')+')</b>';
+  var lo=Math.min.apply(null,vals),hi=Math.max.apply(null,vals),NB=12,bins=[],i2;
+  for(i2=0;i2<NB;i2++)bins.push(0);
+  var bin=function(v){return Math.min(NB-1,Math.floor((v-lo)/((hi-lo)||1)*NB));};
+  vals.forEach(function(v){bins[bin(v)]++;});
+  var mx=Math.max.apply(null,bins),lb2=top[1]?lv-parseFloat(top[1][lb.k]):null;
+  h+='<aside class="lx-side"><div class="x-eb" style="font-size:11px;letter-spacing:.1em">How the leader stacks up</div>'
+    +'<div style="display:flex;align-items:baseline;gap:10px"><div class="lx-big">'+big+'</div><div style="font-size:15px;line-height:1.35;color:var(--t2)">'+bigL+'</div></div>'
+    +'<div><div class="lx-hist" aria-hidden="true">'+bins.map(function(b,i){return '<i class="'+(i===bin(lv)?'on':'')+'" style="height:'+Math.max(4,Math.round(b/mx*100))+'%"></i>';}).join('')+'</div>'
+    +'<div class="lx-axis"><span>'+lbNum(lb,lo)+'</span><span>Every qualified player ('+vals.length+')</span><span>'+lbNum(lb,hi)+'</span></div>'
+    +'<div style="margin-top:8px;font-size:12px;color:var(--t2);display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;background:var(--red);border-radius:2px;flex:none"></span>'+esc(lead.Player)+' is in the red bar</div></div>'
+    +'<div class="lx-2"><div><b>'+(lb2===null?'N/A':lb2<1e-9?'Tied':lbNum(lb,lb2))+'</b><span>lead over #2</span></div><div><b>'+lead.G+'</b><span>games played</span></div></div>'
+    +'<a class="btn" href="#p'+lead.nba_id+'" style="height:46px;box-shadow:3px 3px 0 var(--red)">Open '+esc(lead.Player)+'’s card →</a>'
+    +'<div style="font-size:11px;line-height:1.5;color:var(--t3)">'+qualLine()+(lb.q?' This board also needs '+lb.note.toLowerCase()+'.':'')+'</div></aside></div>';
+  /* every category */
+  h+='<div class="lx-all"><div class="xp"><div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap"><h2 class="x-h2">Every Category</h2><div style="font-size:13px;color:var(--t3)">Tap a card to put it on the podium</div></div><div class="lx-cards">';
+  LB.forEach(function(c,i){
+    var t5=leaders(c,5);if(!t5.length)return;
+    var p=t5[0],tm=teamOf(p.Team),cv=parseFloat(p[c.k]);
+    h+='<button type="button" class="lx-card'+(i===lbCat?' on':'')+'" data-lb="'+i+'" data-top="1"><div class="lx-ch" style="background:'+tm.c+'"><div class="s1" style="background:'+tm.s+'"></div><div class="s2" style="background:'+tm.s+'"></div>'
+      +'<div class="lx-chl"><b>'+c.n+'</b><span>'+c.note+'</span></div><div class="lx-cl">'+xav(p)+'<div style="min-width:0;flex:1"><div class="lx-cn ell">'+esc(p.Player)+'</div><div style="font-size:11px;font-weight:600;opacity:.85">'+esc(p.Team)+'</div></div><div class="lx-cv">'+lbVal(c,p)+'</div></div></div>'
+      +'<div class="lx-cb" style="padding:8px 16px 12px">'+t5.slice(1).map(function(r,j){var w=cv>0?Math.max(2,parseFloat(r[c.k])/cv*100):0;return '<div class="lx-cr"><div class="rk">'+(j+2)+'</div><div class="ell">'+esc(r.Player)+'</div><div class="lx-mini"><i style="width:'+w.toFixed(1)+'%;background:'+teamOf(r.Team).c+'"></i></div><div>'+lbVal(c,r)+'</div></div>';}).join('')+'</div></button>';
+  });
+  h+='</div></div></div></div>';
   $('vLeaders').innerHTML=h;
 }
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-lb]');if(!b)return;
+  lbCat=+b.dataset.lb;buildLeaders();
+  if(b.dataset.top)window.scrollTo({top:0,behavior:'smooth'});
+});
 
 /* ================= PLAYERS PAGE ================= */
 function buildPlayers(){
@@ -905,12 +1129,17 @@ document.addEventListener('click',function(e){
 });
 
 /* ================= TRENDS =================
-   Recent form: each player's last W games against his earlier games. */
+   Recent form: each player's last W games against his earlier games.
+   Hot = orange, cold = blue (easy to tell apart for colorblind visitors). */
+var HOT='#c2410c',COLD='#1d4ed8',HOTT='#fff3ea',COLDT='#edf3ff';
+var FLAME='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c1 3 4 5 4 9a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 0-8z"/><path d="M8 15a4 4 0 0 0 8 0"/></svg>';
+var ICE='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 2v20M4.5 6.5l15 11M19.5 6.5l-15 11M9 3.5l3 2.5 3-2.5M9 20.5l3-2.5 3 2.5"/></svg>';
+var ARROW='<svg width="18" height="12" viewBox="0 0 18 12" fill="none" stroke="#0b1530" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 6h15M11 1l5 5-5 5"/></svg>';
 var TR_STATS=[
- {sh:'Overall',n:'Game Score',note:'Game Score blends points, shooting, rebounds, assists, steals, blocks and turnovers into one number per game.',f:function(x){return x[4]+0.4*x[10]-0.7*x[11]-0.4*(x[15]-x[14])+0.7*x[16]+0.3*x[17]+x[7]+0.7*x[6]+0.7*x[8]-0.4*x[18]-x[9];}},
- {sh:'PTS',n:'Points',i:4},{sh:'REB',n:'Rebounds',i:5},{sh:'AST',n:'Assists',i:6},
- {sh:'3P%',n:'3-Point %',m:12,a:13,min:2},{sh:'FG%',n:'Field Goal %',m:10,a:11,min:5},
- {sh:'STL',n:'Steals',i:7},{sh:'BLK',n:'Blocks',i:8}
+ {sh:'Overall',n:'Game Score',u:'GAME SCORE',note:'Game Score rolls points, shooting, rebounds, assists, steals, blocks and turnovers into one number per game.',f:function(x){return x[4]+0.4*x[10]-0.7*x[11]-0.4*(x[15]-x[14])+0.7*x[16]+0.3*x[17]+x[7]+0.7*x[6]+0.7*x[8]-0.4*x[18]-x[9];}},
+ {sh:'PTS',n:'Points',u:'PER GAME',i:4},{sh:'REB',n:'Rebounds',u:'PER GAME',i:5},{sh:'AST',n:'Assists',u:'PER GAME',i:6},
+ {sh:'3P%',n:'3-Point %',u:'PCT POINTS',m:12,a:13,min:2},{sh:'FG%',n:'Field Goal %',u:'PCT POINTS',m:10,a:11,min:5},
+ {sh:'STL',n:'Steals',u:'PER GAME',i:7},{sh:'BLK',n:'Blocks',u:'PER GAME',i:8}
 ];
 var trCat=0;
 function trVal(s,games){
@@ -921,24 +1150,45 @@ function trWindow(){
   var mx=0;Object.keys(GL).forEach(function(k){mx=Math.max(mx,GL[k].length);});
   return {max:mx,w:Math.min(5,Math.max(2,Math.floor(mx/2)))};
 }
-function spark(s,games,w){
-  var last=games.slice(-10),vals=last.map(function(x){return s.a!==undefined?(x[s.a]?x[s.m]/x[s.a]:0):(s.f?s.f(x):x[s.i]);});
-  var mx=Math.max.apply(null,vals.concat([s.a!==undefined?1:1])),mn=Math.min(0,Math.min.apply(null,vals));
-  var bw=8,gap=1,H=26,out='';
-  vals.forEach(function(v,i){
-    var hgt=Math.max(1.5,(v-mn)/((mx-mn)||1)*H),recent=i>=vals.length-w;
-    out+='<rect x="'+(i*(bw+gap))+'" y="'+(H-hgt)+'" width="'+bw+'" height="'+hgt+'" fill="'+(recent?'#0b1530':'#d5dae4')+'"/>';
+/* Streak Watch: active streaks (ending with each player's latest game), 3+ games long */
+var ST_TYPES=[
+ {w:'30+ points',hot:1,f:function(x){return x[4]>=30;}},
+ {w:'25+ points',hot:1,f:function(x){return x[4]>=25;}},
+ {w:'Double-double',hot:1,f:function(x){return [x[4],x[5],x[6],x[7],x[8]].filter(function(v){return v>=10;}).length>=2;}},
+ {w:'10+ assists',hot:1,f:function(x){return x[6]>=10;}},
+ {w:'12+ rebounds',hot:1,f:function(x){return x[5]>=12;}},
+ {w:'4+ threes',hot:1,f:function(x){return x[12]>=4;}},
+ {w:'3+ blocks',hot:1,f:function(x){return x[8]>=3;}},
+ {w:'Under 35% shooting',hot:0,f:function(x){return x[11]>=8&&x[10]/x[11]<0.35;}}
+];
+function findStreaks(){
+  var all=[];
+  D.forEach(function(p){
+    var g=GL[String(p.nba_id)];if(!g||g.length<3)return;
+    ST_TYPES.forEach(function(t,ti){
+      var n=0;for(var i=g.length-1;i>=0&&t.f(g[i]);i--)n++;
+      if(n>=3)all.push({p:p,n:n,t:t,ti:ti});
+    });
   });
-  return '<svg class="spark" width="'+(10*(bw+gap))+'" height="'+H+'" viewBox="0 0 '+(10*(bw+gap))+' '+H+'" aria-hidden="true">'+out+'</svg>';
+  all.sort(function(a,b){return b.n-a.n||a.ti-b.ti||(b.p.MP_PG||0)-(a.p.MP_PG||0);});
+  /* one card per player, and different streak types first so the row has variety */
+  var seen={},types={},hot=[],cold=[],rest=[];
+  all.forEach(function(s){if(seen[s.p.nba_id])return;if(types[s.ti]){rest.push(s);return;}seen[s.p.nba_id]=1;types[s.ti]=1;(s.t.hot?hot:cold).push(s);});
+  rest.forEach(function(s){if(seen[s.p.nba_id])return;seen[s.p.nba_id]=1;(s.t.hot?hot:cold).push(s);});
+  var pick=hot.slice(0,cold.length?3:4).concat(cold.slice(0,1));
+  return pick;
 }
 function buildTrends(){
   var W=trWindow(),s=TR_STATS[trCat],pctStat=s.a!==undefined;
-  var h='<div class="page-top"><div><div class="eyebrow">'+esc(META.season)+' · RECENT FORM</div><h1 class="sec-t" style="font-size:44px;margin-top:6px">Trends</h1>'
-    +'<div class="sub">Who’s heating up and who’s cooling off: each player’s last '+W.w+' games compared with the rest of his season. Rotation players (15+ minutes) only.</div></div></div>';
-  h+='<div class="chips" id="trChips">'+TR_STATS.map(function(t,i){return '<button type="button" class="chip'+(i===trCat?' on':'')+'" data-tr="'+i+'">'+t.sh+'</button>';}).join('')+'</div>';
-  if(s.note)h+='<div class="tr-note">'+s.note+'</div>';
+  var fm=function(v){return pctStat?(v*100).toFixed(1):v.toFixed(1);};
+  var sg=function(v){return (v>0?'+':'')+fm(v);};
+  var h='<div class="xp"><div class="x-top"><div><div class="x-eb">Recent form · last '+W.w+' games vs the rest of the season</div><h1 class="x-h1">Who’s Hot. Who’s Not.</h1><p class="x-sub">Every rotation player’s last '+W.w+' games against everything before. Bigger gap, bigger story.</p></div>'
+    +'<div class="tx-how"><b>HOW TO READ IT</b><div><span class="tx-dot" style="width:12px;height:12px;border:2px solid var(--t4)"></span>Before <span style="width:30px;height:4px;background:var(--rule2)"></span><span class="tx-dot" style="width:14px;height:14px;background:'+HOT+'"></span>Last '+W.w+' (hot) <span class="tx-dot" style="width:14px;height:14px;background:'+COLD+';margin-left:6px"></span>Last '+W.w+' (cold)</div></div></div>';
+  h+='<div class="x-chips" role="tablist" aria-label="Stat">'+TR_STATS.map(function(t,i){return '<button type="button" role="tab" aria-selected="'+(i===trCat)+'" class="x-chip'+(i===trCat?' on':'')+'" data-tr="'+i+'">'+t.sh+'</button>';}).join('')+'</div>';
+  if(s.note)h+='<div style="font-size:13px;color:var(--t3);line-height:1.5;margin-top:12px">'+s.note+'</div>';
+
   if(!Object.keys(GL).length){h+='<div class="tr-empty">Recent form needs game logs, which arrive with the next stats update.</div>';}
-  else if(W.max<4){h+='<div class="tr-empty">Recent form starts once teams have played 4 games. Check back in a few days.</div>';}
+  else if(W.max<4){h+='<div class="tr-empty">The hot and cold lists start once teams have played 4 games. Check back in a few days. Streaks and percentile swings are below.</div>';}
   else{
     var rows=[];
     D.forEach(function(p){
@@ -948,26 +1198,69 @@ function buildTrends(){
       if(rec===null||pri===null)return;
       rows.push({p:p,g:g,rec:rec,pri:pri,d:rec-pri});
     });
-    var fm=function(v){return pctStat?(v*100).toFixed(1):v.toFixed(1);};
-    var row=function(r,i){
-      var up=r.d>0;
-      return '<div class="tr-row" data-id="'+r.p.nba_id+'"><div class="rk'+(i===0?' one':'')+'">'+(i+1)+'</div><div style="min-width:0"><div class="tr-nm ell">'+esc(r.p.Player)+'</div><div class="tr-tm">'+esc(r.p.Team)+' · '+r.g.length+' GP</div></div>'
-        +spark(s,r.g,W.w)+'<div class="tr-vals">'+fm(r.pri)+' → <b>'+fm(r.rec)+'</b></div><div class="tr-d '+(up?'up':'dn')+'">'+(up?'+':'')+fm(r.d)+'</div></div>';
+    var hot=rows.filter(function(r){return r.d>0;}).sort(function(a,b){return b.d-a.d;}).slice(0,8);
+    var cold=rows.filter(function(r){return r.d<0;}).sort(function(a,b){return a.d-b.d;}).slice(0,8);
+    var scale=function(list){
+      var v=[];list.forEach(function(r){v.push(r.pri,r.rec);});
+      var lo=Math.min.apply(null,v),hi=Math.max.apply(null,v),pad=(hi-lo)*0.08||1;lo-=pad;hi+=pad;
+      return function(x){return ((x-lo)/(hi-lo)*100).toFixed(1);};
     };
-    var hot=rows.filter(function(r){return r.d>0;}).sort(function(a,b){return b.d-a.d;}).slice(0,12);
-    var cold=rows.filter(function(r){return r.d<0;}).sort(function(a,b){return a.d-b.d;}).slice(0,12);
-    h+='<div class="tr-cols"><div><div class="mv-hd rise"><div class="mv-t">▲ Heating up</div><div class="mv-m">'+s.n.toUpperCase()+' · BEFORE → LAST '+W.w+'</div></div>'+(hot.length?hot.map(row).join(''):'<div class="tr-empty">Nobody yet.</div>')+'</div>'
-      +'<div><div class="mv-hd fall"><div class="mv-t">▼ Cooling off</div><div class="mv-m">'+s.n.toUpperCase()+' · BEFORE → LAST '+W.w+'</div></div>'+(cold.length?cold.map(row).join(''):'<div class="tr-empty">Nobody yet.</div>')+'</div></div>';
-    h+='<div class="tr-note">Bars show the last 10 games, with the last '+W.w+' in dark blue.</div>';
+    var spk=function(g,col){
+      var vals=g.slice(-10).map(function(x){return pctStat?(x[s.a]?x[s.m]/x[s.a]:0):(s.f?s.f(x):x[s.i]);});
+      var mx=Math.max.apply(null,vals),mn=Math.min(0,Math.min.apply(null,vals));
+      return '<div class="tx-spk" aria-hidden="true">'+vals.map(function(v,i){return '<i style="height:'+Math.max(6,Math.round((v-mn)/((mx-mn)||1)*100))+'%'+(i>=vals.length-W.w?';background:'+col:'')+'"></i>';}).join('')+'</div>';
+    };
+    var dumb=function(cls,r,pos,col){var pb=pos(r.pri),pa=pos(r.rec);return '<div class="'+cls+'"><div class="ln"></div><div class="fill" style="left:'+Math.min(pb,pa)+'%;width:'+Math.abs(pa-pb).toFixed(1)+'%;background:'+col+'"></div><div class="b" style="left:'+pb+'%"></div><div class="a" style="left:'+pa+'%;background:'+col+'"></div></div>';};
+    var hero=function(r,isHot,pos){
+      var col=isHot?HOT:COLD,p=r.p;
+      return '<div class="tx-hero" data-id="'+p.nba_id+'" style="background:'+(isHot?HOTT:COLDT)+';box-shadow:6px 6px 0 '+col+'">'
+        +'<div class="tx-hl"><div class="tx-tag" style="color:'+col+'">'+(isHot?FLAME+'ON FIRE':ICE+'ICE COLD')+'</div><div style="font-weight:600;font-size:12px;color:var(--t2)">'+s.n+' · biggest '+(isHot?'jump':'drop')+'</div></div>'
+        +'<div class="tx-hm">'+xav(p)+'<div style="min-width:0;flex:1"><div class="tx-hn">'+esc(p.Player)+'</div><div style="font-weight:600;font-size:13px;color:var(--t2);margin-top:4px">'+esc(teamOf(p.Team).n)+'</div></div><div><div class="tx-hd" style="color:'+col+'">'+sg(r.d)+'</div><div class="tx-hu">'+s.u+'</div></div></div>'
+        +'<div class="tx-hb"><div><div class="tx-hv"><span>Before: '+fm(r.pri)+'</span><span style="color:'+col+'">Last '+W.w+': '+fm(r.rec)+'</span></div>'+dumb('tx-db',r,pos,col)+'</div>'
+        +'<div>'+spk(r.g,col)+'<div class="tx-spl">LAST 10 GAMES</div></div></div></div>';
+    };
+    var row=function(r,i,pos,col){
+      var p=r.p;
+      return '<div class="tx-row" data-id="'+p.nba_id+'"><div class="rk">'+(i+1)+'</div>'+xav(p)+'<div class="tx-who" style="min-width:0"><div class="lx-nm ell" style="font-size:14px">'+esc(p.Player)+'</div><div class="lx-tm">'+esc(p.Team)+' · '+r.g.length+' GP</div></div>'
+        +dumb('tx-rdb',r,pos,col)+'<div class="tx-vals">'+fm(r.pri)+' → <b>'+fm(r.rec)+'</b></div><div class="tx-pill" style="background:'+col+'">'+sg(r.d)+'</div></div>';
+    };
+    var hs=scale(hot),cs=scale(cold);
+    if(hot.length||cold.length)h+='<div class="tx-heroes">'+(hot.length?hero(hot[0],true,hs):'')+(cold.length?hero(cold[0],false,cs):'')+'</div>';
+    var col=function(list,isHot,pos){
+      var c=isHot?HOT:COLD;
+      return '<div style="min-width:0"><div class="x-sechd"><h2 class="x-h2" style="font-size:30px;color:'+c+'">'+(isHot?'▲ Heating Up':'▼ Cooling Off')+'</h2><div class="x-meta">'+s.n+' · before → last '+W.w+'</div></div>'
+        +(list.length?list.map(function(r,i){return row(r,i,pos,c);}).join(''):'<div class="tr-empty">Nobody yet.</div>')+'</div>';
+    };
+    h+='<div class="tx-cols">'+col(hot,true,hs)+col(cold,false,cs)+'</div>';
   }
+
+  var st=Object.keys(GL).length?findStreaks():[];
+  h+='<div class="tx-sec"><div class="x-sechd"><h2 class="x-h2" style="font-size:30px">Streak Watch</h2><div style="font-size:13px;color:var(--t3)">Active streaks, one dot per game</div></div>';
+  if(st.length){
+    h+='<div class="tx-streaks">'+st.map(function(x){
+      var c=x.t.hot?HOT:COLD,dots='';for(var i=0;i<Math.min(x.n,12);i++)dots+='<i style="background:'+c+'"></i>';
+      return '<div class="tx-st" data-id="'+x.p.nba_id+'" style="background:'+(x.t.hot?HOTT:COLDT)+'"><div class="tx-sn" style="color:'+c+'">'+x.n+'<span> straight</span></div><div class="tx-sw">'+x.t.w+'</div><div class="tx-dots">'+dots+'</div>'
+        +'<div class="tx-sp">'+xav(x.p)+'<div style="min-width:0"><div class="ell" style="font-weight:700;font-size:13px">'+esc(x.p.Player)+'</div><div style="font-size:11px;color:var(--t3)">'+esc(x.p.Team)+'</div></div></div></div>';
+    }).join('')+'</div>';
+  }else h+='<div class="tr-empty">No active streaks of 3 or more games yet.</div>';
+  h+='</div>';
+
   var M=META.movers;
   if(M&&M.rising&&M.rising.length){
     var last=M.mode==='lastseason';
-    h+='<div class="tr-sec"><div class="eyebrow">PERCENTILE MOVERS · '+(last?'VS LAST SEASON':'LAST '+M.days+' DAYS')+'</div><h2 class="sec-t" style="margin-top:6px">Biggest percentile swings</h2>'
-      +'<div class="sub tr-note">Each player’s biggest change in any stat percentile '+(last?'compared with last season':'over the last '+M.days+' days')+'.</div>'
-      +'<div class="tr-cols"><div class="mv-col rise" style="padding:0;border:none"><div class="mv-hd"><div class="mv-t">▲ Rising</div><div class="mv-m">Δ PCTL</div></div>'+M.rising.map(moverRow).join('')+'</div>'
-      +'<div class="mv-col fall" style="padding:0"><div class="mv-hd"><div class="mv-t">▼ Falling</div><div class="mv-m">Δ PCTL</div></div>'+(M.falling||[]).map(moverRow).join('')+'</div></div></div>';
+    var sw=function(list,isHot){
+      var c=isHot?HOT:COLD;
+      return '<div><div class="tx-sl" style="color:'+c+'">'+(isHot?'▲ RISING':'▼ FALLING')+'</div>'+list.slice(0,8).map(function(m){
+        return '<div class="tx-sr" data-id="'+m.id+'"><div style="min-width:0"><div class="lx-nm ell">'+esc(m.n)+'</div><div class="lx-tm">'+esc(m.t)+' · '+esc(m.s)+'</div></div>'
+          +bub(m.from,'','width:28px;height:28px;opacity:.6;font-weight:700;font-size:11px')+ARROW
+          +bub(m.to,'','width:32px;height:32px;border:2px solid var(--navy);box-sizing:border-box;font-weight:800;font-size:12px')
+          +'<div style="font-weight:800;font-size:16px;text-align:right;color:'+c+'">'+(m.to-m.from>0?'+':'')+(m.to-m.from)+'</div></div>';
+      }).join('')+'</div>';
+    };
+    h+='<div class="tx-sec"><div class="x-sechd"><h2 class="x-h2" style="font-size:30px">Biggest Percentile Swings</h2><div style="font-size:13px;color:var(--t3)">Each player’s biggest change in any stat, '+(last?'vs last season':'over the last '+M.days+' days')+'</div></div>'
+      +'<div class="tx-sw2">'+sw(M.rising,true)+sw(M.falling||[],false)+'</div></div>';
   }
+  h+='</div>';
   $('vTrends').innerHTML=h;
 }
 document.addEventListener('click',function(e){var c=e.target.closest('[data-tr]');if(c){trCat=+c.dataset.tr;buildTrends();}});
