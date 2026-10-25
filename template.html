@@ -286,6 +286,47 @@ main{flex:1}
 .cx-a{font-weight:800;font-size:11px;color:var(--blue);margin-top:2px;min-height:1em}
 .cx-a.eq{color:var(--t4)}
 
+/* ---------- header search ---------- */
+.nav{align-items:center}
+.nav-srch{position:relative}
+.nav-srch .srch{height:34px;width:190px;padding:0 10px;gap:8px;box-shadow:2px 2px 0 var(--navy)}
+.nav-srch .mag{width:11px;height:11px}
+.nav-srch .srch input{font-size:13px}
+.nav-srch .dd{top:40px;left:auto;right:0;width:300px}
+
+/* ---------- player tabs + game log ---------- */
+.p-tabs{display:flex;gap:8px;padding:16px 0 0}
+.p-tab{min-height:40px;padding:0 16px;border-radius:3px;border:1.5px solid var(--navy);font-weight:700;font-size:14px;font-stretch:80%;text-transform:uppercase;letter-spacing:.04em;transition:background .15s}
+.p-tab:hover{background:var(--surface)}
+.p-tab.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.gl{min-width:760px}
+.gl td,.gl th{padding:8px 6px}
+.gl td{font-size:14px}
+.gl .d{text-align:left;color:var(--t3);font-weight:600;white-space:nowrap}
+.gl .o{text-align:left;white-space:nowrap}
+.gl .o img{width:18px;height:18px;vertical-align:-4px;margin-left:6px}
+.gl .w{color:var(--rise);font-weight:800}.gl .l{color:var(--fall);font-weight:800}
+.gl .big{font-weight:800}
+.gl tr.avg td{border-top:2px solid var(--navy);border-bottom:none;font-weight:800;background:var(--tint)}
+.gl tbody tr:hover td{background:var(--surface)}
+
+/* ---------- trends ---------- */
+.tr-cols{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:18px}
+.tr-row{display:grid;grid-template-columns:22px minmax(0,1fr) 88px 118px 52px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .15s}
+.tr-row:hover{background:var(--surface)}
+.tr-row .rk{font-size:20px}
+.tr-nm{font-weight:700;font-size:15px}
+.tr-tm{font-weight:500;font-size:11px;color:var(--t3)}
+.tr-vals{font-weight:600;font-size:14px;text-align:right;white-space:nowrap;color:var(--t3)}
+.tr-vals b{color:var(--navy);font-weight:800}
+.tr-d{font-weight:800;font-size:15px;text-align:right}
+.tr-d.up{color:var(--rise)}.tr-d.dn{color:var(--fall)}
+.spark{display:block}
+.tr-note{font-size:13px;color:var(--t3);line-height:1.5;margin-top:10px}
+.tr-sec{margin-top:40px;padding-top:20px;border-top:3px solid var(--navy)}
+.tr-empty{padding:30px 0;color:var(--t3);font-size:15px;line-height:1.6}
+.mv-all{margin-top:10px}
+
 /* ---------- opening animation ("Tip-Off") ---------- */
 @keyframes draw{to{stroke-dashoffset:0}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
@@ -316,10 +357,15 @@ html.intro .bn-s1,html.intro .bn-s2,html.intro .bn-name{animation:accIn .4s ease
 
 /* ---------- responsive ---------- */
 @media (max-width:1250px){
+  .upd{display:none}
+  .nav{gap:20px}
   .banners{gap:10px;padding:0 16px}
   .hero-h{font-size:52px}
 }
 @media (max-width:1100px){
+  .nav{gap:16px}
+  .nav-srch .srch{width:150px}
+  .tr-cols{grid-template-columns:1fr}
   .movers{grid-template-columns:1fr 1fr}
   .lead{grid-column:1/-1;border-right:none;border-bottom:1px solid var(--rule2);padding:28px 44px}
   .mv-col.rise{padding-left:44px}
@@ -332,6 +378,14 @@ html.intro .bn-s1,html.intro .bn-s2,html.intro .bn-name{animation:accIn .4s ease
   .nav{display:none;position:absolute;top:54px;right:0;left:0;background:#fff;border-bottom:3px solid var(--navy);flex-direction:column;gap:0;z-index:50}
   .nav.open{display:flex}
   .nav a{padding:0 18px;min-height:48px;display:flex;align-items:center;border-top:1px solid var(--rule);font-size:16px}
+  .nav{align-items:stretch}
+  .nav-srch{padding:12px 18px;border-top:1px solid var(--rule)}
+  .nav-srch .srch{width:100%;height:44px}
+  .nav-srch .srch input{font-size:16px}
+  .nav-srch .dd{left:18px;right:18px;width:auto;top:60px}
+  .tr-row{grid-template-columns:20px minmax(0,1fr) 104px 46px}
+  .tr-row .spark{display:none}
+  .tr-vals{font-size:13px}
   .menu-btn{display:block}
   .upd{display:none}
   .hero{grid-template-columns:1fr;border-bottom:none}
@@ -433,7 +487,7 @@ html.intro .bn-s1,html.intro .bn-s2,html.intro .bn-name{animation:accIn .4s ease
 <header class="hdr">
   <div class="hdr-l">
     <a class="wm" href="#/">NBA <span>Savant</span></a>
-    <nav class="nav" id="nav"><a href="#/" data-nav="home">Home</a><a href="#/leaders" data-nav="leaders">Leaderboards</a><a href="#/players" data-nav="players">Players</a><a href="#/compare" data-nav="compare" id="navCmp">Compare</a></nav>
+    <nav class="nav" id="nav"><a href="#/" data-nav="home">Home</a><a href="#/leaders" data-nav="leaders">Leaderboards</a><a href="#/trends" data-nav="trends">Trends</a><a href="#/players" data-nav="players">Players</a><a href="#/compare" data-nav="compare" id="navCmp">Compare</a><div class="nav-srch"><label class="srch"><span class="mag"></span><input id="navQ" placeholder="Search players…" autocomplete="off" aria-label="Search players"></label><div class="dd" id="navDD"></div></div></nav>
   </div>
   <div class="hdr-r"><span><span id="hdrSeason"></span><span class="upd" id="hdrUpd"></span></span><button class="menu-btn" id="menuBtn" type="button" aria-expanded="false">Menu</button></div>
 </header>
@@ -442,7 +496,7 @@ html.intro .bn-s1,html.intro .bn-s2,html.intro .bn-name{animation:accIn .4s ease
   <section class="hero">
     <div class="hero-l">
       <div class="eyebrow" id="heroEb"></div>
-      <h1 class="hero-h">Every stat. Every player. Ranked.</h1>
+      <h1 class="hero-h">People Lie. Numbers Don’t.</h1>
       <p class="hero-p" id="heroP"></p>
       <div class="srch-wrap">
         <label class="srch"><span class="mag"></span><input id="homeQ" placeholder="Search a player…" autocomplete="off" aria-label="Search a player"></label>
@@ -475,6 +529,7 @@ html.intro .bn-s1,html.intro .bn-s2,html.intro .bn-name{animation:accIn .4s ease
 </main>
 
 <main id="vLeaders" class="page" hidden></main>
+<main id="vTrends" class="page" hidden></main>
 <main id="vPlayers" class="page" hidden></main>
 <main id="vPlayer" class="page" hidden></main>
 
@@ -500,6 +555,7 @@ html.intro .bn-s1,html.intro .bn-s2,html.intro .bn-name{animation:accIn .4s ease
 var D=__DATA_PLACEHOLDER__;
 var SD=__SHOTS_PLACEHOLDER__;
 var META=__META_PLACEHOLDER__;
+var GL=__LOGS_PLACEHOLDER__;
 
 /* ================= HELPERS ================= */
 var $=function(id){return document.getElementById(id);};
@@ -712,8 +768,8 @@ function buildMovers(){
     +bub(L.from,'b-from','left:'+L.from+'%')+bub(L.to,'b-to','left:'+L.to+'%')+'</div>'
     +'<div class="lead-copy">'+copy+'</div></div></div>';
   var mob=[M.rising[0],M.rising[1],M.falling[0],M.falling[1]].filter(Boolean);
-  h+='<div class="mv-mob">'+mob.map(moverRow).join('')+'</div></div>';
-  h+='<div class="mv-col rise"><div class="mv-hd"><div class="mv-t">▲ Rising</div><div class="mv-m">'+colMeta+'</div></div>'+M.rising.slice(0,4).map(moverRow).join('')+'</div>';
+  h+='<div class="mv-mob">'+mob.map(moverRow).join('')+'<a class="link mv-all" href="#/trends" style="min-height:44px;display:flex;align-items:center">All trends →</a></div></div>';
+  h+='<div class="mv-col rise"><div class="mv-hd"><div class="mv-t">▲ Rising</div><div class="mv-m">'+colMeta+'</div></div>'+M.rising.slice(0,4).map(moverRow).join('')+'<a class="link mv-all" href="#/trends">All trends →</a></div>';
   h+='<div class="mv-col fall"><div class="mv-hd"><div class="mv-t">▼ Falling</div><div class="mv-m">'+colMeta+'</div></div>'
     +(M.falling.length?M.falling.slice(0,4).map(moverRow).join(''):'<div class="mv-empty">Nobody has dropped yet.</div>')+'</div>';
   el.innerHTML=h;el.hidden=false;
@@ -792,10 +848,12 @@ function tdCell(p,key,txt){var s=S[key],r=s?pct(p,s):null;return '<td'+(isNum(r)
 function showPlayer(p){
   var info=teamOf(p.Team),lg=logoUrl(p);
   var g=function(k){return S[k]?fmt(p[k],S[k]):'N/A';};
-  var h='<div class="page-top" style="border-bottom:none;margin-bottom:8px;padding-bottom:0"><a class="link" href="#/">← Home</a><div class="mini-srch"><label class="srch"><span class="mag"></span><input id="pQ" placeholder="Search another player…" autocomplete="off"></label><div class="dd" id="pDD"></div></div></div>';
+  var h='<div class="page-top" style="border-bottom:none;margin-bottom:8px;padding-bottom:0"><a class="link" href="#/">← Home</a></div>';
   h+='<div class="p-hdr"><div class="p-ph" style="background:'+info.c+'">'+img(lg,'lg')+'<span class="ini">'+esc(ini(p.Player))+'</span>'+img(headLg(p.nba_id),'hs')+'</div>'
     +'<div style="min-width:0"><div class="eyebrow">'+esc(META.season)+' PERCENTILE CARD</div><div class="p-name">'+esc(p.Player)+'</div><div class="p-team" style="color:'+info.c+'">'+esc(info.n)+'</div><div class="p-meta">'+(p.Age?'Age '+p.Age+' · ':'')+p.G+' games</div></div>'
     +(lg?'<img class="p-logo" src="'+lg+'" data-hide="1" alt="">':'<div></div>')+'</div>';
+  h+='<div class="p-tabs" role="tablist"><button type="button" class="p-tab on" data-tab="ov">Overview</button><button type="button" class="p-tab" data-tab="log">Game Log</button></div>';
+  h+='<div id="pLog" hidden>'+gameLog(p)+'</div><div id="pOv">';
   h+='<div class="p-sec"><div class="p-sec-hd"><div class="sec-t">Per Game &amp; Advanced</div><div class="note">Green = top 5% of qualified players</div></div><div class="st-wrap"><table class="st"><tr><th></th><th>GP</th><th>MPG</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TOV</th><th>FG%</th><th>3P%</th><th>FT%</th></tr><tr><td class="lbl">'+esc(META.season)+'</td><td>'+p.G+'</td>';
   ['MP_PG','PTS_PG','TRB_PG','AST_PG','STL_PG','BLK_PG','TOV_PG','FG%','3P%','FT%'].forEach(function(k){h+=tdCell(p,k,g(k));});
   h+='</tr></table><table class="st" style="margin-top:10px"><tr><th></th><th>eFG%</th><th>TS%</th><th>ORTG</th><th>DRTG</th><th>NET</th><th>USG%</th><th>AST%</th><th>+/-</th></tr><tr><td class="lbl">ADV</td>';
@@ -814,12 +872,105 @@ function showPlayer(p){
     if(rows)h+='<div class="cat"><div class="cat-h">'+cat.name+'</div>'+rows+'</div>';
   });
   h+='</div><div class="p-sec" id="scSec" hidden><div class="p-sec-hd"><div class="sec-t">Shot Chart</div><div class="note" id="scInfo"></div></div><div id="scBox"></div></div>';
-  h+='<div class="p-foot">Data via NBA.com · Updated '+esc(META.updated)+' · '+qualLine()+'</div>';
+  h+='</div><div class="p-foot">Data via NBA.com · Updated '+esc(META.updated)+' · '+qualLine()+'</div>';
   $('vPlayer').innerHTML=h;
-  wireSearch($('pQ'),$('pDD'),8,openPlayer);
   drawSC(p);
   document.title=p.Player+' | NBA Savant';
 }
+
+/* ================= GAME LOG ================= */
+/* each game: [date, opp, W/L, MIN, PTS, REB, AST, STL, BLK, TOV, FGM, FGA, 3PM, 3PA, FTM, FTA, OREB, DREB, PF, +/-] */
+function gameLog(p){
+  var g=GL[String(p.nba_id)]||[];
+  var h='<div class="p-sec"><div class="p-sec-hd"><div class="sec-t">Game Log</div><div class="note">'+(g.length?g.length+' games · newest first':'')+'</div></div>';
+  if(!g.length)return h+'<div class="tr-empty">Game logs will show up after the next stats update.</div></div>';
+  var tot=new Array(20).fill(0);
+  var rows=g.slice().reverse().map(function(x){
+    for(var i=3;i<20;i++)tot[i]+=x[i];
+    var opp=x[1].split(' ').pop(),lg=logoT(opp);
+    return '<tr><td class="d">'+esc(x[0])+'</td><td class="o">'+esc(x[1])+img(lg)+'</td><td class="'+(x[2]==='W'?'w':'l')+'">'+esc(x[2])+'</td><td>'+x[3]+'</td>'
+      +'<td'+(x[4]>=30?' class="big"':'')+'>'+x[4]+'</td><td>'+x[5]+'</td><td>'+x[6]+'</td><td>'+x[7]+'</td><td>'+x[8]+'</td><td>'+x[9]+'</td>'
+      +'<td>'+x[10]+'-'+x[11]+'</td><td>'+x[12]+'-'+x[13]+'</td><td>'+x[14]+'-'+x[15]+'</td><td>'+(x[19]>0?'+':'')+x[19]+'</td></tr>';
+  }).join('');
+  var n=g.length,a=function(i){return (tot[i]/n).toFixed(1);};
+  var avg='<tr class="avg"><td class="d">AVG</td><td class="o">'+n+' games</td><td>'+g.filter(function(x){return x[2]==='W';}).length+'-'+g.filter(function(x){return x[2]==='L';}).length+'</td><td>'+a(3)+'</td><td>'+a(4)+'</td><td>'+a(5)+'</td><td>'+a(6)+'</td><td>'+a(7)+'</td><td>'+a(8)+'</td><td>'+a(9)+'</td>'
+    +'<td>'+a(10)+'-'+a(11)+'</td><td>'+a(12)+'-'+a(13)+'</td><td>'+a(14)+'-'+a(15)+'</td><td>'+((tot[19]/n)>0?'+':'')+(tot[19]/n).toFixed(1)+'</td></tr>';
+  return h+'<div class="st-wrap"><table class="st gl"><thead><tr><th class="d">Date</th><th class="o">Opp</th><th>W/L</th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>STL</th><th>BLK</th><th>TOV</th><th>FG</th><th>3P</th><th>FT</th><th>+/-</th></tr></thead><tbody>'+rows+avg+'</tbody></table></div></div>';
+}
+document.addEventListener('click',function(e){
+  var t=e.target.closest('[data-tab]');if(!t)return;
+  var log=t.dataset.tab==='log';
+  [].forEach.call(document.querySelectorAll('.p-tab'),function(b){b.classList.toggle('on',b===t);});
+  $('pLog').hidden=!log;$('pOv').hidden=log;
+});
+
+/* ================= TRENDS =================
+   Recent form: each player's last W games against his earlier games. */
+var TR_STATS=[
+ {sh:'Overall',n:'Game Score',note:'Game Score blends points, shooting, rebounds, assists, steals, blocks and turnovers into one number per game.',f:function(x){return x[4]+0.4*x[10]-0.7*x[11]-0.4*(x[15]-x[14])+0.7*x[16]+0.3*x[17]+x[7]+0.7*x[6]+0.7*x[8]-0.4*x[18]-x[9];}},
+ {sh:'PTS',n:'Points',i:4},{sh:'REB',n:'Rebounds',i:5},{sh:'AST',n:'Assists',i:6},
+ {sh:'3P%',n:'3-Point %',m:12,a:13,min:2},{sh:'FG%',n:'Field Goal %',m:10,a:11,min:5},
+ {sh:'STL',n:'Steals',i:7},{sh:'BLK',n:'Blocks',i:8}
+];
+var trCat=0;
+function trVal(s,games){
+  if(s.a!==undefined){var m=0,a=0;games.forEach(function(x){m+=x[s.m];a+=x[s.a];});return a>=s.min*games.length?m/a:null;}
+  var t=0;games.forEach(function(x){t+=s.f?s.f(x):x[s.i];});return t/games.length;
+}
+function trWindow(){
+  var mx=0;Object.keys(GL).forEach(function(k){mx=Math.max(mx,GL[k].length);});
+  return {max:mx,w:Math.min(5,Math.max(2,Math.floor(mx/2)))};
+}
+function spark(s,games,w){
+  var last=games.slice(-10),vals=last.map(function(x){return s.a!==undefined?(x[s.a]?x[s.m]/x[s.a]:0):(s.f?s.f(x):x[s.i]);});
+  var mx=Math.max.apply(null,vals.concat([s.a!==undefined?1:1])),mn=Math.min(0,Math.min.apply(null,vals));
+  var bw=8,gap=1,H=26,out='';
+  vals.forEach(function(v,i){
+    var hgt=Math.max(1.5,(v-mn)/((mx-mn)||1)*H),recent=i>=vals.length-w;
+    out+='<rect x="'+(i*(bw+gap))+'" y="'+(H-hgt)+'" width="'+bw+'" height="'+hgt+'" fill="'+(recent?'#0b1530':'#d5dae4')+'"/>';
+  });
+  return '<svg class="spark" width="'+(10*(bw+gap))+'" height="'+H+'" viewBox="0 0 '+(10*(bw+gap))+' '+H+'" aria-hidden="true">'+out+'</svg>';
+}
+function buildTrends(){
+  var W=trWindow(),s=TR_STATS[trCat],pctStat=s.a!==undefined;
+  var h='<div class="page-top"><div><div class="eyebrow">'+esc(META.season)+' · RECENT FORM</div><h1 class="sec-t" style="font-size:44px;margin-top:6px">Trends</h1>'
+    +'<div class="sub">Who’s heating up and who’s cooling off: each player’s last '+W.w+' games compared with the rest of his season. Rotation players (15+ minutes) only.</div></div></div>';
+  h+='<div class="chips" id="trChips">'+TR_STATS.map(function(t,i){return '<button type="button" class="chip'+(i===trCat?' on':'')+'" data-tr="'+i+'">'+t.sh+'</button>';}).join('')+'</div>';
+  if(s.note)h+='<div class="tr-note">'+s.note+'</div>';
+  if(!Object.keys(GL).length){h+='<div class="tr-empty">Recent form needs game logs, which arrive with the next stats update.</div>';}
+  else if(W.max<4){h+='<div class="tr-empty">Recent form starts once teams have played 4 games. Check back in a few days.</div>';}
+  else{
+    var rows=[];
+    D.forEach(function(p){
+      var g=GL[String(p.nba_id)];
+      if(!g||g.length<W.w+2||(p.MP_PG||0)<15)return;
+      var rec=trVal(s,g.slice(-W.w)),pri=trVal(s,g.slice(0,-W.w));
+      if(rec===null||pri===null)return;
+      rows.push({p:p,g:g,rec:rec,pri:pri,d:rec-pri});
+    });
+    var fm=function(v){return pctStat?(v*100).toFixed(1):v.toFixed(1);};
+    var row=function(r,i){
+      var up=r.d>0;
+      return '<div class="tr-row" data-id="'+r.p.nba_id+'"><div class="rk'+(i===0?' one':'')+'">'+(i+1)+'</div><div style="min-width:0"><div class="tr-nm ell">'+esc(r.p.Player)+'</div><div class="tr-tm">'+esc(r.p.Team)+' · '+r.g.length+' GP</div></div>'
+        +spark(s,r.g,W.w)+'<div class="tr-vals">'+fm(r.pri)+' → <b>'+fm(r.rec)+'</b></div><div class="tr-d '+(up?'up':'dn')+'">'+(up?'+':'')+fm(r.d)+'</div></div>';
+    };
+    var hot=rows.filter(function(r){return r.d>0;}).sort(function(a,b){return b.d-a.d;}).slice(0,12);
+    var cold=rows.filter(function(r){return r.d<0;}).sort(function(a,b){return a.d-b.d;}).slice(0,12);
+    h+='<div class="tr-cols"><div><div class="mv-hd rise"><div class="mv-t">▲ Heating up</div><div class="mv-m">'+s.n.toUpperCase()+' · BEFORE → LAST '+W.w+'</div></div>'+(hot.length?hot.map(row).join(''):'<div class="tr-empty">Nobody yet.</div>')+'</div>'
+      +'<div><div class="mv-hd fall"><div class="mv-t">▼ Cooling off</div><div class="mv-m">'+s.n.toUpperCase()+' · BEFORE → LAST '+W.w+'</div></div>'+(cold.length?cold.map(row).join(''):'<div class="tr-empty">Nobody yet.</div>')+'</div></div>';
+    h+='<div class="tr-note">Bars show the last 10 games, with the last '+W.w+' in dark blue.</div>';
+  }
+  var M=META.movers;
+  if(M&&M.rising&&M.rising.length){
+    var last=M.mode==='lastseason';
+    h+='<div class="tr-sec"><div class="eyebrow">PERCENTILE MOVERS · '+(last?'VS LAST SEASON':'LAST '+M.days+' DAYS')+'</div><h2 class="sec-t" style="margin-top:6px">Biggest percentile swings</h2>'
+      +'<div class="sub tr-note">Each player’s biggest change in any stat percentile '+(last?'compared with last season':'over the last '+M.days+' days')+'.</div>'
+      +'<div class="tr-cols"><div class="mv-col rise" style="padding:0;border:none"><div class="mv-hd"><div class="mv-t">▲ Rising</div><div class="mv-m">Δ PCTL</div></div>'+M.rising.map(moverRow).join('')+'</div>'
+      +'<div class="mv-col fall" style="padding:0"><div class="mv-hd"><div class="mv-t">▼ Falling</div><div class="mv-m">Δ PCTL</div></div>'+(M.falling||[]).map(moverRow).join('')+'</div></div></div>';
+  }
+  $('vTrends').innerHTML=h;
+}
+document.addEventListener('click',function(e){var c=e.target.closest('[data-tr]');if(c){trCat=+c.dataset.tr;buildTrends();}});
 
 /* ================= SHOT CHART =================
    NBA shot coordinates: units of 1/10 foot, the rim is (0,0). The baseline is
@@ -923,7 +1074,7 @@ function renderCmp(){
 $('cmpBody').addEventListener('click',function(e){var r=e.target.closest('.cmp-ph[data-id]');if(r){closeCmp();openPlayer(byId[r.dataset.id]);}});
 
 /* ================= ROUTING ================= */
-var VIEWS={home:'vHome',leaders:'vLeaders',players:'vPlayers',player:'vPlayer'};
+var VIEWS={home:'vHome',leaders:'vLeaders',trends:'vTrends',players:'vPlayers',player:'vPlayer'};
 var built={};
 function go(h){if(location.hash===h)route();else location.hash=h;}
 function show(view){
@@ -935,6 +1086,7 @@ function route(){
   var h=location.hash||'',m=/^#p(\d+)$/.exec(h);
   if(m&&byId[m[1]]){show('player');showPlayer(byId[m[1]]);}
   else if(h==='#/leaders'){if(!built.leaders){buildLeaders();built.leaders=1;}show('leaders');document.title='Leaderboards | NBA Savant';}
+  else if(h==='#/trends'){buildTrends();show('trends');document.title='Trends | NBA Savant';}
   else if(h==='#/players'){if(!built.players){buildPlayers();built.players=1;}show('players');document.title='Players | NBA Savant';}
   else{show('home');document.title='NBA Savant | Player Percentile Rankings';if(h==='#/compare')openCmp();}
   window.scrollTo(0,0);
@@ -971,7 +1123,7 @@ $('hdrSeason').textContent=META.season;
 $('hdrUpd').textContent=' · UPDATED '+String(META.updated).toUpperCase();
 $('ftrDate').textContent='DATA THROUGH '+String(META.updated).toUpperCase();
 buildHome();
-if(D.length)wireSearch($('homeQ'),$('homeDD'),6,openPlayer);
+if(D.length){wireSearch($('homeQ'),$('homeDD'),6,openPlayer);wireSearch($('navQ'),$('navDD'),8,function(p){$('navQ').value='';openPlayer(p);});}
 route();
 runIntro();
 })();

@@ -57,6 +57,10 @@ OPTIONAL SHORTCUTS (type after the command, separated by spaces)
   python3 update_nba_savant.py 2025-26
       Builds a specific season instead of the current one.
 
+  python3 update_nba_savant.py restyle
+      Applies a new template.html (design changes) to the stats you already
+      have, without downloading anything. Takes one second.
+
 THE SCRIPT PROTECTS YOUR SITE
   It will NOT rewrite index.html when:
     - NBA.com has no games yet for the season

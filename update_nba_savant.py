@@ -153,6 +153,18 @@ def fetch_player_stats(season, advanced=False, date_to=None):
     return with_retries(call, label)
 
 
+def fetch_game_logs(season):
+    """Every player's game-by-game box score for the season, in one request."""
+    from nba_api.stats.endpoints import leaguegamelog
+
+    def call(t):
+        return leaguegamelog.LeagueGameLog(
+            season=season, season_type_all_star='Regular Season',
+            player_or_team_abbreviation='P', timeout=t).get_data_frames()[0]
+
+    return with_retries(call, 'game logs', attempts=3, base_wait=10)
+
+
 def fetch_shots(pid, season):
     from nba_api.stats.endpoints import shotchartdetail
 
@@ -238,7 +250,7 @@ def percentiles(pool, key, higher, qual):
     return out
 
 
-def compute_movers(now_pool, then_pool, limit=8):
+def compute_movers(now_pool, then_pool, limit=15):
     """Each player's single biggest percentile jump (and drop) between two snapshots."""
     best_up, best_down = {}, {}
     for key, label, higher, qname in MOVER_STATS:
@@ -295,6 +307,44 @@ def build_movers(season, now_pool, today):
         return None
     return {'mode': mode, 'days': MOVER_WINDOW_DAYS, 'since': since,
             'rising': rising, 'falling': falling}
+
+
+def _minutes(v):
+    """Minutes can arrive as 34, 34.5 or '34:12'."""
+    if isinstance(v, str) and ':' in v:
+        mm, ss = v.split(':', 1)
+        return round(int(mm) + int(ss) / 60.0)
+    n = num(v, 0)
+    return n if n is not None else 0
+
+
+def build_game_logs(df, player_ids):
+    """{player id: [[date, opp, W/L, MIN, PTS, REB, AST, STL, BLK, TOV, FGM, FGA,
+    3PM, 3PA, FTM, FTA, OREB, DREB, PF, +/-], ...]} oldest game first."""
+    logs = {}
+    if df is None or not len(df):
+        return logs
+    for rec in df.to_dict('records'):
+        pid = num(rec.get('PLAYER_ID'), 0)
+        if pid not in player_ids:
+            continue
+        matchup = str(rec.get('MATCHUP') or '')
+        opp = ('@ ' if ' @ ' in matchup else 'vs ') + matchup.split(' ')[-1]
+        date = str(rec.get('GAME_DATE') or '')[:10]
+        row = [date, opp, str(rec.get('WL') or '')[:1], _minutes(rec.get('MIN'))]
+        for col in ('PTS', 'REB', 'AST', 'STL', 'BLK', 'TOV', 'FGM', 'FGA', 'FG3M', 'FG3A',
+                    'FTM', 'FTA', 'OREB', 'DREB', 'PF', 'PLUS_MINUS'):
+            v = num(rec.get(col), 0)
+            row.append(v if v is not None else 0)
+        logs.setdefault(str(pid), []).append(row)
+    for games in logs.values():
+        games.sort(key=lambda g: g[0])
+        for g in games:   # store dates compactly as M/D for display
+            try:
+                g[0] = '%d/%d' % (int(g[0][5:7]), int(g[0][8:10]))
+            except ValueError:
+                pass
+    return logs
 
 
 def league_curve(shot_data):
@@ -370,10 +420,11 @@ def js_json(obj):
     return json.dumps(obj, separators=(',', ':'), ensure_ascii=True).replace('</', '<\\/')
 
 
-def render_page(template, players, shot_data, meta, season):
+def render_page(template, players, shot_data, meta, season, game_logs=None):
     out = (template
            .replace('__DATA_PLACEHOLDER__', js_json(players))
            .replace('__SHOTS_PLACEHOLDER__', js_json(shot_data))
+           .replace('__LOGS_PLACEHOLDER__', js_json(game_logs or {}))
            .replace('__META_PLACEHOLDER__', js_json(meta))
            .replace('__SEASON_PLACEHOLDER__', season))
     left = re.findall(r'__[A-Z_]+_PLACEHOLDER__', out)
@@ -400,13 +451,15 @@ def restyle():
         players = json.loads(grab('D', 'SD'))
         shots = json.loads(grab('SD', 'META'))
         meta = json.loads(re.search(r'var META=(\{.*?\});\n', old, re.S).group(1))
+        m = re.search(r'var GL=(\{.*?\});\n', old, re.S)
+        logs = json.loads(m.group(1)) if m else {}
     except Exception as e:  # noqa: BLE001
         print('Could not read the data inside index.html (%s).' % e)
         print('Run the normal update instead. Your site was NOT changed.')
         return 1
     with open(os.path.join(HERE, 'template.html'), 'r', encoding='utf-8') as f:
         template = f.read()
-    write_atomic(path, render_page(template, players, shots, meta, meta.get('season', '')))
+    write_atomic(path, render_page(template, players, shots, meta, meta.get('season', ''), logs))
     print('Restyled index.html (%d players, data from %s).' % (len(players), meta.get('updated')))
     print('NEXT: open GitHub Desktop, click "Commit to main", then "Push origin".')
     return 0
@@ -501,6 +554,14 @@ def main(argv):
     else:
         print('       Skipped (not enough data yet). The site will hide that section.')
 
+    # Game logs (one request). If it fails the site still builds without them.
+    game_logs = {}
+    try:
+        game_logs = build_game_logs(fetch_game_logs(season), {p['nba_id'] for p in eligible})
+        print('       Game logs for %d players.' % len(game_logs))
+    except Exception:  # noqa: BLE001
+        print('       Game logs skipped (NBA.com did not answer). Site still builds.')
+
     # 5. Shot charts
     shot_data, lg = {}, None
     if skip_shots:
@@ -529,7 +590,7 @@ def main(argv):
 
     with open(os.path.join(HERE, 'template.html'), 'r', encoding='utf-8') as f:
         template = f.read()
-    html = render_page(template, eligible, shot_data, meta, season)
+    html = render_page(template, eligible, shot_data, meta, season, game_logs)
 
     out_path = os.path.join(HERE, 'index.html')
     write_atomic(out_path, html)
