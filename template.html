@@ -264,6 +264,9 @@ main{flex:1}
 .cmp-empty{text-align:center;padding:48px 16px;color:var(--t3);font-size:15px}
 .cmp-heads{display:grid;grid-template-columns:1fr 1fr;border-bottom:3px solid var(--navy)}
 .cmp-ph{display:flex;flex-direction:column;align-items:center;text-align:center;padding:14px 8px 16px;cursor:pointer}
+.cmp-ph{border-radius:4px;transition:background .15s}.cmp-ph:hover{background:var(--tint)}
+.cmp-ph .cgo{margin-top:8px;font-weight:700;font-size:12px;color:var(--blue)}
+.cmp-ph:hover .cgo{text-decoration:underline}
 .cmp-ph .av{width:84px;height:84px;margin-bottom:8px;font-size:18px}
 .cmp-ph .cn{font-weight:900;font-size:26px;font-stretch:66%;text-transform:uppercase;line-height:1}
 .cmp-ph .ct{font-weight:700;font-size:12px;margin-top:4px}
@@ -1298,9 +1301,9 @@ function showPlayer(p){
   });
   h+='</div>';
   var sim=similar(p,3);
-  if(sim.length)h+='<div class="p-sec"><div class="p-sec-hd"><div class="sec-t">Similar Players</div><div class="note">Closest percentile profile'+(p.Pos?' among '+esc(posName(p).toLowerCase())+'s':'')+'</div></div><div class="sim-grid">'+sim.map(function(o){
+  if(sim.length)h+='<div class="p-sec"><div class="p-sec-hd"><div class="sec-t">Similar Players</div><div class="note">Closest percentile profile'+(p.Pos?' among '+esc(posName(p).toLowerCase())+'s':'')+' · tap one to compare side by side</div></div><div class="sim-grid">'+sim.map(function(o){
     var q=o.q,tm=teamOf(q.Team),m=Math.max(1,Math.min(99,Math.round(100-o.d*2)));
-    return '<a class="sim" href="#p'+q.nba_id+'"><div class="x-av" style="background:'+tm.c+'">'+img(logoUrl(q),'lg')+img(headSm(q.nba_id),'hs')+'</div><div style="min-width:0;flex:1"><div class="sim-n ell">'+esc(q.Player)+'</div><div class="sim-t">'+esc(q.Team)+(q.Pos?' · '+esc(posName(q)):'')+' · '+fmt(q.PTS_PG)+' / '+fmt(q.TRB_PG)+' / '+fmt(q.AST_PG)+'</div></div><div class="sim-m"><b>'+m+'%</b><span>match</span></div></a>';
+    return '<a class="sim" href="#p'+q.nba_id+'" data-sim="'+q.nba_id+'" data-me="'+p.nba_id+'"><div class="x-av" style="background:'+tm.c+'">'+img(logoUrl(q),'lg')+img(headSm(q.nba_id),'hs')+'</div><div style="min-width:0;flex:1"><div class="sim-n ell">'+esc(q.Player)+'</div><div class="sim-t">'+esc(q.Team)+(q.Pos?' · '+esc(posName(q)):'')+' · '+fmt(q.PTS_PG)+' / '+fmt(q.TRB_PG)+' / '+fmt(q.AST_PG)+'</div></div><div class="sim-m"><b>'+m+'%</b><span>match</span></div></a>';
   }).join('')+'</div></div>';
   h+='<div class="p-sec" id="scSec" hidden><div class="p-sec-hd"><div class="sec-t">Shot Chart</div><div class="note" id="scInfo"></div></div><div id="scBox"></div></div>';
   h+='</div><div class="p-foot">Data via NBA.com · Updated '+esc(META.updated)+' · '+qualLine()+'</div>';
@@ -1543,9 +1546,19 @@ $('navCmp').addEventListener('click',function(e){e.preventDefault();$('nav').cla
   var inp=$(idx?'cB':'cA');
   wireSearch(inp,$(idx?'ddB':'ddA'),8,function(p){cPk[idx]=p;inp.value=p.Player;if(cPk[0]&&cPk[1])renderCmp();else $(idx?'cA':'cB').focus();});
 });
+/* open the compare panel with two players already picked */
+function cmpWith(a,b){
+  if(!a||!b)return;cPk=[a,b];$('cA').value=a.Player;$('cB').value=b.Player;renderCmp();
+  $('cmpModal').classList.add('open');document.body.style.overflow='hidden';
+  var pn=document.querySelector('.cmp-panel');if(pn)pn.scrollTop=0;$('cmpBody').scrollTop=0;
+}
+document.addEventListener('click',function(e){
+  var c=e.target.closest('[data-sim]');if(!c)return;
+  e.preventDefault();cmpWith(byId[c.dataset.me],byId[c.dataset.sim]);
+});
 function cmpHead(p){
   var i=teamOf(p.Team);
-  return '<div class="cmp-ph" data-id="'+p.nba_id+'"><div class="av" style="border:3px solid '+i.c+'">'+esc(ini(p.Player))+img(headSm(p.nba_id))+'</div><div class="cn">'+esc(p.Player)+'</div><div class="ct" style="color:'+i.c+'">'+esc(i.n)+'</div><div class="cm">'+(p.Age?'Age '+p.Age+' · ':'')+p.G+' GP</div></div>';
+  return '<div class="cmp-ph" data-id="'+p.nba_id+'"><div class="av" style="border:3px solid '+i.c+'">'+esc(ini(p.Player))+img(headSm(p.nba_id))+'</div><div class="cn">'+esc(p.Player)+'</div><div class="ct" style="color:'+i.c+'">'+esc(i.n)+'</div><div class="cm">'+(p.Age?'Age '+p.Age+' · ':'')+p.G+' GP</div><div class="cgo">View player card →</div></div>';
 }
 function cmpSide(side,r){
   if(!isNum(r))return '<div class="cx-t '+side+'"><div class="cx-bg"></div></div>';
