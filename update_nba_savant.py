@@ -165,6 +165,46 @@ def fetch_game_logs(season):
     return with_retries(call, 'game logs', attempts=3, base_wait=10)
 
 
+def fetch_bio(season):
+    """Position, height, weight, jersey, college and draft for every player. Optional:
+    if NBA.com refuses, the site still builds without these details."""
+    from nba_api.stats.endpoints import playerindex
+
+    def call(t):
+        return playerindex.PlayerIndex(season=season, league_id='00', timeout=t).get_data_frames()[0]
+
+    try:
+        df = with_retries(call, 'player bios', attempts=3, base_wait=10)
+    except Exception as e:  # noqa: BLE001
+        print('       (Skipped player bios: %s)' % e)
+        return {}
+    bio = {}
+    for rec in df.to_dict('records'):
+        pid = num(rec.get('PERSON_ID'), 0)
+        if not pid:
+            continue
+        b = {}
+        for src, key in (('POSITION', 'Pos'), ('HEIGHT', 'Ht'), ('JERSEY_NUMBER', 'No'),
+                         ('COLLEGE', 'College'), ('COUNTRY', 'Country')):
+            v = rec.get(src)
+            if v is not None and str(v).strip() not in ('', 'nan', 'None'):
+                b[key] = to_ascii(str(v).strip())
+        wt = num(rec.get('WEIGHT'), 0)
+        if wt:
+            b['Wt'] = wt
+        try:
+            yr = int(float(rec.get('DRAFT_YEAR')))
+            try:
+                b['Draft'] = '%d R%d #%d' % (yr, int(float(rec.get('DRAFT_ROUND'))), int(float(rec.get('DRAFT_NUMBER'))))
+            except (TypeError, ValueError):
+                b['Draft'] = '%d Undrafted' % yr
+        except (TypeError, ValueError):
+            pass
+        if b:
+            bio[pid] = b
+    return bio
+
+
 def fetch_shots(pid, season):
     from nba_api.stats.endpoints import shotchartdetail
 
@@ -539,6 +579,9 @@ def main(argv):
     print('[3/5] Building player database...')
     players_all = build_players(df_basic, df_adv)
     eligible, games_so_far, min_needed = pick_eligible(players_all)
+    bio = fetch_bio(season)
+    for p in eligible:
+        p.update(bio.get(p['nba_id'], {}))
     eligible.sort(key=lambda p: p['Player'])
     print('       %d players on the site.' % len(eligible))
 
