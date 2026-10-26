@@ -334,7 +334,7 @@ main{flex:1}
 /* player header */
 .h5{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);border:3px solid var(--navy);border-radius:4px;overflow:hidden;min-height:430px;background:#fff}
 .h5-post{position:relative;overflow:hidden;display:flex;align-items:stretch}
-.h5-num{position:absolute;right:-.04em;top:-.2em;font-weight:900;font-size:440px;line-height:1;font-stretch:62%;color:rgba(255,255,255,.12);pointer-events:none}
+.h5-num{position:absolute;left:62%;top:50%;transform:translate(-50%,-56%);font-weight:900;font-size:520px;line-height:1;font-stretch:62%;color:rgba(255,255,255,.14);pointer-events:none;white-space:nowrap}
 .h5-ph{position:absolute;inset:0 0 10px 0}
 .h5-ph .lg{position:absolute;left:62%;top:46%;transform:translate(-50%,-50%);height:78%;opacity:.16}
 .h5-ph .hs{position:absolute;left:62%;bottom:0;transform:translateX(-50%);height:92%;max-width:none}
@@ -348,7 +348,9 @@ main{flex:1}
 .h5-go img{width:16px;height:16px}
 .h5-go .w{color:#6ee7a0}.h5-go .l{color:#ff8a9a}
 .h5-dt{font-weight:500;color:rgba(255,255,255,.7)}
-.h5-side{padding:36px 40px 34px;display:flex;flex-direction:column;justify-content:center;min-width:0;container-type:inline-size}
+.h5-side{position:relative;overflow:hidden;padding:36px 40px 34px;display:flex;flex-direction:column;justify-content:center;min-width:0;container-type:inline-size}
+.h5-side>*:not(.h5-wm){position:relative}
+.h5-wm{position:absolute;right:-90px;top:50%;transform:translateY(-50%);width:440px;height:440px;object-fit:contain;opacity:.09;pointer-events:none}
 .h5-nm{font-weight:900;font-size:min(124px,calc(100cqi / (var(--n) * .5)));line-height:.84;font-stretch:62%;text-transform:uppercase;letter-spacing:-.01em;margin-top:10px}
 .h5-tm{font-weight:700;font-size:17px;margin-top:14px}
 .h5-bio{font-size:14px;color:var(--t3);margin-top:4px}
@@ -698,8 +700,10 @@ html.intro .bn-s1,html.intro .bn-s2,html.intro .bn-name{animation:accIn .4s ease
   .h5{grid-template-columns:1fr;min-height:0}
   .h5-post{height:270px}
   .h5-post .h5-l5{display:none}
-  .h5-num{font-size:300px}
-  .h5-ph .lg,.h5-ph .hs{left:50%}
+  .h5-num{left:50%;font-size:330px}
+  .h5-ph .hs{left:50%}
+  .h5-wm{right:14px;top:16px;transform:none;width:84px;height:84px;opacity:1}
+  .h5-nm{margin-right:96px;font-size:min(64px,calc((100cqi - 96px) / (var(--n) * .5)))!important}
   .h5-stp{height:6px}
   .h5-side{padding:16px 16px 18px}
   .h5-nm{font-size:min(64px,calc(100cqi / (var(--n) * .5)))}
@@ -1264,8 +1268,8 @@ function showPlayer(p){
   var key=[['PTS','PTS_PG'],['REB','TRB_PG'],['AST','AST_PG']];
   var bio=[p.Pos,p.Ht?p.Ht.replace('-','′')+'″':'',p.Wt?p.Wt+' lb':'',p.Age?'Age '+p.Age:'',p.G+(p.G===1?' game':' games')].filter(Boolean).join(' · ');
   h+='<div class="h5"><div class="h5-post" style="background:'+info.c+'">'+(p.No!==undefined&&p.No!==''?'<div class="h5-num">'+esc(p.No)+'</div>':'')
-    +'<div class="h5-ph">'+img(lg,'lg')+img(headLg(p.nba_id),'hs')+'</div>'+l5+'<div class="h5-stp" style="background:'+info.s+'"></div></div>'
-    +'<div class="h5-side"><div class="eyebrow">'+esc(META.season)+' PERCENTILE CARD</div><h1 class="h5-nm" style="--n:'+longest+'">'+esc(first)+(last?'<br>'+esc(last):'')+'</h1>'
+    +'<div class="h5-ph">'+img(headLg(p.nba_id),'hs')+'</div>'+l5+'<div class="h5-stp" style="background:'+info.s+'"></div></div>'
+    +'<div class="h5-side">'+img(lg,'h5-wm')+'<div class="eyebrow">'+esc(META.season)+' PERCENTILE CARD</div><h1 class="h5-nm" style="--n:'+longest+'">'+esc(first)+(last?'<br>'+esc(last):'')+'</h1>'
     +'<div class="h5-tm">'+esc(info.n)+(p.No?' · #'+esc(p.No):'')+'</div><div class="h5-bio">'+esc(bio)+'</div>'
     +'<div class="h5-ks">'+key.map(function(k){var li=lbIndex(k[1]);return '<a class="h5-k" href="'+lbHref(LB[li],p)+'"><span>'+k[0]+'</span><b>'+fmt(p[k[1]])+'</b><small>'+rankTxt(p,k[1])+'</small></a>';}).join('')+'</div>'
     +(l5?'<div class="h5-l5m">'+l5+'</div>':'')+'</div></div>';
