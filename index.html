@@ -1254,7 +1254,7 @@ function recentForm(p){
     h+='<div class="rf" style="'+(big?'border-color:'+col+';background:'+(d>0?HOTT:COLDT):'')+'"><div class="rf-l">'+s.n+'</div><div class="rf-v">'+f(b)+'</div><div class="rf-d" style="color:'+col+'">'+(big?(d>0?'▲ ':'▼ '):'')+(d>0?'+':'')+f(d)+'<span> vs '+f(a)+'</span></div></div>';
   });
   var gs=g.map(function(x){return TR_STATS[0].f(x);}),mx=Math.max.apply(null,gs.concat([1])),mn=Math.min(0,Math.min.apply(null,gs));
-  h+='</div><div class="rf-spk" aria-hidden="true">'+gs.map(function(v,i){return '<i title="'+esc(g[i][0]+' '+g[i][1])+': Game Score '+v.toFixed(1)+'" style="height:'+Math.max(5,Math.round((v-mn)/((mx-mn)||1)*100))+'%'+(i>=n-w?';background:var(--blue)':'')+'"></i>';}).join('')+'</div><div class="rf-cap">GAME SCORE, EVERY GAME THIS SEASON · LAST '+w+' IN BLUE</div></div>';
+  h+='</div><div class="rf-spk" aria-hidden="true">'+gs.map(function(v,i){return '<i title="'+esc(g[i][0]+' '+g[i][1])+': '+v+' PTS+REB+AST" style="height:'+Math.max(5,Math.round((v-mn)/((mx-mn)||1)*100))+'%'+(i>=n-w?';background:var(--blue)':'')+'"></i>';}).join('')+'</div><div class="rf-cap">PTS + REB + AST, EVERY GAME THIS SEASON · LAST '+w+' IN BLUE</div></div>';
   return h;
 }
 function showPlayer(p){
@@ -1346,7 +1346,7 @@ var FLAME='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="c
 var ICE='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 2v20M4.5 6.5l15 11M19.5 6.5l-15 11M9 3.5l3 2.5 3-2.5M9 20.5l3-2.5 3 2.5"/></svg>';
 var ARROW='<svg width="18" height="12" viewBox="0 0 18 12" fill="none" stroke="#0b1530" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 6h15M11 1l5 5-5 5"/></svg>';
 var TR_STATS=[
- {sh:'Overall',n:'Game Score',u:'GAME SCORE',note:'Game Score rolls points, shooting, rebounds, assists, steals, blocks and turnovers into one number per game.',f:function(x){return x[4]+0.4*x[10]-0.7*x[11]-0.4*(x[15]-x[14])+0.7*x[16]+0.3*x[17]+x[7]+0.7*x[6]+0.7*x[8]-0.4*x[18]-x[9];}},
+ {sh:'PTS+REB+AST',n:'Points + Rebounds + Assists',u:'PTS+REB+AST',f:function(x){return x[4]+x[5]+x[6];}},
  {sh:'PTS',n:'Points',u:'PER GAME',i:4},{sh:'REB',n:'Rebounds',u:'PER GAME',i:5},{sh:'AST',n:'Assists',u:'PER GAME',i:6},
  {sh:'3P%',n:'3-Point %',u:'PCT POINTS',m:12,a:13,min:2},{sh:'FG%',n:'Field Goal %',u:'PCT POINTS',m:10,a:11,min:5},
  {sh:'STL',n:'Steals',u:'PER GAME',i:7},{sh:'BLK',n:'Blocks',u:'PER GAME',i:8}
