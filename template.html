@@ -518,6 +518,24 @@ a.lx-card{display:block;color:inherit;text-decoration:none}
 .tx-sr{display:grid;grid-template-columns:minmax(0,1fr) 30px 18px 34px 52px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--rule);cursor:pointer;transition:background .15s}
 .tx-sr:hover{background:var(--surface)}
 .tx-sec{padding-top:40px}
+.an-note{margin-top:14px;padding:10px 14px;border:2px dashed var(--rule2);border-radius:4px;font-size:13px;color:var(--t2)}
+.an-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px;padding-top:22px}
+.an-hd{font-weight:900;font-size:26px;font-stretch:66%;text-transform:uppercase;line-height:1}
+.an-sub{font-size:12px;color:var(--t3);margin:4px 0 10px;padding-bottom:8px;border-bottom:3px solid var(--navy)}
+.an-row{display:grid;grid-template-columns:22px 40px minmax(0,1fr);gap:12px;align-items:start;padding:12px 10px 12px 10px;border-bottom:1px solid var(--rule);border-left:4px solid;cursor:pointer;transition:background .15s}
+.an-row:hover{background:var(--tint)}
+.an-row .rk{font-size:22px;padding-top:6px}
+.an-row .x-av{width:40px;height:40px}
+.an-n{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-weight:800;font-size:15px}
+.an-t{font-weight:500;font-size:11px;color:var(--t3)}
+.an-why{font-size:14px;line-height:1.4;color:var(--t2);margin-top:3px}
+.an-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.an-tags span{font-weight:700;font-size:10px;letter-spacing:.06em;text-transform:uppercase;border:1.5px solid;border-radius:3px;padding:2px 6px}
+.an-rec{margin-top:18px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 22px;padding:12px 16px;border:2px solid var(--navy);border-radius:4px;box-shadow:3px 3px 0 var(--navy);font-size:14px}
+.an-rec b{font-weight:800;font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.an-rec em{font-style:normal;font-weight:900;font-size:20px;font-stretch:66%}
+.an-rec small{width:100%;font-size:11px;color:var(--t3)}
+
 
 /* ---------- opening animation ("Tip-Off") ---------- */
 @keyframes draw{to{stroke-dashoffset:0}}
@@ -558,7 +576,7 @@ html.intro .bn-s1,html.intro .bn-s2,html.intro .bn-name{animation:accIn .4s ease
   .lx-feat{grid-template-columns:1fr}
   .hb-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
   .lx-side{max-width:520px}
-  .tx-heroes,.tx-cols,.tx-sw2{grid-template-columns:1fr}
+  .tx-heroes,.tx-cols,.tx-sw2,.an-cols{grid-template-columns:1fr}
   .tx-sw2{row-gap:22px}
   .tx-streaks{grid-template-columns:repeat(2,minmax(0,1fr))}
   .nav{gap:16px}
@@ -1338,6 +1356,63 @@ document.addEventListener('click',function(e){
   $('pLog').hidden=!log;$('pOv').hidden=log;
 });
 
+/* ================= DUE TO BREAK OUT / DUE TO COOL OFF =================
+   Picked each night by the updater: players whose underlying numbers (shot luck,
+   open/contested shooting, on/off impact, efficiency for their role, hustle) disagree
+   with their box score. META.an = tonight's picks, META.anHist = every night's picks. */
+var AN_TAG={shot:'Shot luck',def:'Open / contested',impact:'On / off',eff:'Efficiency',hustle:'Hustle'};
+function anWhy(x,isB){
+  var r=x.r||{},f1=function(v){return Number(v).toFixed(1);},sg=function(v){return (v>0?'+':'')+f1(v);},tm=teamOf(x.t).n.split(' ').pop();
+  ['a','x','lg','ts','usg','defl','cont'].forEach(function(k){if(r[k]!=null)r[k]=f1(r[k]);});
+  if(r.k==='shot')return isB?'Shooting '+r.a+'% eFG, but his shot spots usually go in at '+r.x+'%.':'Shooting '+r.a+'% eFG on shots that usually go in at '+r.x+'%.';
+  if(r.k==='def'){var l=r.rng==='open'?'open looks':'contested shots';return (isB?'Making just ':'Making ')+r.a+'% eFG on '+l+' (league '+r.lg+'%).';}
+  if(r.k==='impact')return 'The '+tm+' are '+sg(r.on)+' per 100 with him on the floor and '+sg(r.off)+' with him off.';
+  if(r.k==='eff')return isB?r.ts+'% true shooting while using just '+r.usg+'% of plays.':'Using '+r.usg+'% of plays on just '+r.ts+'% true shooting.';
+  if(r.k==='hustle')return isB?'Top '+Math.max(1,100-r.p)+'% in hustle plays: '+r.defl+' deflections and '+r.cont+' contests per 36.':'Bottom '+Math.max(1,r.p)+'% in hustle plays per 36 minutes.';
+  return '';
+}
+/* season dates: game logs say "10/27", so add the right year */
+function anDate(md){var y=parseInt(String(META.season).slice(0,4),10),a=md.split('/'),m=+a[0];return new Date(m>=8?y:y+1,m-1,+a[1]);}
+function anRecord(){
+  var H=META.anHist||[];if(!H.length)return null;
+  var last=new Date(H[H.length-1][0]+'T12:00:00'),cut=new Date(last.getTime()-7*864e5);
+  var first={};   /* earliest pick per player per list */
+  H.forEach(function(h){var d=new Date(h[0]+'T12:00:00');[1,2].forEach(function(li){(h[li]||[]).forEach(function(x){var k=li+'|'+x[0];if(!first[k])first[k]={li:li,id:x[0],pra:x[1],d:d};});});});
+  var res={b:[0,0],c:[0,0],since:new Date(H[0][0]+'T12:00:00')};
+  Object.keys(first).forEach(function(k){
+    var f=first[k];if(f.d>cut)return;
+    var g=(GL[String(f.id)]||[]).filter(function(x){return anDate(x[0])>f.d;});
+    if(g.length<3)return;
+    var post=g.reduce(function(s,x){return s+x[4]+x[5]+x[6];},0)/g.length,o=f.li===1?res.b:res.c;
+    o[1]++;if(f.li===1?post>f.pra:post<f.pra)o[0]++;
+  });
+  return res;
+}
+function anSection(){
+  var A=META.an;
+  var h='<div class="tx-sec"><div class="x-sechd"><h2 class="x-h2" style="font-size:30px">What the Analytics See</h2><div style="font-size:13px;color:var(--t3)">Underlying numbers vs the box score · PTS+REB+AST</div></div>';
+  if(!A||(!A.b.length&&!A.c.length))return h+'<div class="tr-empty">These lists start with the next nightly stats update.</div></div>';
+  if(A.games<15)h+='<div class="an-note"><b>Early season:</b> only '+A.games+' games in, so these are small samples. Expect the lists to settle by mid-November.</div>';
+  var col=function(list,isB){
+    var c=isB?HOT:COLD;
+    return '<div style="min-width:0"><div class="an-hd" style="color:'+c+'">'+(isB?'▲ Due to Break Out':'▼ Due to Cool Off')+'</div><div class="an-sub">'+(isB?'The analytics like him more than his box score does':'His box score looks better than the analytics')+'</div>'
+      +(list.length?list.map(function(x,i){
+        var p=byId[x.id]||{Player:x.n,Team:x.t,nba_id:x.id};
+        return '<div class="an-row" data-id="'+x.id+'" style="border-left-color:'+c+'"><div class="rk">'+(i+1)+'</div>'+xav(p)+'<div style="min-width:0"><div class="an-n"><span class="ell">'+esc(x.n)+'</span><span class="an-t">'+esc(x.t)+' · '+x.pra+' PTS+REB+AST</span></div>'
+          +'<div class="an-why">'+esc(anWhy(x,isB))+'</div><div class="an-tags">'+(x.tags||[]).map(function(t){return '<span style="color:'+c+';border-color:'+c+'">'+AN_TAG[t]+'</span>';}).join('')+'</div></div></div>';
+      }).join(''):'<div class="tr-empty">Nobody stands out yet.</div>')+'</div>';
+  };
+  h+='<div class="an-cols">'+col(A.b,true)+col(A.c,false)+'</div>';
+  var R=anRecord(),fmtD=function(d){return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});};
+  if(R&&(R.b[1]||R.c[1])){
+    var pc2=function(o){return o[1]?Math.round(o[0]/o[1]*100)+'%':'N/A';};
+    h+='<div class="an-rec"><b>Track record</b><span><em style="color:'+HOT+'">'+R.b[0]+' of '+R.b[1]+'</em> Break Out picks went up ('+pc2(R.b)+')</span><span><em style="color:'+COLD+'">'+R.c[0]+' of '+R.c[1]+'</em> Cool Off picks went down ('+pc2(R.c)+')</span><small>PTS+REB+AST in games after each player was first picked, picks at least a week old</small></div>';
+  }else if(R){
+    h+='<div class="an-rec"><b>Track record</b><span>Picks are saved every night starting '+fmtD(R.since)+'. Results show up once picks are a week old and the players have played 3 more games.</span></div>';
+  }
+  return h+'</div>';
+}
+
 /* ================= TRENDS =================
    Recent form: each player's last W games against his earlier games.
    Hot = orange, cold = blue (easy to tell apart for colorblind visitors). */
@@ -1444,6 +1519,7 @@ function buildTrends(){
     h+='<div class="tx-cols">'+col(hot,true,hs)+col(cold,false,cs)+'</div>';
   }
 
+  h+=anSection();
   var st=Object.keys(GL).length?findStreaks():[];
   h+='<div class="tx-sec"><div class="x-sechd"><h2 class="x-h2" style="font-size:30px">Streak Watch</h2><div style="font-size:13px;color:var(--t3)">Active streaks, one dot per game</div></div>';
   if(st.length){

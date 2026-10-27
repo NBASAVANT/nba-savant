@@ -168,9 +168,8 @@ def fetch_game_logs(season):
 def fetch_bio(season):
     """Position, height, weight, jersey, college and draft for every player. Optional:
     if NBA.com refuses, the site still builds without these details."""
-    from nba_api.stats.endpoints import playerindex
-
     def call(t):
+        from nba_api.stats.endpoints import playerindex
         return playerindex.PlayerIndex(season=season, league_id='00', timeout=t).get_data_frames()[0]
 
     try:
@@ -203,6 +202,137 @@ def fetch_bio(season):
         if b:
             bio[pid] = b
     return bio
+
+
+DEF_RANGES = {
+    'open': ['4-6 Feet - Open', '6+ Feet - Wide Open'],
+    'tight': ['0-2 Feet - Very Tight', '2-4 Feet - Tight'],
+}
+
+
+def fetch_pt_shots(season, dist_range):
+    """Every player's shooting with the closest defender in one distance range (season totals)."""
+    from nba_api.stats.endpoints import leaguedashplayerptshot
+
+    def call(t):
+        return leaguedashplayerptshot.LeagueDashPlayerPtShot(
+            season=season, per_mode_simple='Totals', season_type_all_star='Regular Season',
+            close_def_dist_range_nullable=dist_range, timeout=t).get_data_frames()[0]
+
+    return with_retries(call, 'shots (%s)' % dist_range, attempts=3, base_wait=10, timeout=60)
+
+
+def fetch_hustle(season):
+    """Deflections, contested shots, screen assists, charges, loose balls (season totals)."""
+    from nba_api.stats.endpoints import leaguehustlestatsplayer
+
+    def call(t):
+        return leaguehustlestatsplayer.LeagueHustleStatsPlayer(
+            season=season, per_mode_time='Totals', season_type_all_star='Regular Season',
+            timeout=t).get_data_frames()[0]
+
+    return with_retries(call, 'hustle stats', attempts=3, base_wait=10, timeout=60)
+
+
+def fetch_onoff(season, team_id):
+    """One team's net rating with each player on and off the floor: (off_rows, on_rows)."""
+    from nba_api.stats.endpoints import teamplayeronoffsummary
+
+    def call(t):
+        frames = teamplayeronoffsummary.TeamPlayerOnOffSummary(
+            team_id=team_id, season=season, season_type_all_star='Regular Season',
+            per_mode_detailed='Totals', timeout=t).get_data_frames()
+        rows = [r for f in frames if 'COURT_STATUS' in f.columns for r in f.to_dict('records')]
+        on = [r for r in rows if str(r.get('COURT_STATUS', '')).lower() == 'on']
+        off = [r for r in rows if str(r.get('COURT_STATUS', '')).lower() == 'off']
+        return off, on
+
+    return with_retries(call, 'on/off %s' % team_id, attempts=2, base_wait=5, timeout=45, quiet=True)
+
+
+def _f(v):
+    try:
+        v = float(v)
+        return None if math.isnan(v) else v
+    except (TypeError, ValueError):
+        return None
+
+
+def add_extra_stats(players, season):
+    """Pull the three optional data sets and attach them to each player.
+    Anything NBA.com refuses is skipped; the site still builds without it."""
+    by_id = {p['nba_id']: p for p in players}
+    got = []
+    # 1. defender distance shooting
+    try:
+        for key, ranges in DEF_RANGES.items():
+            tot = {}
+            for rng in ranges:
+                df = fetch_pt_shots(season, rng)
+                for rec in df.to_dict('records'):
+                    pid = num(rec.get('PLAYER_ID'), 0)
+                    if pid not in by_id:
+                        continue
+                    t = tot.setdefault(pid, [0.0, 0.0, 0.0])   # FGM, FGA, 3PM
+                    t[0] += _f(rec.get('FGM')) or 0
+                    t[1] += _f(rec.get('FGA')) or 0
+                    t[2] += _f(rec.get('FG3M')) or 0
+                time.sleep(1.5)
+            for pid, (m, a, m3) in tot.items():
+                if a > 0:
+                    by_id[pid][key + 'FGA'] = int(a)
+                    by_id[pid][key + 'EFG'] = round((m + 0.5 * m3) / a, 3)
+        got.append('defender distance')
+    except Exception as e:  # noqa: BLE001
+        print('       (Skipped open/contested shots: %s)' % e)
+    # 2. hustle
+    try:
+        df = fetch_hustle(season)
+        for rec in df.to_dict('records'):
+            p = by_id.get(num(rec.get('PLAYER_ID'), 0))
+            mins = _f(rec.get('MIN'))
+            if not p or not mins:
+                continue
+            per36 = lambda c: (_f(rec.get(c)) or 0) * 36.0 / mins
+            p['HUS36'] = round(per36('DEFLECTIONS') + 0.5 * per36('CONTESTED_SHOTS') + 0.5 * per36('SCREEN_ASSISTS')
+                               + 2 * per36('CHARGES_DRAWN') + per36('LOOSE_BALLS_RECOVERED'), 2)
+            p['DEFL36'] = round(per36('DEFLECTIONS'), 1)
+            p['CONT36'] = round(per36('CONTESTED_SHOTS'), 1)
+        got.append('hustle')
+        time.sleep(1.5)
+    except Exception as e:  # noqa: BLE001
+        print('       (Skipped hustle stats: %s)' % e)
+    # 3. on/off, one request per team
+    teams = sorted({p.get('tid') for p in players if p.get('tid')})
+    ok = fails = 0
+    best = {}
+    for tid in teams:
+        if fails >= 3 and not ok:   # NBA.com isn't answering these; don't spend an hour trying
+            break
+        try:
+            off_df, on_df = fetch_onoff(season, tid)
+            offm = {num(r.get('VS_PLAYER_ID'), 0): r for r in off_df}
+            for r in on_df:
+                pid = num(r.get('VS_PLAYER_ID'), 0)
+                o = offm.get(pid)
+                if pid not in by_id or not o:
+                    continue
+                on_min, off_min = _f(r.get('MIN')) or 0, _f(o.get('MIN')) or 0
+                if pid in best and best[pid] >= on_min:   # traded: keep the team he played most for
+                    continue
+                best[pid] = on_min
+                p = by_id[pid]
+                p['ON_NET'], p['OFF_NET'] = _f(r.get('NET_RATING')), _f(o.get('NET_RATING'))
+                p['ON_MIN'], p['OFF_MIN'] = round(on_min), round(off_min)
+            ok += 1
+        except Exception:  # noqa: BLE001
+            fails += 1
+        time.sleep(0.8)
+    if ok:
+        got.append('on/off for %d teams' % ok)
+    else:
+        print('       (Skipped on/off ratings: NBA.com did not answer)')
+    return got
 
 
 def fetch_shots(pid, season):
@@ -453,6 +583,157 @@ def download_shots(players, season):
     return shot_data, failed
 
 
+# ───────────────────────── Due to Break Out / Due to Cool Off ─────────────────────────
+# "A" = what the analytics think of a player (signals below, as z-scores, + = good sign).
+# "B" = what the box score shows (points + rebounds + assists per game, as a z-score).
+# Break Out: A well above B. Cool Off: B well above A.
+AN_MIN_MPG = 15
+AN_PICKS = 5
+AN_WEIGHTS = {'shot': 1.0, 'def': 0.8, 'impact': 1.0, 'eff': 0.7, 'hustle': 0.6}
+
+
+def _z(values):
+    """dict id -> value  =>  dict id -> z-score."""
+    vals = [v for v in values.values() if v is not None]
+    if len(vals) < 8:
+        return {}
+    mean = sum(vals) / len(vals)
+    sd = math.sqrt(sum((v - mean) ** 2 for v in vals) / len(vals)) or 1.0
+    return {k: (v - mean) / sd for k, v in values.items() if v is not None}
+
+
+def shot_quality(shots, lg):
+    """(actual eFG, expected eFG from where the shots came from, attempts)."""
+    if not shots or not lg:
+        return None
+    made_pts = exp_pts = 0.0
+    for x, y, m in shots:
+        three = is_three(x, y)
+        w = 1.5 if three else 1.0
+        made_pts += w * m
+        exp_pts += w * lg['3' if three else '2'][dist_bin(x, y)]
+    n = len(shots)
+    return made_pts / n, exp_pts / n, n
+
+
+def build_analytics(players, shot_data, lg, games_so_far):
+    pool = [p for p in players if (p.get('MP_PG') or 0) >= AN_MIN_MPG and p.get('G', 0) >= 2]
+    if len(pool) < 20:
+        return None
+    ids = [p['nba_id'] for p in pool]
+    by = {p['nba_id']: p for p in pool}
+    raw = {k: {} for k in AN_WEIGHTS}
+    info = {pid: {} for pid in ids}
+
+    # league eFG with an open / tight defender, from the pool
+    lgr = {}
+    for key in ('open', 'tight'):
+        a = sum(p.get(key + 'FGA', 0) for p in pool)
+        pts = sum(p.get(key + 'EFG', 0) * p.get(key + 'FGA', 0) for p in pool)
+        lgr[key] = pts / a if a else None
+
+    for p in pool:
+        pid = p['nba_id']
+        sq = shot_quality(shot_data.get(str(pid)), lg)
+        if sq and sq[2] >= 20:
+            a, x, n = sq
+            raw['shot'][pid] = (a - x) * n / (n + 150.0)
+            info[pid]['shot'] = {'a': round(a * 100, 1), 'x': round(x * 100, 1)}
+        tot, dev, parts = 0, 0.0, {}
+        for key in ('open', 'tight'):
+            fa = p.get(key + 'FGA', 0)
+            if fa and lgr[key]:
+                tot += fa
+                dev += (p[key + 'EFG'] - lgr[key]) * fa
+                parts[key] = (p[key + 'EFG'] - lgr[key], round(p[key + 'EFG'] * 100, 1), round(lgr[key] * 100, 1), fa)
+        if tot >= 15:
+            raw['def'][pid] = dev / (tot + 80.0)
+            info[pid]['def'] = parts
+        if p.get('ON_NET') is not None and p.get('OFF_NET') is not None and (p.get('OFF_MIN') or 0) >= 20:
+            on_min = p.get('ON_MIN') or 0
+            raw['impact'][pid] = (p['ON_NET'] - p['OFF_NET']) * on_min / (on_min + 250.0)
+            info[pid]['impact'] = {'on': round(p['ON_NET'], 1), 'off': round(p['OFF_NET'], 1)}
+        if p.get('HUS36') is not None:
+            raw['hustle'][pid] = p['HUS36']
+    zts = _z({pid: by[pid].get('TS%') for pid in ids})
+    zus = _z({pid: by[pid].get('USG%') for pid in ids})
+    for pid in ids:
+        if pid in zts and pid in zus:
+            raw['eff'][pid] = zts[pid] - zus[pid]
+            info[pid]['eff'] = {'ts': round(by[pid]['TS%'] * 100, 1), 'usg': round(by[pid]['USG%'] * 100, 1)}
+    hus_rank = sorted(raw['hustle'], key=lambda k: raw['hustle'][k])
+    for i, pid in enumerate(hus_rank):
+        pctl = int(round(100.0 * (i + 0.5) / len(hus_rank)))
+        info[pid]['hustle'] = {'p': pctl, 'defl': by[pid].get('DEFL36'), 'cont': by[pid].get('CONT36')}
+
+    z = {k: _z(v) for k, v in raw.items()}
+    # unlucky shooting counts in a player's favor (it should even out), lucky shooting against him
+    orient = {'shot': -1, 'def': -1, 'impact': 1, 'eff': 1, 'hustle': 1}
+    zb = _z({pid: (by[pid].get('PTS_PG') or 0) + (by[pid].get('TRB_PG') or 0) + (by[pid].get('AST_PG') or 0)
+             for pid in ids})
+    rows = []
+    for pid in ids:
+        contrib = {k: AN_WEIGHTS[k] * orient[k] * z[k][pid] for k in AN_WEIGHTS if pid in z[k]}
+        if len(contrib) < 2 or pid not in zb:
+            continue
+        A = sum(contrib.values()) / sum(AN_WEIGHTS[k] for k in contrib)
+        rows.append((pid, A, zb[pid], contrib))
+
+    def pick(score_fn, ok_fn, sign):
+        out = []
+        for pid, A, B, c in sorted(rows, key=lambda r: -score_fn(r[1], r[2])):
+            if not ok_fn(A, B):
+                continue
+            order = sorted(c, key=lambda k: -sign * c[k])
+            top = order[0]
+            if sign * c[top] < 0.3:
+                continue
+            p = by[pid]
+            out.append({
+                'id': pid, 'n': p['Player'], 't': p['Team'],
+                'pra': round((p.get('PTS_PG') or 0) + (p.get('TRB_PG') or 0) + (p.get('AST_PG') or 0), 1),
+                's': round(score_fn(A, B), 2),
+                'r': dict(info[pid].get(top, {}), k=top) if top != 'def' else _def_reason(info[pid]['def'], sign),
+                'tags': [k for k in order if sign * c[k] >= 0.35][:3],
+            })
+            if len(out) == AN_PICKS:
+                break
+        return out
+
+    breakout = pick(lambda A, B: A - 0.7 * B, lambda A, B: A >= 0.3, 1)
+    cooloff = pick(lambda A, B: B - A, lambda A, B: B >= 0.3 and A <= -0.1, -1)
+    return {'games': games_so_far, 'pool': len(pool), 'b': breakout, 'c': cooloff}
+
+
+def _def_reason(parts, sign):
+    """Pick the defender range that tells the story: cold on open looks, or hot on contested ones."""
+    best = None
+    for key, (d, mine, league, fga) in parts.items():
+        if best is None or -sign * d > -sign * best[1]:
+            best = (key, d, mine, league, fga)
+    return {'k': 'def', 'rng': best[0], 'a': best[2], 'lg': best[3], 'n': best[4]}
+
+
+def read_old_meta():
+    """META from the current index.html (for pick history), or {}."""
+    try:
+        with open(os.path.join(HERE, 'index.html'), 'r', encoding='utf-8') as f:
+            m = re.search(r'var META=(\{.*?\});\n', f.read(), re.S)
+        return json.loads(m.group(1)) if m else {}
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+def add_to_history(history, analytics, today):
+    """One entry per day: [date, [[id, pra]...] break out, [[id, pra]...] cool off]. Newest last."""
+    day = today.strftime('%Y-%m-%d')
+    history = [h for h in (history or []) if h and h[0] != day]
+    if analytics and (analytics['b'] or analytics['c']):
+        history.append([day, [[x['id'], x['pra']] for x in analytics['b']],
+                        [[x['id'], x['pra']] for x in analytics['c']]])
+    return history[-200:]
+
+
 # ───────────────────────── Writing the page ─────────────────────────
 
 def js_json(obj):
@@ -505,6 +786,19 @@ def restyle():
     return 0
 
 
+def datatest(season):
+    """Quick check that NBA.com answers the three extra data requests."""
+    for label, fn in (('Open shots', lambda: fetch_pt_shots(season, DEF_RANGES['open'][0])),
+                      ('Hustle stats', lambda: fetch_hustle(season)),
+                      ('On/off (Knicks)', lambda: fetch_onoff(season, 1610612752)[1])):
+        try:
+            r = fn()
+            print('  OK    %-16s %d rows' % (label, len(r)))
+        except Exception as e:  # noqa: BLE001
+            print('  FAIL  %-16s %s' % (label, e))
+    return 0
+
+
 # ───────────────────────── Main ─────────────────────────
 
 def main(argv):
@@ -512,6 +806,8 @@ def main(argv):
     skip_shots = False
     if any(a.lower() == 'restyle' for a in argv):
         return restyle()
+    if any(a.lower() == 'datatest' for a in argv):
+        return datatest(season)
     for a in argv:
         if re.match(r'^\d{4}-\d{2}$', a):
             season = a
@@ -620,6 +916,23 @@ def main(argv):
             return 1
         lg = league_curve(shot_data)
 
+    # Extra data + Due to Break Out / Due to Cool Off (optional: never blocks the update)
+    analytics, history = None, []
+    try:
+        print('       Pulling open/contested shots, hustle stats and on/off ratings...')
+        got = add_extra_stats(eligible, season)
+        if got:
+            print('       Got: %s.' % ', '.join(got))
+        analytics = build_analytics(eligible, shot_data, lg, games_so_far)
+        old_meta = read_old_meta()
+        history = old_meta.get('anHist', []) if old_meta.get('season') == season else []
+        history = add_to_history(history, analytics, today)
+        if analytics:
+            print('       Due to Break Out: %s' % ', '.join(x['n'] for x in analytics['b']))
+            print('       Due to Cool Off:  %s' % ', '.join(x['n'] for x in analytics['c']))
+    except Exception as e:  # noqa: BLE001
+        print('       (Break Out / Cool Off lists skipped: %s)' % e)
+
     now = datetime.now()
     meta = {
         'season': season,
@@ -629,6 +942,8 @@ def main(argv):
         'pct': int(MIN_GP_FRACTION * 100),
         'lg': lg,
         'movers': movers,
+        'an': analytics,
+        'anHist': history,
     }
 
     with open(os.path.join(HERE, 'template.html'), 'r', encoding='utf-8') as f:
