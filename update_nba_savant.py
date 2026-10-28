@@ -273,9 +273,6 @@ def add_extra_stats(players, season):
                 continue
             p['ls3a'] = int(round((_f(rec.get('FG3A')) or 0) * gp))
             p['ls3m'] = int(round((_f(rec.get('FG3M')) or 0) * gp))
-            fta = (_f(rec.get('FTA')) or 0) * gp
-            if fta >= 40:
-                p['lsft'] = round(_f(rec.get('FT_PCT')) or 0, 3)
         got.append('last season')
         time.sleep(1.5)
     except Exception as e:  # noqa: BLE001
@@ -290,15 +287,19 @@ def add_extra_stats(players, season):
                     pid = num(rec.get('PLAYER_ID'), 0)
                     if pid not in by_id:
                         continue
-                    t = tot.setdefault(pid, [0.0, 0.0, 0.0])   # FGM, FGA, 3PM
+                    t = tot.setdefault(pid, [0.0, 0.0, 0.0, 0.0])   # FGM, FGA, 3PM, 3PA
                     t[0] += _f(rec.get('FGM')) or 0
                     t[1] += _f(rec.get('FGA')) or 0
                     t[2] += _f(rec.get('FG3M')) or 0
+                    t[3] += _f(rec.get('FG3A')) or 0
                 time.sleep(1.5)
-            for pid, (m, a, m3) in tot.items():
+            for pid, (m, a, m3, a3) in tot.items():
                 if a > 0:
                     by_id[pid][key + 'FGA'] = int(a)
                     by_id[pid][key + 'EFG'] = round((m + 0.5 * m3) / a, 3)
+                if a3 > 0:
+                    by_id[pid][key + '3A'] = int(a3)
+                    by_id[pid][key + '3M'] = int(m3)
         got.append('defender distance')
     except Exception as e:  # noqa: BLE001
         print('       (Skipped open/contested shots: %s)' % e)
@@ -604,7 +605,8 @@ def download_shots(players, season):
 # Each player is checked against a few "profiles" that combine several stats, the way an
 # analyst would read them together. Rules of thumb used (sources in automation/HOW_TO.txt):
 #  - 3-point % needs ~300 attempts to trust, so a hot or cold start is judged against the
-#    player's own track record (last season), or his free-throw % if he has no track record.
+#    player's own track record (last season), or, with no track record, against what the league
+#    makes on threes as open (or contested) as his.
 #  - Efficiency doesn't naturally fall as usage rises, so a heavy-usage scorer is judged on
 #    true shooting vs the league average.
 #  - On/off takes hundreds of minutes to settle, so it is pulled toward zero (300-minute prior)
@@ -676,7 +678,6 @@ def build_analytics(players, shot_data, lg, games_so_far, game_logs=None):
     tot = lambda k: sum(T[i][k] for i in ids)
     lg_ts = tot('pts') / (2.0 * (tot('fga') + 0.44 * tot('fta'))) if tot('fga') else 0.57
     lg_3 = tot('3pm') / tot('3pa') if tot('3pa') else 0.36
-    lg_ft = tot('ftm') / tot('fta') if tot('fta') else 0.78
 
     usg_p = _pctl({i: by[i].get('USG%') or 0 for i in ids})
     pts_p = _pctl({i: by[i].get('PTS_PG') or 0 for i in ids})
@@ -694,6 +695,11 @@ def build_analytics(players, shot_data, lg, games_so_far, game_logs=None):
         hus_p.update(_pctl({i: by[i]['HUS36'] for i in mem}))
         for i in mem:
             hus_grp[i] = {'G': 'guards', 'F': 'forwards', 'C': 'centers'}.get(gname, 'rotation players')
+    # league 3P% on open vs contested threes (for players without a track record)
+    lg3r = {}
+    for key in ('open', 'tight'):
+        a3 = sum(by[i].get(key + '3A', 0) for i in ids)
+        lg3r[key] = sum(by[i].get(key + '3M', 0) for i in ids) / a3 if a3 >= 100 else None
     # open/contested league eFG
     lgr = {}
     for key in ('open', 'tight'):
@@ -718,15 +724,23 @@ def build_analytics(players, shot_data, lg, games_so_far, game_logs=None):
         three = None
         if t['3pa'] >= 15 and (p.get('3PA_PG') or 0) >= 2:
             cur = t['3pm'] / t['3pa']
+            oa, ta = p.get('open3A', 0), p.get('tight3A', 0)
+            share = oa / float(oa + ta) if oa + ta >= 10 else None
+            # what the league makes on threes as open (or as contested) as his
+            look = ((oa * lg3r['open'] + ta * lg3r['tight']) / (oa + ta)) if share is not None and lg3r.get('open') and lg3r.get('tight') else None
             if (p.get('ls3a') or 0) >= 80:
-                prior, src = p['ls3m'] / p['ls3a'], 'last'
+                prior, src = p['ls3m'] / float(p['ls3a']), 'last'
+            elif look is not None:
+                prior, src = look, 'open'
             else:
-                ft = p.get('lsft') or (t['ftm'] / t['fta'] if t['fta'] >= 15 else None)
-                prior = lg_3 + 0.35 * ((ft or lg_ft) - lg_ft)
-                src = 'ft' if ft else 'league'
+                prior, src = lg_3, 'league'
             exp = (t['3pm'] + THREE_PRIOR * prior) / (t['3pa'] + THREE_PRIOR)
             ppg = (cur - exp) * (p.get('3PA_PG') or 0) * 3
-            three = {'cur': cur, 'exp': exp, 'prior': prior, 'src': src, 'ppg': ppg, 'm': int(round(t['3pm'])), 'a': int(round(t['3pa']))}
+            three = {'cur': cur, 'exp': exp, 'prior': prior, 'src': src, 'ppg': ppg, 'm': int(round(t['3pm'])), 'a': int(round(t['3pa'])),
+                     'share': share, 'look': look}
+            if share is not None and p.get('open3A', 0) >= 5 and lg3r.get('open'):
+                o3 = p['open3M'] / float(p['open3A'])
+                ev['open3'] = ['Open threes', _pc(o3) + '%', '%d of %d, league %s%%' % (p['open3M'], p['open3A'], _pc(lg3r['open'])), o3 >= lg3r['open']]
             ev['3p'] = ['3-point %', _pc(cur) + '%', 'expected ' + _pc(exp) + '%', cur >= exp]
         sq = shot_quality(shot_data.get(str(i)), lg)
         if sq and sq[2] >= 40:
@@ -759,17 +773,20 @@ def build_analytics(players, shot_data, lg, games_so_far, game_logs=None):
         if three and abs(three['ppg']) >= 0.8 and abs(three['cur'] - three['exp']) >= 0.05:
             hot = three['cur'] > three['exp']
             if three['src'] == 'last':
-                base = 'He shot %s%% on %d threes last season' % (_pc(three['prior']), int(p['ls3a']))
-            elif three['src'] == 'ft':
-                base = 'For a %s%% free-throw shooter, a normal mark is about %s%%' % (
-                    _pc(p.get('lsft') or (t['ftm'] / t['fta'])), _pc(three['prior']))
+                base = 'His track record: %s%% on %d threes last season.' % (_pc(three['prior']), int(p['ls3a']))
+                if three['share'] is not None and three['look'] is not None:
+                    base += ' %d%% of his threes this season have been open; on looks like his, the league makes %s%%.' % (
+                        round(three['share'] * 100), _pc(three['look']))
+            elif three['src'] == 'open':
+                base = ('He has no real track record yet, so the starting point is his shot mix: %d%% of his threes have been open, '
+                        'and on looks like his the league makes %s%%.') % (round(three['share'] * 100), _pc(three['look']))
             else:
-                base = 'Without a track record, the league rate (%s%%) is the starting point' % _pc(lg_3)
-            txt = ('%s %s%% of his threes (%d of %d). %s, and threes take about 300 attempts to trust, '
+                base = 'He has no real track record yet, so the starting point is the league rate (%s%%).' % _pc(lg_3)
+            txt = ('%s %s%% of his threes (%d of %d). %s Threes take about 300 attempts to trust, '
                    'so the best guess going forward is about %s%%: roughly %.1f %s points a game.') % (
                 'Making' if hot else 'Making just', _pc(three['cur']), three['m'], three['a'], base, _pc(three['exp']),
                 abs(three['ppg']), 'fewer' if hot else 'more')
-            keys = ['3p', 'open' if not hot else 'tight', 'sq', 'ts']
+            keys = ['3p', 'open3', 'open' if not hot else 'tight', 'sq', 'ts']
             profiles.append(('c' if hot else 'b', abs(three['ppg']) * 1.1, 'Hot from three' if hot else 'Cold from three', txt, keys,
                              _conf(three['a'], 100, 250, 'threes')))
         # BREAK OUT 2: efficient in a small role
