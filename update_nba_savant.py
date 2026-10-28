@@ -263,6 +263,23 @@ def add_extra_stats(players, season):
     Anything NBA.com refuses is skipped; the site still builds without it."""
     by_id = {p['nba_id']: p for p in players}
     got = []
+    # 0. last season's shooting (the track record hot/cold starts are judged against)
+    try:
+        df = fetch_player_stats(previous_season(season))
+        for rec in df.to_dict('records'):
+            p = by_id.get(num(rec.get('PLAYER_ID'), 0))
+            gp = _f(rec.get('GP')) or 0
+            if not p or not gp:
+                continue
+            p['ls3a'] = int(round((_f(rec.get('FG3A')) or 0) * gp))
+            p['ls3m'] = int(round((_f(rec.get('FG3M')) or 0) * gp))
+            fta = (_f(rec.get('FTA')) or 0) * gp
+            if fta >= 40:
+                p['lsft'] = round(_f(rec.get('FT_PCT')) or 0, 3)
+        got.append('last season')
+        time.sleep(1.5)
+    except Exception as e:  # noqa: BLE001
+        print('       (Skipped last season: %s)' % e)
     # 1. defender distance shooting
     try:
         for key, ranges in DEF_RANGES.items():
@@ -584,12 +601,18 @@ def download_shots(players, season):
 
 
 # ───────────────────────── Due to Break Out / Due to Cool Off ─────────────────────────
-# "A" = what the analytics think of a player (signals below, as z-scores, + = good sign).
-# "B" = what the box score shows (points + rebounds + assists per game, as a z-score).
-# Break Out: A well above B. Cool Off: B well above A.
+# Each player is checked against a few "profiles" that combine several stats, the way an
+# analyst would read them together. Rules of thumb used (sources in automation/HOW_TO.txt):
+#  - 3-point % needs ~300 attempts to trust, so a hot or cold start is judged against the
+#    player's own track record (last season), or his free-throw % if he has no track record.
+#  - Efficiency doesn't naturally fall as usage rises, so a heavy-usage scorer is judged on
+#    true shooting vs the league average.
+#  - On/off takes hundreds of minutes to settle, so it is pulled toward zero (300-minute prior)
+#    and only used next to other evidence.
 AN_MIN_MPG = 15
 AN_PICKS = 5
-AN_WEIGHTS = {'shot': 1.0, 'def': 0.8, 'impact': 1.0, 'eff': 0.7, 'hustle': 0.6}
+THREE_PRIOR = 300.0      # attempts of "track record" a new 3P% sample is blended with
+ONOFF_PRIOR = 300.0      # minutes
 
 
 def _z(values):
@@ -600,6 +623,13 @@ def _z(values):
     mean = sum(vals) / len(vals)
     sd = math.sqrt(sum((v - mean) ** 2 for v in vals) / len(vals)) or 1.0
     return {k: (v - mean) / sd for k, v in values.items() if v is not None}
+
+
+def _pctl(values):
+    """dict id -> value  =>  dict id -> percentile 0..100 within the dict."""
+    order = sorted(values, key=lambda k: values[k])
+    n = len(order)
+    return {k: 100.0 * (i + 0.5) / n for i, k in enumerate(order)}
 
 
 def shot_quality(shots, lg):
@@ -616,102 +646,195 @@ def shot_quality(shots, lg):
     return made_pts / n, exp_pts / n, n
 
 
-def build_analytics(players, shot_data, lg, games_so_far):
+def _pc(v):
+    return '%.1f' % (v * 100)
+
+
+def build_analytics(players, shot_data, lg, games_so_far, game_logs=None):
+    game_logs = game_logs or {}
     pool = [p for p in players if (p.get('MP_PG') or 0) >= AN_MIN_MPG and p.get('G', 0) >= 2]
     if len(pool) < 20:
         return None
-    ids = [p['nba_id'] for p in pool]
     by = {p['nba_id']: p for p in pool}
-    raw = {k: {} for k in AN_WEIGHTS}
-    info = {pid: {} for pid in ids}
+    ids = list(by)
 
-    # league eFG with an open / tight defender, from the pool
+    # season totals (exact from game logs when we have them)
+    T = {}
+    for pid in ids:
+        p, g = by[pid], game_logs.get(str(pid)) or game_logs.get(pid)
+        if g:
+            s = lambda i: sum(x[i] for x in g)
+            T[pid] = {'fgm': s(10), 'fga': s(11), '3pm': s(12), '3pa': s(13), 'ftm': s(14), 'fta': s(15),
+                      'pts': s(4), 'min': s(3), 'g': len(g)}
+        else:
+            G = p.get('G', 0)
+            T[pid] = {'fga': (p.get('FGA_PG') or 0) * G, '3pa': (p.get('3PA_PG') or 0) * G,
+                      '3pm': (p.get('3PA_PG') or 0) * G * (p.get('3P%') or 0), 'fta': (p.get('FTA_PG') or 0) * G,
+                      'ftm': (p.get('FTA_PG') or 0) * G * (p.get('FT%') or 0), 'pts': (p.get('PTS_PG') or 0) * G,
+                      'min': (p.get('MP_PG') or 0) * G, 'g': G}
+    # league marks across the pool
+    tot = lambda k: sum(T[i][k] for i in ids)
+    lg_ts = tot('pts') / (2.0 * (tot('fga') + 0.44 * tot('fta'))) if tot('fga') else 0.57
+    lg_3 = tot('3pm') / tot('3pa') if tot('3pa') else 0.36
+    lg_ft = tot('ftm') / tot('fta') if tot('fta') else 0.78
+
+    usg_p = _pctl({i: by[i].get('USG%') or 0 for i in ids})
+    pts_p = _pctl({i: by[i].get('PTS_PG') or 0 for i in ids})
+    pra = {i: (by[i].get('PTS_PG') or 0) + (by[i].get('TRB_PG') or 0) + (by[i].get('AST_PG') or 0) for i in ids}
+    pra_p = _pctl(pra)
+    # hustle percentile within position
+    groups = {}
+    for i in ids:
+        if by[i].get('HUS36') is not None:
+            groups.setdefault(str(by[i].get('Pos') or 'X').split('-')[0][:1].upper() or 'X', []).append(i)
+    if any(len(v) < 12 for v in groups.values()):
+        groups = {'X': [i for v in groups.values() for i in v]}
+    hus_p, hus_grp = {}, {}
+    for gname, mem in groups.items():
+        hus_p.update(_pctl({i: by[i]['HUS36'] for i in mem}))
+        for i in mem:
+            hus_grp[i] = {'G': 'guards', 'F': 'forwards', 'C': 'centers'}.get(gname, 'rotation players')
+    # open/contested league eFG
     lgr = {}
     for key in ('open', 'tight'):
-        a = sum(p.get(key + 'FGA', 0) for p in pool)
-        pts = sum(p.get(key + 'EFG', 0) * p.get(key + 'FGA', 0) for p in pool)
-        lgr[key] = pts / a if a else None
+        a = sum(by[i].get(key + 'FGA', 0) for i in ids)
+        lgr[key] = sum(by[i].get(key + 'EFG', 0) * by[i].get(key + 'FGA', 0) for i in ids) / a if a else None
 
-    for p in pool:
-        pid = p['nba_id']
-        sq = shot_quality(shot_data.get(str(pid)), lg)
-        if sq and sq[2] >= 20:
-            a, x, n = sq
-            raw['shot'][pid] = (a - x) * n / (n + 150.0)
-            info[pid]['shot'] = {'a': round(a * 100, 1), 'x': round(x * 100, 1)}
-        tot, dev, parts = 0, 0.0, {}
-        for key in ('open', 'tight'):
-            fa = p.get(key + 'FGA', 0)
-            if fa and lgr[key]:
-                tot += fa
-                dev += (p[key + 'EFG'] - lgr[key]) * fa
-                parts[key] = (p[key + 'EFG'] - lgr[key], round(p[key + 'EFG'] * 100, 1), round(lgr[key] * 100, 1), fa)
-        if tot >= 15:
-            raw['def'][pid] = dev / (tot + 80.0)
-            info[pid]['def'] = parts
+    cards = {'b': [], 'c': []}
+    for i in ids:
+        p, t = by[i], T[i]
+        name = p['Player'].split(' ')[-1]
+        ts = t['pts'] / (2.0 * (t['fga'] + 0.44 * t['fta'])) if t['fga'] else None
+        if ts is None or t['fga'] < 20:
+            continue
+        rts = ts - lg_ts
+        usg = p.get('USG%') or 0
+        ev = {}  # evidence chips: key -> [label, value, comparison, looks good right now? (None = neutral)]
+        ev['ts'] = ['True shooting', _pc(ts) + '%', 'league ' + _pc(lg_ts) + '%', rts >= 0]
+        ev['usg'] = ['Usage', _pc(usg) + '%', 'top %d%% of rotation' % max(1, 100 - int(usg_p[i])) if usg_p[i] >= 50
+                     else 'bottom %d%%' % max(1, int(usg_p[i])), None]
+
+        # three-point outlook: blend this season with his track record
+        three = None
+        if t['3pa'] >= 15 and (p.get('3PA_PG') or 0) >= 2:
+            cur = t['3pm'] / t['3pa']
+            if (p.get('ls3a') or 0) >= 80:
+                prior, src = p['ls3m'] / p['ls3a'], 'last'
+            else:
+                ft = p.get('lsft') or (t['ftm'] / t['fta'] if t['fta'] >= 15 else None)
+                prior = lg_3 + 0.35 * ((ft or lg_ft) - lg_ft)
+                src = 'ft' if ft else 'league'
+            exp = (t['3pm'] + THREE_PRIOR * prior) / (t['3pa'] + THREE_PRIOR)
+            ppg = (cur - exp) * (p.get('3PA_PG') or 0) * 3
+            three = {'cur': cur, 'exp': exp, 'prior': prior, 'src': src, 'ppg': ppg, 'm': int(round(t['3pm'])), 'a': int(round(t['3pa']))}
+            ev['3p'] = ['3-point %', _pc(cur) + '%', 'expected ' + _pc(exp) + '%', cur >= exp]
+        sq = shot_quality(shot_data.get(str(i)), lg)
+        if sq and sq[2] >= 40:
+            ev['sq'] = ['Shot-making', _pc(sq[0]) + '% eFG', 'shot spots predict ' + _pc(sq[1]) + '%', sq[0] >= sq[1]]
+        for key, lab in (('open', 'Open looks'), ('tight', 'Contested shots')):
+            if p.get(key + 'FGA', 0) >= 12 and lgr.get(key):
+                ev[key] = [lab, _pc(p[key + 'EFG']) + '% eFG', 'league ' + _pc(lgr[key]) + '%', p[key + 'EFG'] >= lgr[key]]
+        imp = None
         if p.get('ON_NET') is not None and p.get('OFF_NET') is not None and (p.get('OFF_MIN') or 0) >= 20:
             on_min = p.get('ON_MIN') or 0
-            raw['impact'][pid] = (p['ON_NET'] - p['OFF_NET']) * on_min / (on_min + 250.0)
-            info[pid]['impact'] = {'on': round(p['ON_NET'], 1), 'off': round(p['OFF_NET'], 1)}
-        if p.get('HUS36') is not None:
-            raw['hustle'][pid] = p['HUS36']
-    zts = _z({pid: by[pid].get('TS%') for pid in ids})
-    zus = _z({pid: by[pid].get('USG%') for pid in ids})
-    for pid in ids:
-        if pid in zts and pid in zus:
-            raw['eff'][pid] = zts[pid] - zus[pid]
-            info[pid]['eff'] = {'ts': round(by[pid]['TS%'] * 100, 1), 'usg': round(by[pid]['USG%'] * 100, 1)}
-    hus_rank = sorted(raw['hustle'], key=lambda k: raw['hustle'][k])
-    for i, pid in enumerate(hus_rank):
-        pctl = int(round(100.0 * (i + 0.5) / len(hus_rank)))
-        info[pid]['hustle'] = {'p': pctl, 'defl': by[pid].get('DEFL36'), 'cont': by[pid].get('CONT36')}
+            imp = (p['ON_NET'] - p['OFF_NET']) * on_min / (on_min + ONOFF_PRIOR)
+            ev['onoff'] = ['On/off', '%+.1f' % (p['ON_NET'] - p['OFF_NET']), '%+.1f after adjusting for sample' % imp, imp >= 0]
+        if i in hus_p:
+            ev['hustle'] = ['Hustle', 'top %d%%' % max(1, 100 - int(hus_p[i])) if hus_p[i] >= 50 else 'bottom %d%%' % max(1, int(hus_p[i])),
+                            'among ' + hus_grp[i], hus_p[i] >= 50]
 
-    z = {k: _z(v) for k, v in raw.items()}
-    # unlucky shooting counts in a player's favor (it should even out), lucky shooting against him
-    orient = {'shot': -1, 'def': -1, 'impact': 1, 'eff': 1, 'hustle': 1}
-    zb = _z({pid: (by[pid].get('PTS_PG') or 0) + (by[pid].get('TRB_PG') or 0) + (by[pid].get('AST_PG') or 0)
-             for pid in ids})
-    rows = []
-    for pid in ids:
-        contrib = {k: AN_WEIGHTS[k] * orient[k] * z[k][pid] for k in AN_WEIGHTS if pid in z[k]}
-        if len(contrib) < 2 or pid not in zb:
-            continue
-        A = sum(contrib.values()) / sum(AN_WEIGHTS[k] for k in contrib)
-        rows.append((pid, A, zb[pid], contrib))
+        profiles = []   # (list, score, label, text, evidence keys, confidence)
+        # COOL OFF 1: volume without efficiency
+        if pts_p[i] >= 65 and usg_p[i] >= 60 and rts <= -0.025:
+            sc = (-rts / 0.04) * (usg_p[i] / 100.0) * (t['fga'] / (t['fga'] + 60.0)) * 2.2
+            fg = t['fgm'] / t['fga'] if t.get('fgm') is not None else p.get('FG%')
+            txt = ('Scoring %.1f a game, but it takes %.1f shots and %.1f free throws to get there. '
+                   'His %s%% true shooting is %.1f points below the league average while he uses %s%% of his team\'s plays%s, '
+                   'so the points are coming from volume, not efficiency.') % (
+                p.get('PTS_PG') or 0, p.get('FGA_PG') or 0, p.get('FTA_PG') or 0, _pc(ts), -rts * 100, _pc(usg),
+                (' and shoots %s%% from the field' % _pc(fg)) if fg else '')
+            profiles.append(('c', sc, 'Volume without efficiency', txt, ['ts', 'usg', 'sq', 'onoff'],
+                             _conf(t['fga'], 150, 400, 'shots')))
+        # COOL OFF 2 / BREAK OUT 1: three-point shooting vs track record
+        if three and abs(three['ppg']) >= 0.8 and abs(three['cur'] - three['exp']) >= 0.05:
+            hot = three['cur'] > three['exp']
+            if three['src'] == 'last':
+                base = 'He shot %s%% on %d threes last season' % (_pc(three['prior']), int(p['ls3a']))
+            elif three['src'] == 'ft':
+                base = 'For a %s%% free-throw shooter, a normal mark is about %s%%' % (
+                    _pc(p.get('lsft') or (t['ftm'] / t['fta'])), _pc(three['prior']))
+            else:
+                base = 'Without a track record, the league rate (%s%%) is the starting point' % _pc(lg_3)
+            txt = ('%s %s%% of his threes (%d of %d). %s, and threes take about 300 attempts to trust, '
+                   'so the best guess going forward is about %s%%: roughly %.1f %s points a game.') % (
+                'Making' if hot else 'Making just', _pc(three['cur']), three['m'], three['a'], base, _pc(three['exp']),
+                abs(three['ppg']), 'fewer' if hot else 'more')
+            keys = ['3p', 'open' if not hot else 'tight', 'sq', 'ts']
+            profiles.append(('c' if hot else 'b', abs(three['ppg']) * 1.1, 'Hot from three' if hot else 'Cold from three', txt, keys,
+                             _conf(three['a'], 100, 250, 'threes')))
+        # BREAK OUT 2: efficient in a small role
+        if rts >= 0.04 and usg_p[i] <= 45 and t['fga'] >= 25:
+            sc = (rts / 0.04) * (1 - usg_p[i] / 100.0) * (t['fga'] / (t['fga'] + 60.0)) * 2.0
+            txt = ('%s%% true shooting is %.1f points above the league average, but he only uses %s%% of his team\'s plays '
+                   '(%.1f shots a game). Few rotation players score this efficiently; if his role grows, the points have room to follow.') % (
+                _pc(ts), rts * 100, _pc(usg), p.get('FGA_PG') or 0)
+            profiles.append(('b', sc, 'Efficient, under-used', txt, ['ts', 'usg', 'sq', 'onoff'], _conf(t['fga'], 150, 400, 'shots')))
+        # BREAK OUT 3: impact the box score misses
+        if imp is not None and imp >= 3 and i in hus_p and hus_p[i] >= 70 and pra_p[i] <= 60 and rts >= -0.04:
+            sc = imp / 4.0 + (hus_p[i] - 50) / 40.0
+            txt = ('His team is %+.1f per 100 possessions with him on the floor and %+.1f with him off (%d minutes), and he is in the '
+                   'top %d%% of %s in hustle plays: %.1f deflections and %.1f contested shots per 36. His %.1f points, rebounds and assists miss most of that.') % (
+                p['ON_NET'], p['OFF_NET'], p.get('ON_MIN') or 0, max(1, 100 - int(hus_p[i])), hus_grp[i],
+                p.get('DEFL36') or 0, p.get('CONT36') or 0, pra[i])
+            profiles.append(('b', sc, 'Impact beyond the box score', txt, ['onoff', 'hustle', 'ts'], _conf(p.get('ON_MIN') or 0, 300, 800, 'minutes')))
+        # COOL OFF 3: big numbers, team gets outscored
+        if imp is not None and imp <= -3 and pra_p[i] >= 75 and rts <= 0.01:
+            sc = -imp / 4.0 + (pra_p[i] - 75) / 25.0
+            txt = ('Putting up %.1f points, rebounds and assists, but his team is %+.1f per 100 with him on the floor and %+.1f with him off, '
+                   'and his %s%% true shooting is %s the league average. Big counting stats on a losing floor tend to shrink once the minutes get tighter.') % (
+                pra[i], p['ON_NET'], p['OFF_NET'], _pc(ts), 'below' if rts < 0 else 'only at')
+            profiles.append(('c', sc, 'Big numbers, little impact', txt, ['onoff', 'ts', 'usg'], _conf(p.get('ON_MIN') or 0, 300, 800, 'minutes')))
 
-    def pick(score_fn, ok_fn, sign):
-        out = []
-        for pid, A, B, c in sorted(rows, key=lambda r: -score_fn(r[1], r[2])):
-            if not ok_fn(A, B):
+        for side in ('b', 'c'):
+            mine = sorted([x for x in profiles if x[0] == side], key=lambda x: -x[1])
+            if not mine:
                 continue
-            order = sorted(c, key=lambda k: -sign * c[k])
-            top = order[0]
-            if sign * c[top] < 0.3:
-                continue
-            p = by[pid]
-            out.append({
-                'id': pid, 'n': p['Player'], 't': p['Team'],
-                'pra': round((p.get('PTS_PG') or 0) + (p.get('TRB_PG') or 0) + (p.get('AST_PG') or 0), 1),
-                's': round(score_fn(A, B), 2),
-                'r': dict(info[pid].get(top, {}), k=top) if top != 'def' else _def_reason(info[pid]['def'], sign),
-                'tags': [k for k in order if sign * c[k] >= 0.35][:3],
+            best = mine[0]
+            score = best[1] + 0.3 * sum(x[1] for x in mine[1:])
+            keys = [k for k in best[4] if k in ev][:3]
+            cards[side].append({
+                'id': i, 'n': p['Player'], 't': p['Team'], 'pra': round(pra[i], 1), 's': round(score, 2),
+                'lab': best[2],
+                'txt': best[3], 'ev': [ev[k] for k in keys], 'conf': best[5],
+                'also': [x[2] for x in mine[1:]],
             })
-            if len(out) == AN_PICKS:
+
+    # a player goes on only one list: the side where his case is stronger
+    best_side = {}
+    for side in ('b', 'c'):
+        for c in cards[side]:
+            if c['id'] not in best_side or c['s'] > best_side[c['id']][1]:
+                best_side[c['id']] = (side, c['s'])
+    out = {}
+    for side in ('b', 'c'):
+        cards[side] = [c for c in cards[side] if best_side[c['id']][0] == side]
+        picked, per_label = [], {}
+        for c in sorted(cards[side], key=lambda c: -c['s']):
+            lab = c['lab']
+            if per_label.get(lab, 0) >= 3:      # keep the list varied
+                continue
+            per_label[lab] = per_label.get(lab, 0) + 1
+            picked.append(c)
+            if len(picked) == AN_PICKS:
                 break
-        return out
-
-    breakout = pick(lambda A, B: A - 0.7 * B, lambda A, B: A >= 0.3, 1)
-    cooloff = pick(lambda A, B: B - A, lambda A, B: B >= 0.3 and A <= -0.1, -1)
-    return {'games': games_so_far, 'pool': len(pool), 'b': breakout, 'c': cooloff}
+        out[side] = picked
+    return {'games': games_so_far, 'pool': len(pool), 'lgts': round(lg_ts * 100, 1), 'b': out['b'], 'c': out['c']}
 
 
-def _def_reason(parts, sign):
-    """Pick the defender range that tells the story: cold on open looks, or hot on contested ones."""
-    best = None
-    for key, (d, mine, league, fga) in parts.items():
-        if best is None or -sign * d > -sign * best[1]:
-            best = (key, d, mine, league, fga)
-    return {'k': 'def', 'rng': best[0], 'a': best[2], 'lg': best[3], 'n': best[4]}
+def _conf(n, mid, high, unit):
+    """How much to trust a profile, from its sample size."""
+    lvl = 'High' if n >= high else 'Medium' if n >= mid else 'Low'
+    return {'lvl': lvl, 'note': '%d %s so far' % (int(n), unit)}
 
 
 def read_old_meta():
@@ -762,8 +885,9 @@ def write_atomic(path, text):
     os.replace(tmp, path)
 
 
-def restyle():
-    """Rebuild index.html from its own embedded data with the latest template.html."""
+def restyle(rescore=False):
+    """Rebuild index.html from its own embedded data with the latest template.html.
+    rescore=True also recomputes the Break Out / Cool Off picks from that data."""
     path = os.path.join(HERE, 'index.html')
     try:
         with open(path, 'r', encoding='utf-8') as f:
@@ -778,6 +902,13 @@ def restyle():
         print('Could not read the data inside index.html (%s).' % e)
         print('Run the normal update instead. Your site was NOT changed.')
         return 1
+    if rescore:
+        an = build_analytics(players, shots, meta.get('lg'), meta.get('gamesSoFar', 0), logs)
+        meta['an'] = an
+        meta['anHist'] = add_to_history(meta.get('anHist'), an, datetime.now().date())
+        if an:
+            print('Due to Break Out: %s' % ', '.join(x['n'] for x in an['b']))
+            print('Due to Cool Off:  %s' % ', '.join(x['n'] for x in an['c']))
     with open(os.path.join(HERE, 'template.html'), 'r', encoding='utf-8') as f:
         template = f.read()
     write_atomic(path, render_page(template, players, shots, meta, meta.get('season', ''), logs))
@@ -806,6 +937,8 @@ def main(argv):
     skip_shots = False
     if any(a.lower() == 'restyle' for a in argv):
         return restyle()
+    if any(a.lower() == 'rescore' for a in argv):
+        return restyle(rescore=True)
     if any(a.lower() == 'datatest' for a in argv):
         return datatest(season)
     for a in argv:
@@ -923,7 +1056,7 @@ def main(argv):
         got = add_extra_stats(eligible, season)
         if got:
             print('       Got: %s.' % ', '.join(got))
-        analytics = build_analytics(eligible, shot_data, lg, games_so_far)
+        analytics = build_analytics(eligible, shot_data, lg, games_so_far, game_logs)
         old_meta = read_old_meta()
         history = old_meta.get('anHist', []) if old_meta.get('season') == season else []
         history = add_to_history(history, analytics, today)
