@@ -958,6 +958,15 @@ h2.st-sh.gg{margin-top:38px}
 .ar-rel{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
 .ar-rel a{display:flex;flex-direction:column;gap:6px;padding:14px 0;border-top:3px solid var(--navy)}
 .ar-rel b{font-weight:800;font-size:16px;line-height:1.25;color:var(--navy)}
+.ar-rel a{flex-direction:row;align-items:flex-start;gap:14px}
+.ar-rel .rl-t{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ar-rel .rl-n{font-size:12.5px;color:var(--t3);font-weight:600}
+.pbx.rl{width:84px;height:84px;border-radius:12px}
+.pbx.rl .hs{height:96%}
+.st-gl .opp{display:inline-flex;align-items:center;gap:6px}
+.st-gl .opp i{font-style:normal;color:var(--t3);font-size:12px;width:18px}
+.st-gl .opp img.ol{width:22px;height:22px;object-fit:contain}
+.st-gl .opp b{font-weight:700}
 .st-gl.ft td:nth-child(2){text-align:left}
 /* ---------- home: news front page ---------- */
 .stage .court,.stage .court-m{display:none}
@@ -2540,7 +2549,6 @@ function chMargin(o){
 function cMargin(vals,gm,nr){return chMargin({v:vals,g:gm,nr:nr});}
 function fmtV(r,v){return r.pc?f1(v)+'%':r.sg?(v>0?'+':'')+f1(v):f1(v);}
 /* number line: zero in the middle, good changes go right in green, bad ones left in red */
-function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
 function chChange(rows,nb){
   var bl=befLab(nb),rl=recLab(),rel=function(r){return r.b?(r.a-r.b)/Math.abs(r.b)*100:(r.a?100:0);},mx=Math.max.apply(null,rows.map(function(r){return Math.abs(rel(r));}).concat([10]));
   var h='<div class="chg"><div class="chg-h"><span></span><span>'+esc(bl)+'</span><span class="mid"><i class="r">◀ Worse</i><i class="z">0</i><i class="g">Better ▶</i></span><span>'+esc(rl)+'</span></div>';
@@ -2706,11 +2714,13 @@ function byline(extra,p,t){
     return '<a class="ar-chip" href="#t/'+t+'">'+tbx(t,'sm')+'<div class="ac-n"><b>'+esc(teamOf(t).n)+'</b><span>Season so far</span></div>'
     +'<div class="ac-s"><span><b>'+(a.w||0)+'-'+(a.l||0)+'</b>RECORD</span><span><b>'+(a.net>0?'+':'')+f1(a.net||0)+'</b>NET</span><span><b>#'+rk+'</b>POWER</span></div><div class="ac-go">Team page →<i>'+meta+'</i></div></a>';}
   return '<div class="ar-meta"><div class="ar-av">NS</div><div class="byl"><b>Savant Data Desk</b><br>'+meta+'</div></div>';}
+function oppCell(s){var m=String(s||'').match(/^(vs\.?|@)\s*([A-Z]{2,3})$/);if(!m)return esc(s);
+  return '<span class="opp"><i>'+(m[1]==='@'?'@':'vs')+'</i>'+img(logoT(m[2]),'ol')+'<b>'+m[2]+'</b></span>';}
 function relStories(skip){
   var ps_=playerStories().filter(function(s){return String(s.p.nba_id)!==String(skip);}).slice(0,2).map(function(s){return {p:s.p,v:s.v,w:pWrite(s)};});
   var ts=teamStories().filter(function(s){return s.t!==skip;}).slice(0,1).map(function(s){return {t:s.t,v:s.v,w:tWrite(s)};});
   var all=ps_.concat(ts);if(!all.length)return '';
-  return '<div class="ar-more"><h2 class="x-h2 st-sh">More stories</h2><div class="ar-rel">'+all.map(function(o){var vv=VERD[o.v];return '<a href="'+stHref(o)+'"><span class="kick '+vv[2]+'">'+vv[0]+'</span><b>'+esc(o.w.h)+'</b></a>';}).join('')+'</div></div>';
+  return '<div class="ar-more"><h2 class="x-h2 st-sh">More stories</h2><div class="ar-rel">'+all.map(function(o){var vv=VERD[o.v];return '<a href="'+stHref(o)+'">'+(o.p?pbx(o.p,'rl'):tbx(o.t,'rl'))+'<div class="rl-t"><span class="kick '+vv[2]+'">'+vv[0]+'</span><b>'+esc(o.w.h)+'</b><span class="rl-n">'+esc(o.p?o.p.Player+' · '+nick(o.p.Team):teamOf(o.t).n)+'</span></div></a>';}).join('')+'</div></div>';
 }
 function winBar(){return '<div class="st-win">View: '+[['5','Last 5'],['10','Last 10'],['season','Season']].map(function(x){return '<button type="button" class="x-chip'+(TRW===x[0]?' on':'')+'" data-trw="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
 function showStory(kind,id){
@@ -2732,7 +2742,7 @@ function showStory(kind,id){
     var cm=chCourt(p);if(cm)h+='<div class="fg-a ar-fig ar-court">'+cm+'</div>';
     h+='<div class="ar-watch"><b>What to watch</b>'+esc(w.watch)+'</div>';
     h+='<h2 class="x-h2 st-sh gg">Game by game</h2><div class="st-wrap"><table class="st-gl"><tr><th>Date</th><th>Opp</th><th></th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>FG</th><th>3P</th><th>FT</th><th>TOV</th></tr>'
-      +s.g.slice().reverse().map(function(x,i){return '<tr class="'+(i<rec.length?'rec':'')+'"><td>'+x[0]+'</td><td>'+esc(x[1])+'</td><td class="'+(x[2]==='W'?'w':'l')+'">'+x[2]+'</td><td>'+x[3]+'</td><td><b>'+x[4]+'</b></td><td>'+x[5]+'</td><td>'+x[6]+'</td><td>'+x[10]+'-'+x[11]+'</td><td>'+x[12]+'-'+x[13]+'</td><td>'+x[14]+'-'+x[15]+'</td><td>'+x[9]+'</td></tr>';}).join('')+'</table></div>';
+      +s.g.slice().reverse().map(function(x,i){return '<tr class="'+(i<rec.length?'rec':'')+'"><td>'+x[0]+'</td><td>'+oppCell(x[1])+'</td><td class="'+(x[2]==='W'?'w':'l')+'">'+x[2]+'</td><td>'+x[3]+'</td><td><b>'+x[4]+'</b></td><td>'+x[5]+'</td><td>'+x[6]+'</td><td>'+x[10]+'-'+x[11]+'</td><td>'+x[12]+'-'+x[13]+'</td><td>'+x[14]+'-'+x[15]+'</td><td>'+x[9]+'</td></tr>';}).join('')+'</table></div>';
     h+=relStories(p.nba_id);
     document.title=w.h+' | NBA Savant';
   }else{
@@ -2749,7 +2759,7 @@ function showStory(kind,id){
     h+='<div class="fg-a ar-fig">'+chFig('The numbers behind it','How each stat changed from '+befLab(s.sp.pri.length).toLowerCase()+' to the '+trLab().toLowerCase()+'. Green bars go right when the change helps, red bars go left when it hurts. Longer bar = bigger change.',chChange(w.dmx,s.sp.pri.length),1)+'</div>';
     h+='<div class="ar-watch"><b>What to watch</b>'+esc(w.watch)+'</div>';
     h+='<h2 class="x-h2 st-sh gg">Game by game</h2><div class="st-wrap"><table class="st-gl"><tr><th>Date</th><th>Opp</th><th></th><th>Score</th><th>Margin</th></tr>'
-      +s.g.slice().reverse().map(function(o,i){var m=o.pts-o.opp;return '<tr class="'+(i<s.sp.rec.length?'rec':'')+'"><td>'+o.d+'</td><td>'+esc(o.o)+'</td><td class="'+(o.wl==='W'?'w':'l')+'">'+o.wl+'</td><td>'+o.pts+'–'+o.opp+'</td><td style="color:'+(m>=0?'var(--rise)':'var(--fall)')+';font-weight:700">'+(m>0?'+':'')+m+'</td></tr>';}).join('')+'</table></div>';
+      +s.g.slice().reverse().map(function(o,i){var m=o.pts-o.opp;return '<tr class="'+(i<s.sp.rec.length?'rec':'')+'"><td>'+o.d+'</td><td>'+oppCell(o.o)+'</td><td class="'+(o.wl==='W'?'w':'l')+'">'+o.wl+'</td><td>'+o.pts+'–'+o.opp+'</td><td style="color:'+(m>=0?'var(--rise)':'var(--fall)')+';font-weight:700">'+(m>0?'+':'')+m+'</td></tr>';}).join('')+'</table></div>';
     h+=relStories(id);
     document.title=w.h+' | NBA Savant';
   }
