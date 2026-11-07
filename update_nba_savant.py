@@ -276,6 +276,46 @@ def fetch_team_logs(season):
     return with_retries(call, 'team game logs', attempts=3, base_wait=10, timeout=60)
 
 
+def fetch_schedule(season):
+    """Upcoming games (today and the next 2 days, US Eastern) as [date 'M/D', away, home, tip time]."""
+    import datetime
+    try:
+        from zoneinfo import ZoneInfo
+        today = datetime.datetime.now(ZoneInfo('America/New_York')).date()
+    except Exception:  # noqa: BLE001
+        today = (datetime.datetime.utcnow() - datetime.timedelta(hours=5)).date()
+    days = [today + datetime.timedelta(days=i) for i in range(3)]
+    keys = {d.isoformat(): '%d/%d' % (d.month, d.day) for d in days}
+    out = []
+    try:
+        from nba_api.stats.endpoints import scheduleleaguev2
+
+        def call(t):
+            return scheduleleaguev2.ScheduleLeagueV2(season=season, league_id='00', timeout=t).get_data_frames()[0]
+
+        df = with_retries(call, 'schedule', attempts=3, base_wait=10, timeout=60)
+        for r in df.to_dict('records'):
+            d = str(r.get('gameDateEst') or r.get('gameDate') or '')[:10]
+            if d not in keys or r.get('gameStatus') == 3:
+                continue
+            tip = str(r.get('gameStatusText') or '').strip()
+            out.append([keys[d], r.get('awayTeam_teamTricode'), r.get('homeTeam_teamTricode'), tip, d])
+    except Exception as e:  # noqa: BLE001
+        print('       (Season schedule unavailable: %s; trying today\'s scoreboard)' % e)
+        try:
+            from nba_api.live.nba.endpoints import scoreboard
+            sb = scoreboard.ScoreBoard().get_dict().get('scoreboard', {})
+            for g in sb.get('games', []):
+                if g.get('gameStatus') == 3:
+                    continue
+                out.append([keys[today.isoformat()], g['awayTeam']['teamTricode'], g['homeTeam']['teamTricode'],
+                            str(g.get('gameStatusText') or '').strip(), today.isoformat()])
+        except Exception as e2:  # noqa: BLE001
+            print('       (Skipped upcoming games: %s)' % e2)
+    out.sort(key=lambda x: x[4])
+    return [x[:4] for x in out if x[1] and x[2]]
+
+
 def build_games(rows):
     """Final scores as [date 'M/D', away, away pts, home, home pts], oldest first."""
     games = {}
@@ -1006,6 +1046,8 @@ def restyle(rescore=False, clutch_season=None, scores_season=None):
         try:
             meta['games'] = build_games(fetch_team_logs(scores_season).to_dict('records'))
             print('Final scores: %d games' % len(meta['games']))
+            meta['sched'] = fetch_schedule(scores_season)
+            print('Upcoming games: %d' % len(meta['sched']))
         except Exception as e:  # noqa: BLE001
             print('Could not get final scores (%s). Your site was NOT changed.' % e)
             return 1
@@ -1193,6 +1235,8 @@ def main(argv):
         meta['games'] = build_games(fetch_team_logs(season).to_dict('records'))
     except Exception as e:  # noqa: BLE001
         print('       (Skipped final scores: %s)' % e)
+    meta['sched'] = fetch_schedule(season)
+    print('       Upcoming games: %d' % len(meta['sched']))
 
     with open(os.path.join(HERE, 'template.html'), 'r', encoding='utf-8') as f:
         template = f.read()

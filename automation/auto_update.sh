@@ -14,7 +14,7 @@ GIT_TERMINAL_PROMPT=0 git pull --rebase --autostash -q origin main || echo "(Cou
 "$PY" update_nba_savant.py || { echo "ERROR: stats update failed. index.html was left as it was."; exit 1; }
 if git diff --quiet -- index.html; then echo "No new stats since last update. Nothing to push."; exit 0; fi
 git add index.html
-git commit -q -m "Nightly stats update $(date +%Y-%m-%d)"
+git commit -q -m "Stats update $(date +%Y-%m-%d)"
 if GIT_TERMINAL_PROMPT=0 git push -q origin HEAD; then
   echo "DONE: new stats pushed to GitHub."
 else
