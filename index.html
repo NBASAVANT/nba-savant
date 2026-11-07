@@ -941,7 +941,7 @@ h2.st-sh.gg{margin-top:38px}
 .ar-p{font-size:18px;line-height:1.65;color:#1b2236;margin:0 0 20px;text-wrap:pretty}
 .ar-p b{font-weight:800}
 .ar-h2{font-weight:900;font-size:32px;font-stretch:72%;line-height:1.05;margin:36px 0 12px}
-.ks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:3px solid var(--navy);border-radius:12px;margin:8px 0 30px;overflow:hidden}
+.ks{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);border:3px solid var(--navy);border-radius:12px;margin:8px 0 30px;overflow:hidden}
 .ks>div{padding:16px 18px;border-right:1px solid var(--rule2);min-width:0}.ks>div:last-child{border-right:0}
 .ks-l{font-weight:800;font-size:11px;letter-spacing:.12em;color:var(--t3);text-transform:uppercase}
 .ks-v{font-weight:900;font-size:46px;font-stretch:64%;line-height:1;margin-top:8px;white-space:nowrap}
@@ -1038,7 +1038,8 @@ h2.st-sh.gg{margin-top:38px}
   .ar-p{font-size:16.5px}
   .ar-fig{margin:6px -6px 24px;padding:16px 12px 12px}
   .ar-fig .fg figcaption b{font-size:17px}
-  .ks-v{font-size:32px}.ks-v small{font-size:13px;display:block;margin-top:3px}.ks>div{padding:12px 10px}.ks-l{font-size:9.5px;letter-spacing:.08em}.ks-c{font-size:11px}
+  .ks-v{font-size:32px}.ks-v small{font-size:13px;display:block;margin-top:3px}
+  .ks{grid-auto-flow:row;grid-template-columns:1fr 1fr}.ks>div{border-bottom:1px solid var(--rule2)}.ks>div{padding:12px 10px}.ks-l{font-size:9.5px;letter-spacing:.08em}.ks-c{font-size:11px}
   .ar-rel{grid-template-columns:1fr}
   .bgc{min-height:230px}.bgc-n{font-size:96px}.bgc-n small{font-size:32px}.bgc-s{font-size:20px}.bgc-t{padding:18px;max-width:70%}
   .tp-v{font-size:28px}.tape{column-gap:10px}
@@ -2119,7 +2120,7 @@ function tAgg(gs){
   gs.forEach(function(o){if(o.wl==='W')s.w++;['pts','opp','poss','fgm','fga','tpm','tpa','fta','tov','ast','oreb'].forEach(function(k){s[k]+=o[k];});});
   if(!n||!s.poss)return null;
   return {n:n,w:s.w,l:n-s.w,ortg:s.pts/s.poss*100,drtg:s.opp/s.poss*100,net:(s.pts-s.opp)/s.poss*100,pace:s.poss/n,
-    p3:s.tpa?s.tpm/s.tpa*100:0,tpa:s.tpa/n,tov:s.tov/s.poss*100,ftr:s.fga?s.fta/s.fga*100:0,ast:s.fgm?s.ast/s.fgm*100:0,oreb:s.oreb/n,ppg:s.pts/n,oppg:s.opp/n};
+    p3:s.tpa?s.tpm/s.tpa*100:0,tpa:s.tpa/n,tpm:s.tpm/n,sh3:s.pts?3*s.tpm/s.pts*100:0,tov:s.tov/s.poss*100,ftr:s.fga?s.fta/s.fga*100:0,ast:s.fgm?s.ast/s.fgm*100:0,oreb:s.oreb/n,ppg:s.pts/n,oppg:s.opp/n};
 }
 var TAGG=null;
 function allTeamAgg(){if(TAGG)return TAGG;TAGG={};var G=teamGames();Object.keys(G).forEach(function(t){TAGG[t]=tAgg(G[t]);});return TAGG;}
@@ -2145,7 +2146,7 @@ function pAgg(p,gs){
   var r={n:n,min:s.min/n,pts:s.pts/n,reb:s.reb/n,ast:s.ast/n,tov:s.tov/n,fga:s.fga/n,fta:s.fta/n,tpa:s.tpa/n,tpm:s.tpm/n};
   r.pra=r.pts+r.reb+r.ast;
   r.ts=s.fga+s.fta?s.pts/(2*(s.fga+0.44*s.fta))*100:0;
-  r.p3=s.tpa?s.tpm/s.tpa*100:null;
+  r.p3=s.tpa?s.tpm/s.tpa*100:null;r.sh3=s.pts?3*s.tpm/s.pts*100:0;
   r.usg=s.min&&s.tUse?((s.fga+0.44*s.fta+s.tov)*(s.tMin/5))/(s.min*s.tUse)*100:0;
   var den=s.tMin?(s.min/(s.tMin/5))*s.tFgm-s.fgm:0;r.astp=den>0?s.ast/den*100:0;
   return r;
@@ -2207,6 +2208,13 @@ function befW(n,team){return TRW==='season'?'in the first half':n<=10?(team?'in 
 function gTS(x){var a=x[11]+0.44*x[15];return a?x[4]/(2*a)*100:0;}
 
 /* ============ PLAYER STORY WRITER: headline, dek, body, charts ============ */
+/* ARTICLE RULES
+   1. The subhead (dek) states the exact numbers behind the headline, before and after.
+   2. The key numbers box shows those same stats first; every claim in the headline has a number there.
+   3. Three-point stories (hot streak, cold streak, back to normal, team shooting) always show:
+      3-point %, threes made per game, and share of points from threes, plus a threes-made-each-game chart.
+   4. Every chart has a title, a subtitle saying what is measured, labeled axes, direct labels and a source line.
+   5. Green means better, red means worse, gray when neither. */
 function pWrite(s){
   var p=s.p,R=s.R,B=s.B,N=lastName(p.Player),F=p.Player,rec=s.sp.rec,pri=s.sp.pri,all=s.g,nr=rec.length;
   var up=s.v==='REAL'||s.v==='OPPORTUNITY'||s.v==='LUCK';
@@ -2217,15 +2225,19 @@ function pWrite(s){
   var KS={PTS:{l:'Points',a:R.pts,b:B.pts,good:1},TS:{l:'True shooting',a:R.ts,b:B.ts,good:1,pc:1},USG:{l:'Usage rate',a:R.usg,b:B.usg,good:null,pc:1},
     FTA:{l:'Free throws',a:R.fta,b:B.fta,good:1},TPA:{l:'3-pt attempts',a:R.tpa,b:B.tpa,good:null},P3:{l:'3-point %',a:R.p3||0,b:B.p3||0,good:1,pc:1},
     TOV:{l:'Turnovers',a:R.tov,b:B.tov,good:0},AST:{l:'Assists',a:R.ast,b:B.ast,good:1},ASTP:{l:'Assist rate',a:R.astp,b:B.astp,good:1,pc:1},
-    MIN:{l:'Minutes',a:R.min,b:B.min,good:1},FGA:{l:'Shots',a:R.fga,b:B.fga,good:null},PRA:{l:'Pts + reb + ast',a:R.pra,b:B.pra,good:1}};
+    MIN:{l:'Minutes',a:R.min,b:B.min,good:1},FGA:{l:'Shots',a:R.fga,b:B.fga,good:null},PRA:{l:'Pts + reb + ast',a:R.pra,b:B.pra,good:1},
+    TPM:{l:'Threes made',a:R.tpm,b:B.tpm,good:1},SH3:{l:'Points from threes',a:R.sh3,b:B.sh3,good:null,pc:1}};
   var D_={TS:{l:'True shooting',u:'% of possible points',b:B.ts,a:R.ts,good:1,pc:1,ref:s.LTS,refl:'LEAGUE AVG'},USG:{l:'Usage rate',u:'% of team plays he finishes',b:B.usg,a:R.usg,good:1,pc:1},
     PTS:{l:'Points',u:'per game',b:B.pts,a:R.pts,good:1},TOV:{l:'Turnovers',u:'per game',b:B.tov,a:R.tov,good:0},FTA:{l:'Free throws',u:'attempts per game',b:B.fta,a:R.fta,good:1},
     TPA:{l:'Threes',u:'attempts per game',b:B.tpa,a:R.tpa,good:null},AST:{l:'Assists',u:'per game',b:B.ast,a:R.ast,good:1},ASTP:{l:'Assist rate',u:'% of teammate baskets he set up',b:B.astp,a:R.astp,good:1,pc:1},
     MIN:{l:'Minutes',u:'per game',b:B.min,a:R.min,good:1},P3:{l:'3-point %',u:'share of threes made',b:B.p3===null?s.base:B.p3,a:R.p3===null?0:R.p3,good:1,pc:1,ref:s.base,refl:s.hasTrack?'LAST SEASON':'LEAGUE AVG'},
-    FGA:{l:'Shots',u:'attempts per game',b:B.fga,a:R.fga,good:null},PRA:{l:'Pts + reb + ast',u:'per game',b:B.pra,a:R.pra,good:1}};
+    FGA:{l:'Shots',u:'attempts per game',b:B.fga,a:R.fga,good:null},PRA:{l:'Pts + reb + ast',u:'per game',b:B.pra,a:R.pra,good:1},
+    TPM:{l:'Threes made',u:'per game',b:B.tpm,a:R.tpm,good:1},SH3:{l:'Points from threes',u:'% of his points',b:B.sh3,a:R.sh3,good:null,pc:1}};
   var best=rec.reduce(function(m,x){return x[4]>m[4]?x:m;},rec[0]),worst=rec.reduce(function(m,x){return x[4]<m[4]?x:m;},rec[0]);
   var lede='<b>'+esc(F)+' has averaged '+f1(R.pts)+' points over his '+recW()+'</b>, '+(R.pts>=B.pts?'up':'down')+' from '+f1(B.pts)+' '+befW(pri.length)
     +(up&&best[4]>=R.pts+5?', capped by '+best[4]+' points '+oppName(best[1])+' on '+best[0]:(!up&&worst[4]<=R.pts-5?', including just '+worst[4]+' '+oppName(worst[1])+' on '+worst[0]:''))+'.';
+  var th=function(dir){return 'He’s making '+f1(R.tpm)+' threes a game at '+pct1(R.p3||0)+', '+dir+' from '+f1(B.tpm)+' at '+pct1(B.p3||0)+'. Threes are '+f0(R.sh3)+'% of his points now, compared with '+f0(B.sh3)+'% before.';};
+  var tpmC=mk(col_(12),'threes made','Threes made');
   if(s.v==='REAL'){
     if(s.drv==='involved'){o.h=N+' is scoring '+f0(R.pts)+' a night, and he’s doing it efficiently';
       o.k='His usage rate jumped from '+pct1(B.usg)+' to '+pct1(R.usg)+' while his true shooting rose from '+pct1(B.ts)+' to '+pct1(R.ts)+'. Usually one goes up and the other comes down.';
@@ -2279,18 +2291,18 @@ function pWrite(s){
     o.ks=['MIN','PTS','TS'];o.dm=['MIN','PTS','TS','USG'];o.c=mk(col_(3),'minutes','Minutes');o.note=s.mates.length+(s.mates.length>1?' teammates out':' teammate out');
   }else if(s.v==='LUCK'){
     o.h=ps(N)+' hot stretch is running on '+f0(R.p3)+'% three-point shooting';
-    o.k=(s.hasTrack?'He shot '+pct1(s.base)+' from three last season.':'League average is '+pct1(s.base)+' from three.')+' Some of this will cool off.';
+    o.k=th('up')+' '+(s.hasTrack?'He shot '+pct1(s.base)+' from three last season.':'League average is '+pct1(s.base)+'.');
     o.nut='Three-point percentage takes hundreds of attempts to settle. Over a handful of games it swings wildly.';
     o.h2='How much is the threes?';o.b2='At his normal three-point rate he’d be scoring about '+f1(Math.max(0,s.luck))+' fewer points a game in this stretch.';
     o.watch='The rest of his game is what to watch. If it holds when the threes cool, he’s still improved.';
-    o.ks=['P3','PTS','TS'];o.dm=['P3','PTS','TS','TPA'];o.c=ptsC;
+    o.ks=['P3','TPM','SH3','PTS'];o.dm=['P3','TPM','SH3','PTS','TS'];o.c=ptsC;o.c3=tpmC;
   }else if(s.v==='COLD'){
     o.h=ps(N)+' slump is mostly cold three-point shooting';
-    o.k='He’s making '+pct1(R.p3)+' of his threes, well below his '+pct1(s.base)+(s.hasTrack?' from last season':' league norm')+'. Expect a bounce back.';
+    o.k=th('down')+' His '+(s.hasTrack?'track record':'league norm')+' is '+pct1(s.base)+'. Expect a bounce back.';
     o.nut='Three-point percentage swings a lot over a few games. Shooters this far below their norm usually climb back.';
     o.h2='The rest of his game';o.b2='Outside of the threes, his role and shot volume look similar, which is why this reads as bad luck.';
     o.watch='When the threes start falling again, the scoring should return.';
-    o.ks=['P3','PTS','TS'];o.dm=['P3','PTS','TS','TPA'];o.c=ptsC;
+    o.ks=['P3','TPM','SH3','PTS'];o.dm=['P3','TPM','SH3','PTS','TS'];o.c=ptsC;o.c3=tpmC;
   }else if(s.v==='NORMAL'&&s.drv==='ts'){
     o.h=ps(N)+' dip is just his shooting coming back to earth';
     o.k='His true shooting fell from '+pct1(B.ts)+' to '+pct1(R.ts)+', still above the '+pct1(s.LTS)+' league average.';
@@ -2300,11 +2312,11 @@ function pWrite(s){
     o.ks=['TS','PTS','USG'];o.dm=['TS','PTS','USG','TOV'];o.c=tsC;
   }else if(s.v==='NORMAL'){
     o.h=ps(N)+' slump is just his hot start cooling off';
-    o.k=pct1(B.p3)+' from three early, '+pct1(R.p3)+' now, right around his '+pct1(s.base)+(s.hasTrack?' track record':' league norm')+'.';
+    o.k=th('down')+' That’s right around his '+pct1(s.base)+(s.hasTrack?' track record':' league norm')+'.';
     o.nut='His early scoring was built on threes falling at a rate almost nobody keeps up.';
     o.h2='This is his real level';o.b2='The current numbers line up with his track record, so this is what to expect going forward.';
     o.watch='Don’t expect the early-season scoring to come back, but don’t expect it to fall further either.';
-    o.ks=['P3','PTS','TS'];o.dm=['P3','PTS','TS','TPA'];o.c=ptsC;
+    o.ks=['P3','TPM','SH3','PTS'];o.dm=['P3','TPM','SH3','PTS','TS'];o.c=ptsC;o.c3=tpmC;
   }else{
     if(s.drv==='eff'){o.h=ps(N)+' true shooting is down '+f0(B.ts-R.ts)+' points, and it’s not bad luck';o.k='He’s at '+pct1(R.ts)+', below the '+pct1(s.LTS)+' league average, and it isn’t explained by cold threes.';o.ks=['TS','PTS','USG'];o.dm=['TS','PTS','TOV','USG'];o.c=tsC;}
     else if(s.drv==='tov'){o.h=ps(N)+' turnovers are up from '+f1(B.tov)+' to '+f1(R.tov)+' a game';o.k='And his scoring fell from '+f1(B.pts)+' to '+f1(R.pts)+'.';o.ks=['TOV','PTS','TS'];o.dm=['TOV','PTS','TS','AST'];o.c=mk(col_(9),'turnovers','Turnovers');}
@@ -2324,6 +2336,8 @@ function pWrite(s){
   o.card=function(){return chFig(o.chartT,null,chBars({v:o.c.v,g:gm,nr:nr,col:o.col,unit:o.c.unit,yl:o.c.yl,note:o.note}),0);};
   o.big=function(){var sm=window.innerWidth<700;return chFig(bigTitle(s,o),o.chartT+' this season. Dashed lines show the average '+trLabB().toLowerCase()+' and during the '+trLab().toLowerCase()+'.',
     chBars({v:o.c.v,g:gm,nr:nr,col:o.col,unit:o.c.unit,yl:o.c.yl,big:1,W:sm?360:860,H:sm?260:360,note:o.note,max:1,all:1}),1);};
+  if(o.c3)o.big3=function(){var sm=window.innerWidth<700,a=all.slice(-12);return chFig(N+' made '+f1(R.tpm)+' threes a game in the '+trLab().toLowerCase()+', '+(R.tpm>=B.tpm?'up':'down')+' from '+f1(B.tpm),'Threes made in each game, with the share of his points that came from threes: '+f0(B.sh3)+'% '+trLabB().toLowerCase()+', '+f0(R.sh3)+'% in the '+trLab().toLowerCase()+'.',
+    chBars({v:o.c3.v,g:gm,nr:nr,col:o.col,unit:'threes made',yl:'Threes made',big:1,W:sm?360:860,H:sm?240:300,all:1}),1);};
   o.chart=o.card();
   return o;
 }
@@ -2358,9 +2372,9 @@ function tWrite(s){
   else if(s.v==='REAL'){var c=[{v:(B.tov-R.tov)/2,p:'fewer turnovers',l:'Turnovers per 100 possessions fell from '+f1(B.tov)+' to '+f1(R.tov)+'.'},{v:(R.ftr-B.ftr)/5,p:'more trips to the line',l:'Free throw rate rose from '+f1(B.ftr)+' to '+f1(R.ftr)+'.'},{v:(R.ast-B.ast)/5,p:'better ball movement',l:'Assisted baskets rose from '+f1(B.ast)+'% to '+f1(R.ast)+'%.'}].sort(function(a,b){return b.v-a.v;});
     o.h=TN+are+R.w+'-'+R.l+' '+rec+' thanks to '+(c[0].v>0?c[0].p:'a better offense');o.k='They’re scoring '+f1(R.ortg)+' points per 100 possessions, up from '+f1(B.ortg)+'. '+(c[0].v>0?c[0].l:'');
     o.h2='Habits, not hot shooting';o.b2='The offense improved without a big jump in three-point shooting, which makes it more likely to last.';o.watch='Keep watching the '+(c[0].v>0?c[0].p:'offense')+'. That’s where the improvement lives.';}
-  else if(s.v==='LUCK'){o.h=tp+' hot stretch is running on threes';o.k='They’re making '+pct1(R.p3)+' of their threes, up from '+pct1(B.p3)+'. Shooting that hot tends to cool.';
+  else if(s.v==='LUCK'){o.h=tp+' hot stretch is running on threes';o.k='They’re making '+f1(R.tpm)+' threes a game at '+pct1(R.p3)+', up from '+f1(B.tpm)+' at '+pct1(B.p3)+'. Threes are now '+f0(R.sh3)+'% of their points, up from '+f0(B.sh3)+'%. Shooting that hot tends to cool.';
     o.h2='How much is the threes?';o.b2='About '+Math.round(Math.abs(s.shoot)/Math.max(0.1,Math.abs(s.dO))*100)+'% of the offensive jump came from three-point shooting alone.';o.watch='If the threes cool and they keep winning, the improvement is real.';}
-  else if(s.v==='COLD'){o.h=tp+' slide is mostly cold shooting';o.k='They’re making '+pct1(R.p3)+' of their threes, down from '+pct1(B.p3)+'. Expect a bounce back.';
+  else if(s.v==='COLD'){o.h=tp+' slide is mostly cold shooting';o.k='They’re making '+f1(R.tpm)+' threes a game at '+pct1(R.p3)+', down from '+f1(B.tpm)+' at '+pct1(B.p3)+'. Threes are '+f0(R.sh3)+'% of their points now, compared with '+f0(B.sh3)+'%. Expect a bounce back.';
     o.h2='How much is the threes?';o.b2='About '+Math.round(Math.abs(s.shoot)/Math.max(0.1,Math.abs(s.dO))*100)+'% of the offensive drop came from three-point shooting alone.';o.watch='When the threes return to normal, so should the offense.';}
   else if(s.kind==='def'){o.h=TN+are+R.w+'-'+R.l+' '+rec+' because the defense fell apart';o.k='They’re allowing '+f1(R.drtg)+' points per 100 possessions, up from '+f1(B.drtg)+'.';
     o.h2='Not just bad luck';o.b2='The drop is on the defensive end, which isn’t explained by cold shooting.';o.watch='Watch the points allowed per 100 possessions. That number has to come down.';}
@@ -2368,10 +2382,13 @@ function tWrite(s){
     o.h2='Not just cold shooting';o.b2='Three-point shooting explains less than half of the drop, so something else in the offense changed.';o.watch='Watch the points per 100 possessions over the next week.';}
   o.lede='<b>The '+esc(teamOf(s.t).n)+' have gone '+R.w+'-'+R.l+' '+rec+'</b>, after starting '+B.w+'-'+B.l+'. Their net rating moved '+f1(Math.abs(s.dNet))+' points per 100 possessions '+(s.up?'in the right direction':'the wrong way')+'.';
   o.nut='Offense went from '+f1(B.ortg)+' to '+f1(R.ortg)+' points per 100 possessions and defense from '+f1(B.drtg)+' to '+f1(R.drtg)+' allowed.';
-  o.ksx=[{l:'Record',txt:R.w+'-'+R.l,sub:B.w+'-'+B.l+' before'},{l:'Net rating',a:R.net,b:B.net,good:1,sg:1},s.kind==='shoot'?{l:'3-point %',a:R.p3,b:B.p3,good:1,pc:1}:s.kind==='def'?{l:'Points allowed per 100',a:R.drtg,b:B.drtg,good:0}:{l:'Points per 100',a:R.ortg,b:B.ortg,good:1}];
-  o.dmx=[{l:'Offense',u:'points per 100 possessions',b:B.ortg,a:R.ortg,good:1},{l:'Defense',u:'points allowed per 100',b:B.drtg,a:R.drtg,good:0},{l:'3-point %',u:'share of threes made',b:B.p3,a:R.p3,good:1,pc:1},{l:'Turnovers',u:'per 100 possessions',b:B.tov,a:R.tov,good:0}];
+  o.ksx=s.kind==='shoot'?[{l:'3-point %',a:R.p3,b:B.p3,good:1,pc:1},{l:'Threes made',a:R.tpm,b:B.tpm,good:1},{l:'Points from threes',a:R.sh3,b:B.sh3,good:null,pc:1},{l:'Record',txt:R.w+'-'+R.l,sub:B.w+'-'+B.l+' before'}]
+    :[{l:'Record',txt:R.w+'-'+R.l,sub:B.w+'-'+B.l+' before'},{l:'Net rating',a:R.net,b:B.net,good:1,sg:1},s.kind==='def'?{l:'Points allowed per 100',a:R.drtg,b:B.drtg,good:0}:{l:'Points per 100',a:R.ortg,b:B.ortg,good:1}];
+  o.dmx=s.kind==='shoot'?[{l:'3-point %',u:'share of threes made',b:B.p3,a:R.p3,good:1,pc:1},{l:'Threes made',u:'per game',b:B.tpm,a:R.tpm,good:1},{l:'Points from threes',u:'% of their points',b:B.sh3,a:R.sh3,good:null,pc:1},{l:'Offense',u:'points per 100 possessions',b:B.ortg,a:R.ortg,good:1},{l:'Defense',u:'points allowed per 100',b:B.drtg,a:R.drtg,good:0}]:[{l:'Offense',u:'points per 100 possessions',b:B.ortg,a:R.ortg,good:1},{l:'Defense',u:'points allowed per 100',b:B.drtg,a:R.drtg,good:0},{l:'3-point %',u:'share of threes made',b:B.p3,a:R.p3,good:1,pc:1},{l:'Turnovers',u:'per 100 possessions',b:B.tov,a:R.tov,good:0}];
   var g=s.g.slice(-14),gm=g.map(function(x){return {o:x.o,d:x.d,ab:x.o.split(' ').pop(),sc:x.pts+'–'+x.opp};}),mv=g.map(function(x){return x.pts-x.opp;}),nr2=Math.min(n,g.length);
   o.card=function(){return chFig('Point margin each game',null,chMargin({v:mv,g:gm,nr:nr2}),0);};
+  if(s.kind==='shoot')o.big3=function(){var sm=window.innerWidth<700,gg=s.g.slice(-14);return chFig(TN+' made '+f1(R.tpm)+' threes a game in the '+trLab().toLowerCase()+', '+(R.tpm>=B.tpm?'up':'down')+' from '+f1(B.tpm),'Threes made in each game. Threes were '+f0(B.sh3)+'% of their points '+trLabB().toLowerCase()+' and '+f0(R.sh3)+'% in the '+trLab().toLowerCase()+'.',
+    chBars({v:gg.map(function(x){return x.tpm;}),g:gg.map(function(x){return {o:x.o,d:x.d,ab:x.o.split(' ').pop()};}),nr:Math.min(n,gg.length),col:s.up?'var(--rise)':'var(--fall)',unit:'threes made',yl:'Threes made',big:1,all:1,W:sm?360:860,H:sm?240:300}),1);};
   o.big=function(){var sm=window.innerWidth<700;return chFig(TN+' went '+R.w+'-'+R.l+' '+rec,'Final point margin in each game. Above the line is a win.',chMargin({v:mv,g:gm,nr:nr2,big:1,W:sm?360:860,H:sm?260:340}),1);};
   o.chart=o.card();
   return o;
@@ -2574,6 +2591,7 @@ function showStory(kind,id){
     h+='<p class="ar-p">'+w.lede+'</p><p class="ar-p">'+esc(w.nut)+'</p>'+ksBox(w.ksx);
     h+='<div class="fg-a ar-fig">'+w.big()+'</div>';
     h+='<h2 class="ar-h2">'+esc(w.h2)+'</h2><p class="ar-p">'+esc(w.b2)+'</p>';
+    if(w.big3)h+='<div class="fg-a ar-fig">'+w.big3()+'</div>';
     var sm=window.innerWidth<700;
     h+='<div class="fg-a ar-fig">'+chFig('The numbers behind it',trLabB()+' (hollow) vs '+trLab().toLowerCase()+' (filled). Green = better, red = worse.',chDumb(w.dmx,{big:1,W:sm?360:860}),1)+'</div>';
     var cm=chCourt(p);if(cm)h+='<div class="fg-a ar-fig ar-court">'+cm+'</div>';
@@ -2589,6 +2607,7 @@ function showStory(kind,id){
     w=tWrite(s);var v2=VERD[s.v],info=teamOf(id),sm2=window.innerWidth<700;
     h+='<div class="kick '+v2[2]+'">'+(s.up?'Team surge':'Team slide')+' · '+esc(info.n)+'</div><h1 class="ar-h">'+esc(w.h)+'</h1><p class="ar-dek">'+esc(w.k)+'</p>'+byline(trLab()+' vs '+trLabB().toLowerCase(),null,id);
     h+='<p class="ar-p">'+w.lede+'</p><p class="ar-p">'+esc(w.nut)+'</p>'+ksBox(w.ksx);
+    if(w.big3)h+='<div class="fg-a ar-fig">'+w.big3()+'</div>';
     h+='<div class="fg-a ar-fig">'+chStrip(s.g.slice(-10))+'</div>';
     h+='<div class="fg-a ar-fig">'+w.big()+'</div>';
     h+='<h2 class="ar-h2">'+esc(w.h2)+'</h2><p class="ar-p">'+esc(w.b2)+'</p>';
