@@ -1233,7 +1233,9 @@ html.intro #hmMain::after{content:'';position:absolute;inset:0;background:var(--
 .bp-num{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:6px 0 4px}
 .bp-num b{font-weight:900;font-size:40px;font-stretch:70%;color:var(--navy);line-height:1}
 .bp-num span{font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--t2)}
-.bp-num em{font-style:normal;font-weight:800;font-size:14px}.bp-num em.g{color:var(--rise)}.bp-num em.r{color:var(--fall)}
+.bp-num em{font-style:normal;font-weight:800;font-size:14px}.bp-num em.n{color:var(--t2)}.bp-call{text-transform:uppercase}.bp-call.g{color:var(--rise)!important}.bp-call.r{color:var(--fall)!important}
+.bt-ou b{display:block;font-weight:800}.bt-ou small{display:block;font-size:11px;color:var(--t3);font-weight:600}.bt-t td.bt-ou.g b{color:var(--rise)}.bt-t td.bt-ou.r b{color:var(--fall)}
+.bp-num em.g{color:var(--rise)}.bp-num em.r{color:var(--fall)}
 .bp-meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--t3)}.bp-meta b{color:var(--navy)}
 .bp-why{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
 .bp-why li{font-size:14px;color:var(--t2);display:flex;gap:7px}.bp-why li i{font-style:normal;font-size:11px;padding-top:3px}.bp-why li.g i{color:var(--rise)}.bp-why li.r i{color:var(--fall)}
@@ -3547,11 +3549,16 @@ function why3(c){
 function confPicks(list){
   var out=[];list.forEach(function(o){if(o.m<22||o.mcv>0.3||o.nG<4)return;var best=null;
     ['pts','reb','ast','tpm','pra'].forEach(function(k){if((k==='tpm'&&o.s_tpm<1.2)||(k==='ast'&&o.s_ast<2.5)||(k==='reb'&&o.s_reb<3.5))return;
-      var d=o[k]-o['s_'+k],z=d/o['sd_'+k],R=bReasons(o,k),ag=R.filter(function(r){return r.s===(d>0?1:-1);}).length,ng=R.length-ag;
-      if((ag<2&&!(ag===1&&ng===0))||Math.abs(z)<0.3)return;var sc=Math.abs(z)*(0.6+0.2*Math.min(ag,3)-0.15*ng);if(!best||sc>best.sc)best={o:o,k:k,d:d,z:z,R:R,sc:sc};});
+      var line=bLine(o,k),d=o[k]-line,z=d/o['sd_'+k],R=bReasons(o,k),ag=R.filter(function(r){return r.s===(d>0?1:-1);}).length,ng=R.length-ag;
+      if((ag<2&&!(ag===1&&ng===0))||Math.abs(z)<0.3)return;var sc=Math.abs(z)*(0.6+0.2*Math.min(ag,3)-0.15*ng);if(!best||sc>best.sc)best={o:o,k:k,d:d,z:z,R:R,sc:sc,line:line,over:d>0,prob:bProb(o,k,line,d>0)};});
     if(best)out.push(best);});
   return out.sort(function(a,b){return b.sc-a.sc;}).slice(0,6);
 }
+function bLine(o,k){return Math.max(0.5,Math.round(o['s_'+k]-0.5)+0.5);}
+function ncdf(z){var t=1/(1+0.2316419*Math.abs(z)),d=0.3989423*Math.exp(-z*z/2),p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return z>0?1-p:p;}
+/* calibrated on our backtest: raw model chances ran about 20 points too confident, so they're pulled halfway toward 50% */
+function bProb(o,k,line,over){var p=ncdf((o[k]-line)/(o['sd_'+k]*1.2));p=0.5+(p-0.5)*0.55;return over?p:1-p;}
+function half(v){return Math.round(v*2)/2;}
 function beatCount(o,k,v){var g=o.g.slice(-10);return {n:g.filter(function(x){return glv(x,k)>v;}).length,of:g.length};}
 
 /* tonight */
@@ -3571,7 +3578,7 @@ function gradeDay(md){
     day=day.concat(all);});
   confPicks(day).forEach(function(c){if(c.o.act)picks.push({c:c,a:glv(c.o.act,c.k)});});
   BET.cut=keep;
-  picks.forEach(function(z){z.hit=(z.a-z.c.o['s_'+z.c.k])*(z.c.d)>0;z.inR=Math.abs(z.a-z.c.o[z.c.k])<=1.54*z.c.o['sd_'+z.c.k];});
+  picks.forEach(function(z){z.hit=z.c.over?z.a>z.c.line:z.a<z.c.line;z.inR=Math.abs(z.a-z.c.o[z.c.k])<=1.54*z.c.o['sd_'+z.c.k];});
   return {md:md,n:n,wins:wins,picks:picks,mae:pts.length?avg(pts.map(function(z){return z.e;})):null,base:pts.length?avg(pts.map(function(z){return z.b;})):null,np:pts.length};
 }
 function seasonGrades(){
@@ -3604,14 +3611,13 @@ function awardLadder(kind,cut){
 /* ---------- rendering ---------- */
 function bSigned(v){return (v>0?'+':v<0?'−':'')+f1(Math.abs(v));}
 function bMatch(x){return x.aw+'-'+x.hm;}
-function bHead(c){var o=c.o,N=lastName(o.p.Player),v=Math.round(o[c.k]),nm=BSTAT[c.k].toLowerCase(),opp=nick(o.opp);
-  if(c.k==='tpm')nm=v===1?'made three':'made threes';
-  return c.d>0?N+' projected for '+v+' '+nm+' against the '+opp:N+' projected to dip to '+v+' '+nm+' against the '+opp;}
+function bCall(c){return (c.over?'Over ':'Under ')+c.line+' '+BSTAT[c.k].toLowerCase();}
+function bHead(c){return lastName(c.o.p.Player)+': '+bCall(c).toLowerCase()+' against the '+nick(c.o.opp);}
 function pickCard(c,i){
-  var o=c.o,k=c.k,up=c.d>0,bc=beatCount(o,k,o[k]),lo=Math.max(0,o[k]-1.54*o['sd_'+k]),hi=o[k]+1.54*o['sd_'+k];
+  var o=c.o,k=c.k,ov=c.over,g=o.g.slice(-10),hits=g.filter(function(x){var v=glv(x,k);return ov?v>c.line:v<c.line;}).length,lo=Math.max(0,Math.floor(o[k]-1.54*o['sd_'+k])),hi=Math.ceil(o[k]+1.54*o['sd_'+k]);
   return '<div class="bp">'+'<div class="bp-n">'+(i+1)+'</div>'+pbx(o.p,'bp-hs')+'<div class="bp-b"><div class="bp-top"><a href="#p'+o.p.nba_id+'" class="bp-nm">'+esc(o.p.Player)+'</a><span class="bp-mu">'+img(logoT(o.t),'bp-lg')+(o.home?' vs ':' @ ')+img(logoT(o.opp),'bp-lg')+'<b>'+esc(o.opp)+'</b></span></div>'
-    +'<div class="bp-num"><b>'+f1(o[k])+'</b><span>'+esc(BSTAT[k].toLowerCase())+' projected</span><em class="'+(up?'g':'r')+'">'+(up?'▲ ':'▼ ')+f1(Math.abs(c.d))+' '+(up?'above':'below')+' his '+f1(o['s_'+k])+' season average</em></div>'
-    +'<div class="bp-meta"><span>Likely range <b>'+f1(lo)+' to '+f1(hi)+'</b></span><span>Topped '+f1(o[k])+' in <b>'+bc.n+' of his last '+bc.of+'</b></span><span>'+f1(o.m)+' minutes projected</span></div>'
+    +'<div class="bp-num"><b class="bp-call '+(ov?'g':'r')+'">'+(ov?'Over':'Under')+' '+c.line+'</b><span>'+esc(BSTAT[k].toLowerCase())+'</span><em class="n">We give it a '+Math.round(c.prob*100)+'% chance</em></div>'
+    +'<div class="bp-meta"><span>Our projection <b>'+f1(o[k])+'</b></span><span>Season average <b>'+f1(o['s_'+k])+'</b></span><span>'+(ov?'Over':'Under')+' '+c.line+' in <b>'+hits+' of his last '+g.length+'</b></span><span>Likely range <b>'+lo+' to '+hi+'</b></span></div>'
     +'<ul class="bp-why">'+why3(c).map(function(r){return '<li class="'+(r.s>0?'g':r.s<0?'r':'n')+'"><i>'+(r.s>0?'▲':r.s<0?'▼':'•')+'</i>'+esc(r.t)+'</li>';}).join('')+'</ul></div></div>';
 }
 function gameCard(x){
@@ -3619,7 +3625,7 @@ function gameCard(x){
   var oA=(x.A[0]||{outs:[]}).outs||[],oH=(x.H[0]||{outs:[]}).outs||[];
   var b2b=[(x.A[0]&&x.A[0].b2b)?x.aw:null,(x.H[0]&&x.H[0].b2b)?x.hm:null].filter(Boolean);
   return '<a class="bg" href="#b/g/'+bMatch(x)+'"><div class="bg-tip">'+esc(x.tip||'')+'</div><div class="bg-row">'+img(logoT(x.aw),'bg-lg')+'<b>'+x.aw+'</b><em>'+Math.round(x.pa)+'</em></div><div class="bg-row">'+img(logoT(x.hm),'bg-lg')+'<b>'+x.hm+'</b><em>'+Math.round(x.ph)+'</em></div>'
-    +'<div class="bg-ft"><span>'+fav+' by '+f1(Math.abs(x.mg))+'</span><span>Total '+f1(x.tot)+'</span></div>'
+    +'<div class="bg-ft"><span>'+(half(Math.abs(x.mg))?fav+' by '+half(Math.abs(x.mg)):'Pick ’em')+'</span><span>Total '+half(x.tot)+'</span></div>'
     +(b2b.length||oA.length||oH.length?'<div class="bg-note">'+(b2b.length?b2b.join(', ')+' on a back-to-back. ':'')+(oA.concat(oH).length?'Out: '+oA.concat(oH).slice(0,3).map(function(r){return lastName(r.p.Player);}).join(', '):'')+'</div>':'')+'</a>';
 }
 function projTable(games,filt){
@@ -3628,9 +3634,9 @@ function projTable(games,filt){
   var col=function(id,lab){return '<th class="'+(BSORT.k===id?'on':'')+'"><button type="button" data-bsort="'+id+'">'+lab+'</button></th>';};
   return '<div class="bt-chips"><button type="button" class="x-chip'+(!filt?' on':'')+'" data-bgf="">All games</button>'+games.map(function(x){return '<button type="button" class="x-chip'+(filt===bMatch(x)?' on':'')+'" data-bgf="'+bMatch(x)+'">'+x.aw+' @ '+x.hm+'</button>';}).join('')+'</div>'
     +'<div class="bt-tw"><table class="bt-t"><thead><tr><th>Player</th><th>Opp</th>'+col('m','Min')+col('pts','Pts')+col('reb','Reb')+col('ast','Ast')+col('tpm','3PM')+col('pra','PRA')+col('pr','P+R')+col('pa','P+A')+'</tr></thead><tbody>'
-    +rows.map(function(o){var c=function(kk,dec){var d=o[kk]-(o['s_'+kk]==null?o[kk]:o['s_'+kk]),cl=Math.abs(d)>=(kk==='tpm'?0.5:kk==='pts'||kk==='pra'||kk==='pr'||kk==='pa'?2:1)?(d>0?'g':'r'):'';return '<td class="'+cl+'" title="Season average '+(o['s_'+kk]!=null?f1(o['s_'+kk]):'')+'">'+f1(o[kk])+'</td>';};
+    +rows.map(function(o){var c=function(kk){var ln=bLine(o,kk),ov=o[kk]>ln,pb=bProb(o,kk,ln,ov),cl=pb>=0.58?(ov?'g':'r'):'';return '<td class="bt-ou '+cl+'" title="Our projection '+f1(o[kk])+', season average '+f1(o['s_'+kk])+'"><b>'+(ov?'O':'U')+' '+ln+'</b><small>'+Math.round(pb*100)+'%</small></td>';};
       return '<tr><td><a class="bt-pl" href="#p'+o.p.nba_id+'">'+'<span class="ld-hs" style="background:'+teamOf(o.t).c+'">'+img(headSm(o.p.nba_id),'')+'</span><b>'+esc(o.p.Player)+'</b><span>'+o.t+'</span></a></td><td>'+(o.home?'vs ':'@ ')+o.opp+'</td><td>'+f1(o.m)+'</td>'+c('pts')+c('reb')+c('ast')+c('tpm')+c('pra')+c('pr')+c('pa')+'</tr>';}).join('')
-    +'</tbody></table></div>'+(cap?'<button type="button" class="x-chip bt-more" data-ball="1">Show all '+nAll+' players</button>':'')+'<p class="bt-note">Green = projected well above his season average, red = well below. Hover a number for his average. Tap a column to sort.</p>';
+    +'</tbody></table></div>'+(cap?'<button type="button" class="x-chip bt-more" data-ball="1">Show all '+nAll+' players</button>':'')+'<p class="bt-note">O = over, U = under. The number is the half-point line closest to his season average; the % is our chance it hits. Green or red = 58%+ on the over or under. Hover for our exact projection. Tap a column to sort.</p>';
 }
 function teamTrend(t){
   var G=teamGames()[t]||[],A=allTeamAgg(),rec=function(gs){var w=gs.filter(function(o){return o.wl==='W';}).length;return w+'-'+(gs.length-w);};
@@ -3646,21 +3652,21 @@ function trendTable(teams){
 }
 function slateScatter(sl){
   if(sl.games.length<3)return '';var xs=sl.games.map(function(x){return x.tot;}),ys=sl.games.map(function(x){return Math.abs(x.mg);});
-  var pts=sl.games.map(function(x){var fav=x.mg>=0?x.hm:x.aw;return {x:x.tot,y:Math.abs(x.mg),logo:logoT(fav),ring:teamOf(fav).c,lab:x.aw+' @ '+x.hm,pri:x.tot,tip:x.aw+' @ '+x.hm+': total '+f1(x.tot)+', '+fav+' by '+f1(Math.abs(x.mg))};});
+  var pts=sl.games.map(function(x){var fav=x.mg>=0?x.hm:x.aw;return {x:x.tot,y:Math.abs(x.mg),logo:logoT(fav),ring:teamOf(fav).c,lab:x.aw+' @ '+x.hm,pri:x.tot,tip:x.aw+' @ '+x.hm+': total '+half(x.tot)+', '+fav+' by '+half(Math.abs(x.mg))};});
   var hiT=sl.games.slice().sort(function(a,b){return b.tot-a.tot;})[0],cl=sl.games.slice().sort(function(a,b){return Math.abs(a.mg)-Math.abs(b.mg);})[0];
-  return scatFig('Tonight’s highest total is '+hiT.aw+' @ '+hiT.hm+' ('+f1(hiT.tot)+'); the closest game is '+cl.aw+' @ '+cl.hm,'Each logo is tonight’s projected favorite. Further right = more total points projected; higher = bigger projected win. Dashed lines = tonight’s average.',
+  return scatFig('Tonight’s highest total is '+hiT.aw+' @ '+hiT.hm+' ('+half(hiT.tot)+'); the closest game is '+cl.aw+' @ '+cl.hm,'Each logo is tonight’s projected favorite. Further right = more total points projected; higher = bigger projected win. Dashed lines = tonight’s average.',
     chScatter({pts:pts,xl:'Projected total points (more →)',yl:'Projected margin (bigger ↑)',avg:[avg(xs),avg(ys)],quad:['LOPSIDED, LOW-SCORING','LOPSIDED SHOOTOUT','CLOSE, LOW-SCORING','CLOSE SHOOTOUT'],qc:['n','n','n','n']}));
 }
 function scorecard(){
   var S=seasonGrades();if(!S.days.length)return '';var y=S.days[S.days.length-1];
   var pr=function(n,d){return d?Math.round(n/d*100)+'%':'–';};
-  var h='<div class="bs-g"><div class="bs-k"><b>'+S.hit+'-'+(S.picks.length-S.hit)+'</b><span>Confident projections that landed on the side of his average we called ('+pr(S.hit,S.picks.length)+')</span></div>'
+  var h='<div class="bs-g"><div class="bs-k"><b>'+S.hit+'-'+(S.picks.length-S.hit)+'</b><span>Our confident over/under calls that hit ('+pr(S.hit,S.picks.length)+')</span></div>'
     +'<div class="bs-k"><b>'+pr(S.inR,S.picks.length)+'</b><span>Finished inside our likely range</span></div>'
     +'<div class="bs-k"><b>'+(S.mae!=null?f1(S.mae):'–')+'</b><span>Average miss on points projections (season averages alone: '+(S.base!=null?f1(S.base):'–')+')</span></div>'
     +'<div class="bs-k"><b>'+S.W+'-'+(S.N-S.W)+'</b><span>Projected winner correct ('+pr(S.W,S.N)+')</span></div></div>';
-  if(y.picks.length){h+='<h3 class="bt-h3">Last game day ('+esc(y.md)+')</h3><div class="bt-tw"><table class="bt-t"><thead><tr><th>Player</th><th>Stat</th><th>Projected</th><th>Season avg</th><th>Actual</th><th>Call</th></tr></thead><tbody>'
-    +y.picks.map(function(z){var o=z.c.o;return '<tr><td><span class="bt-pl"><span class="ld-hs" style="background:'+teamOf(o.t).c+'">'+img(headSm(o.p.nba_id),'')+'</span><b>'+esc(o.p.Player)+'</b></span></td><td>'+esc(BSTAT[z.c.k])+'</td><td>'+f1(o[z.c.k])+'</td><td>'+f1(o['s_'+z.c.k])+'</td><td><b>'+z.a+'</b></td><td class="'+(z.hit?'g':'r')+'">'+(z.hit?'✓ Hit':'✗ Miss')+'</td></tr>';}).join('')+'</tbody></table></div>';}
-  return h+'<p class="bt-note">Graded with the same model, using only stats from before each game. A confident call is a hit when he finished on the side of his season average we projected.</p>';
+  if(y.picks.length){h+='<h3 class="bt-h3">Last game day ('+esc(y.md)+')</h3><div class="bt-tw"><table class="bt-t"><thead><tr><th>Player</th><th>Our call</th><th>Our projection</th><th>Actual</th><th>Result</th></tr></thead><tbody>'
+    +y.picks.map(function(z){var o=z.c.o;return '<tr><td><span class="bt-pl"><span class="ld-hs" style="background:'+teamOf(o.t).c+'">'+img(headSm(o.p.nba_id),'')+'</span><b>'+esc(o.p.Player)+'</b></span></td><td><b class="'+(z.c.over?'g':'r')+'">'+esc(bCall(z.c))+'</b></td><td>'+f1(o[z.c.k])+'</td><td><b>'+z.a+'</b></td><td class="'+(z.hit?'g':'r')+'">'+(z.hit?'✓ Hit':'✗ Miss')+'</td></tr>';}).join('')+'</tbody></table></div>';}
+  return h+'<p class="bt-note">Graded with the same model, using only stats from before each game. Each call is over or under the half-point line closest to his season average going into the game.</p>';
 }
 function ladderBox(kind,title,blurb){
   var now=awardLadder(kind),cut=mdOrd(mdShift((META.games||[]).length?META.games[META.games.length-1][0]:'11/1',-6)),bef=awardLadder(kind,cut),bi={};bef.forEach(function(r,i){bi[r.p.nba_id]=i+1;});
@@ -3675,7 +3681,7 @@ function buildBetting(){
   if(!sl.games.length){h+='<div class="tr-empty">No upcoming games are in the data yet. Run the update on a game day (1 to 2 hours before tip works best) and tonight’s projections will appear here.</div>';}
   else{
     var all=[];sl.games.forEach(function(x){all=all.concat(x.A,x.H);});var P=confPicks(all);
-    if(P.length){h+='<article class="bt-lead"><div class="kick b">Tonight’s best projections · '+esc(sl.md)+'</div><h1 class="ar-h">'+esc(bHead(P[0]))+'</h1><p class="ar-dek">'+(P.length>1?'Our '+P.length+' most confident projections tonight.':'Our most confident projection tonight.')+' Each comes from a player with steady minutes, where the reasons point the same way. Green = above his normal, red = below.</p><div class="bp-l">'+P.map(pickCard).join('')+'</div></article>';}
+    if(P.length){h+='<article class="bt-lead"><div class="kick b">Tonight’s best projections · '+esc(sl.md)+'</div><h1 class="ar-h">'+esc(bHead(P[0]))+'</h1><p class="ar-dek">'+(P.length>1?'Our '+P.length+' most confident projections tonight.':'Our most confident projection tonight.')+' Each is an over or under on the half-point line closest to his season average, from a player with steady minutes, where the reasons point the same way.</p><div class="bp-l">'+P.map(pickCard).join('')+'</div></article>';}
     h+='<section class="bt-s"><div class="x-sechd"><h2 class="x-h2">Tonight’s games</h2><div class="x-meta">Projected score · tap a game for the full preview</div></div><div class="bg-g">'+sl.games.map(gameCard).join('')+'</div></section>';
     h+='<section class="bt-s qc-i">'+slateScatter(sl)+'</section>';
     h+='<section class="bt-s"><div class="x-sechd"><h2 class="x-h2">Player projections</h2><div class="x-meta">Everyone projected for 12+ minutes tonight</div></div><div id="btTable">'+projTable(sl.games,BSORT.g)+'</div></section>';
@@ -3693,8 +3699,8 @@ function showMatchup(code){
   var fav=x.mg>=0?x.hm:x.aw,dog=fav===x.hm?x.aw:x.hm,fs=Math.round(Math.max(x.ph,x.pa)),ds=Math.round(Math.min(x.ph,x.pa)),C=x.C,A=allTeamAgg();
   var rk=function(t,k,lo){var v=C.bl(t,k),all=Object.keys(C.TR).map(function(z){return C.bl(z,k);});return ordn(all.filter(function(z){return lo?z<v-1e-9:z>v+1e-9;}).length+1);};
   h+='<div class="kick b">Game preview · '+esc(x.tip||sl.md)+'</div><h1 class="ar-h">'+esc(nick(x.aw)+' at '+nick(x.hm)+': we project '+nick(fav)+' '+fs+', '+nick(dog)+' '+ds)+'</h1>';
-  h+='<p class="ar-dek">'+esc(nick(fav))+' by '+f1(Math.abs(x.mg))+', with '+f1(x.tot)+' total points. '+esc('Offense vs defense, pace and home court, from season and last-10 numbers.')+'</p>';
-  h+='<div class="bm-sc">'+[[x.aw,x.pa],[x.hm,x.ph]].map(function(z){return '<div class="bm-t">'+img(logoT(z[0]),'bm-lg')+'<b>'+esc(nick(z[0]))+'</b><em>'+f1(z[1])+'</em><span>'+(z[0]===x.hm?'Home':'Away')+' · '+(A[z[0]]?A[z[0]].w+'-'+A[z[0]].l:'')+'</span></div>';}).join('<div class="bm-at">@</div>')+'</div>';
+  h+='<p class="ar-dek">'+esc(nick(fav))+' by '+half(Math.abs(x.mg))+', with '+half(x.tot)+' total points. '+esc('Offense vs defense, pace and home court, from season and last-10 numbers.')+'</p>';
+  h+='<div class="bm-sc">'+[[x.aw,x.pa],[x.hm,x.ph]].map(function(z){return '<div class="bm-t">'+img(logoT(z[0]),'bm-lg')+'<b>'+esc(nick(z[0]))+'</b><em>'+Math.round(z[1])+'</em><span>'+(z[0]===x.hm?'Home':'Away')+' · '+(A[z[0]]?A[z[0]].w+'-'+A[z[0]].l:'')+'</span></div>';}).join('<div class="bm-at">@</div>')+'</div>';
   var row=function(l,a,b){return '<tr><td>'+l+'</td><td>'+a+'</td><td>'+b+'</td></tr>';};
   var oA=(x.A[0]||{outs:[]}).outs,oH=(x.H[0]||{outs:[]}).outs,b2A=x.A[0]&&x.A[0].b2b,b2H=x.H[0]&&x.H[0].b2b;
   h+='<h2 class="ar-h2">Key edges</h2><div class="bt-tw"><table class="bt-t bm-e"><thead><tr><th></th><th>'+img(logoT(x.aw),'bg-lg')+' '+x.aw+'</th><th>'+img(logoT(x.hm),'bg-lg')+' '+x.hm+'</th></tr></thead><tbody>'
