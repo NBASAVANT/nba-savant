@@ -251,6 +251,37 @@ def fetch_onoff(season, team_id):
     return with_retries(call, 'on/off %s' % team_id, attempts=2, base_wait=5, timeout=45, quiet=True)
 
 
+def fetch_clutch(season):
+    """Clutch totals: last 5 minutes of the 4th quarter or overtime, score within 5."""
+    from nba_api.stats.endpoints import leaguedashplayerclutch
+
+    def call(t):
+        return leaguedashplayerclutch.LeagueDashPlayerClutch(
+            season=season, season_type_all_star='Regular Season', per_mode_detailed='Totals',
+            clutch_time='Last 5 Minutes', ahead_behind='Ahead or Behind', point_diff=5,
+            timeout=t).get_data_frames()[0]
+
+    return with_retries(call, 'clutch stats', attempts=3, base_wait=10, timeout=60)
+
+
+def apply_clutch(players, df):
+    """Attach clutch totals (CL_*) to each player. Returns how many players got them."""
+    by_id = {p['nba_id']: p for p in players}
+    n = 0
+    for rec in df.to_dict('records'):
+        p = by_id.get(num(rec.get('PLAYER_ID'), 0))
+        if not p:
+            continue
+        for src, dst in (('GP', 'CL_GP'), ('MIN', 'CL_MIN'), ('PTS', 'CL_PTS'), ('FGM', 'CL_FGM'), ('FGA', 'CL_FGA'),
+                         ('FG3M', 'CL_3PM'), ('FG3A', 'CL_3PA'), ('FTM', 'CL_FTM'), ('FTA', 'CL_FTA'),
+                         ('AST', 'CL_AST'), ('TOV', 'CL_TOV'), ('PLUS_MINUS', 'CL_PM')):
+            v = _f(rec.get(src))
+            if v is not None:
+                p[dst] = round(v, 1) if src == 'MIN' else int(round(v))
+        n += 1
+    return n
+
+
 def _f(v):
     try:
         v = float(v)
@@ -351,6 +382,12 @@ def add_extra_stats(players, season):
         got.append('on/off for %d teams' % ok)
     else:
         print('       (Skipped on/off ratings: NBA.com did not answer)')
+    # 4. clutch
+    try:
+        if apply_clutch(players, fetch_clutch(season)):
+            got.append('clutch')
+    except Exception as e:  # noqa: BLE001
+        print('       (Skipped clutch stats: %s)' % e)
     return got
 
 
@@ -908,7 +945,7 @@ def write_atomic(path, text):
     os.replace(tmp, path)
 
 
-def restyle(rescore=False):
+def restyle(rescore=False, clutch_season=None):
     """Rebuild index.html from its own embedded data with the latest template.html.
     rescore=True also recomputes the Break Out / Cool Off picks from that data."""
     path = os.path.join(HERE, 'index.html')
@@ -925,6 +962,12 @@ def restyle(rescore=False):
         print('Could not read the data inside index.html (%s).' % e)
         print('Run the normal update instead. Your site was NOT changed.')
         return 1
+    if clutch_season:
+        try:
+            print('Clutch players: %d' % apply_clutch(players, fetch_clutch(clutch_season)))
+        except Exception as e:  # noqa: BLE001
+            print('Could not get clutch stats (%s). Your site was NOT changed.' % e)
+            return 1
     if rescore:
         an = build_analytics(players, shots, meta.get('lg'), meta.get('gamesSoFar', 0), logs)
         meta['an'] = an
@@ -964,6 +1007,8 @@ def main(argv):
         return restyle(rescore=True)
     if any(a.lower() == 'datatest' for a in argv):
         return datatest(season)
+    if any(a.lower() == 'clutch' for a in argv):
+        return restyle(clutch_season=season)
     for a in argv:
         if re.match(r'^\d{4}-\d{2}$', a):
             season = a
