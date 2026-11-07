@@ -1124,6 +1124,8 @@ html.intro #hmMain::after{content:'';position:absolute;inset:0;background:var(--
 
 /* ---------- scatter ---------- */
 .scat{width:100%;height:auto;display:block}
+.scat .slab{paint-order:stroke;stroke:#fff;stroke-width:3.5px;stroke-linejoin:round;fill:#3b4358;font-weight:700}
+.scat .slab.hl{fill:#0b1530;font-weight:900}
 .tp-scat{border:1px solid var(--rule2);border-radius:14px;padding:20px 22px 14px;margin-top:6px;max-width:960px}
 /* ---------- hero stat panel ---------- */
 .hp{display:grid;grid-template-columns:350px minmax(0,1fr);border:1.5px solid var(--navy);border-radius:16px;margin:4px -60px 30px;overflow:hidden;background:#fff}
@@ -2262,7 +2264,9 @@ function gTS(x){var a=x[11]+0.44*x[15];return a?x[4]/(2*a)*100:0;}
    12. Every comparison names its window: "Up from 32.4% (first 3 games)", never a bare "+6.3".
    13. Before vs now is shown side by side in a table with column headers, not as loose deltas.
    14. Charts: title = what is measured, subtitle = the takeaway with both numbers, a legend for colors, averages labeled at the line's end.
-   15. Teams are shown with logos; highlighted players with their team logo. */
+   15. Teams are shown with logos; highlighted players with their team logo.
+   16. Scatters label without hover: every team gets logo + abbreviation; for players, the top scorers and extremes get logo + name
+       (about 40 on desktop, 16 on phones), placed automatically with short leader lines; everyone else is a faint dot. */
 function pWrite(s){
   var p=s.p,R=s.R,B=s.B,N=lastName(p.Player),F=p.Player,rec=s.sp.rec,pri=s.sp.pri,all=s.g,nr=rec.length;
   var up=s.v==='REAL'||s.v==='OPPORTUNITY'||s.v==='LUCK';
@@ -2739,7 +2743,7 @@ function showBigNight(key){
 
 /* ================= SCATTER CHARTS (fans love these) ================= */
 function chScatter(o){
-  var sm=window.innerWidth<700,W=sm?360:860,H=sm?340:480,m={l:sm?42:64,r:sm?14:26,t:18,b:sm?46:58},iw=W-m.l-m.r,ih=H-m.t-m.b,k=sm?1:1.3,P=o.pts;
+  var sm=window.innerWidth<700,W=sm?360:860,H=sm?380:560,m={l:sm?42:64,r:sm?14:26,t:18,b:sm?46:58},iw=W-m.l-m.r,ih=H-m.t-m.b,k=sm?1:1.3,P=o.pts;
   var xs=P.map(function(p){return p.x;}),ys=P.map(function(p){return p.y;});
   if(o.arrow){xs.push(o.arrow.x1,o.arrow.x2);ys.push(o.arrow.y1,o.arrow.y2);}
   var xa=Math.min.apply(null,xs),xb=Math.max.apply(null,xs),ya=Math.min.apply(null,ys),yb=Math.max.apply(null,ys),px=(xb-xa)*0.08||1,py=(yb-ya)*0.1||1;
@@ -2755,19 +2759,30 @@ function chScatter(o){
     if(o.quad){var q=o.quad,fs=8.5*k;h+=cTag(m.l+6,m.t+12*k,q[0],'#8a93a6','start',fs)+cTag(W-m.r-6,m.t+12*k,q[1],'#1f8a4c','end',fs)+cTag(m.l+6,m.t+ih-6,q[2],'#c2341f','start',fs)+cTag(W-m.r-6,m.t+ih-6,q[3],'#8a93a6','end',fs);}}
   if(o.diag){h+='<line x1="'+X(x0)+'" y1="'+Y(x0)+'" x2="'+X(x1)+'" y2="'+Y(x1)+'" stroke="#0b1530" stroke-width="1.5" stroke-dasharray="5 4"/>'+cTag(X(x1)-6,Y(x1)+14*k,o.diag,'#0b1530','end',8.5*k);}
   if(o.slope){h+='<line x1="'+X(x0)+'" y1="'+Y(x0*o.slope)+'" x2="'+X(x1)+'" y2="'+Y(x1*o.slope)+'" stroke="#0b1530" stroke-width="1.5" stroke-dasharray="5 4"/>'+cTag(X(x1)-6,Y(x1*o.slope)-7,o.slopeL||'LEAGUE AVERAGE','#0b1530','end',8.5*k);}
-  var dot=function(p){var cx=X(p.x),cy=Y(p.y),r=(p.hl?(p.logo?(p.pl?13:22):7.5):(p.logo?12:4.6))*k,s='<g class="ci" data-tip="'+esc(p.tip||'')+'">';
-    if(p.logo){s+=(p.hl&&!p.pl?'<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+(r+3)+'" fill="#fff" stroke="'+(p.ring||'#0b1530')+'" stroke-width="2.5"/>':'')+'<image href="'+p.logo+'" x="'+(cx-r).toFixed(1)+'" y="'+(cy-r).toFixed(1)+'" width="'+(2*r).toFixed(1)+'" height="'+(2*r).toFixed(1)+'" opacity="'+(p.hl||o.allLogo?1:.75)+'" preserveAspectRatio="xMidYMid meet"/>';}
-    else s+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+r.toFixed(1)+'" fill="'+(p.c||'#b6bdcc')+'" opacity="'+(p.hl?1:.5)+'" stroke="#fff" stroke-width="1.5"/>';
+  var prad=function(p){return (p.hl?(p.logo?(p.pl?14:22):7.5):(p.logo?(p.pl?8.5:12):(p.faint?3.4:4.6)))*k;};
+  var dot=function(p){var cx=X(p.x),cy=Y(p.y),r=prad(p),s='<g class="ci" data-tip="'+esc(p.tip||'')+'">';
+    if(p.logo){s+=(p.hl&&!p.pl?'<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+(r+3)+'" fill="#fff" stroke="'+(p.ring||'#0b1530')+'" stroke-width="2.5"/>':'')+'<image href="'+p.logo+'" x="'+(cx-r).toFixed(1)+'" y="'+(cy-r).toFixed(1)+'" width="'+(2*r).toFixed(1)+'" height="'+(2*r).toFixed(1)+'" opacity="'+(p.hl||o.allLogo||p.pl?1:.75)+'" preserveAspectRatio="xMidYMid meet"/>';}
+    else s+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+r.toFixed(1)+'" fill="'+(p.c||'#b6bdcc')+'" opacity="'+(p.hl?1:p.faint?.32:.5)+'" stroke="#fff" stroke-width="1"/>';
     if(p.lab)LBL.push({cx:cx,cy:cy,r:r,p:p});
     return s+'</g>';};
   var LBL=[],BOX=[];
-  var placeLabels=function(){var out='';P.forEach(function(p){if(!p.logo&&!p.hl)return;var cx=X(p.x),cy=Y(p.y),r=(p.hl?(p.logo?(p.pl?14:25):8):(p.logo?12:5))*k;BOX.push({x:cx-r,y:cy-r,w:2*r,h:2*r,self:p});});LBL.sort(function(a,b){return (b.p.hl?1:0)-(a.p.hl?1:0);}).forEach(function(L){
-    var fs=(L.p.hl?11.5:10)*k,w=L.p.lab.length*fs*0.58,hgt=fs*1.1,opts=[[L.cx+L.r+5,L.cy+fs*0.35,'start'],[L.cx-L.r-5,L.cy+fs*0.35,'end'],[L.cx,L.cy-L.r-5,'middle'],[L.cx,L.cy+L.r+fs+2,'middle']];
-    for(var i=0;i<opts.length;i++){var o2=opts[i],x0_=o2[2]==='start'?o2[0]:o2[2]==='end'?o2[0]-w:o2[0]-w/2,y0_=o2[1]-fs*0.85,bx={x:x0_,y:y0_,w:w,h:hgt};
-      if(bx.x<m.l||bx.x+bx.w>W-m.r||bx.y<m.t||bx.y+bx.h>m.t+ih)continue;
-      if(BOX.some(function(q){return q.self!==L.p&&bx.x<q.x+q.w&&bx.x+bx.w>q.x&&bx.y<q.y+q.h&&bx.y+bx.h>q.y;}))continue;
-      BOX.push(bx);out+='<text class="cr" x="'+o2[0].toFixed(1)+'" y="'+o2[1].toFixed(1)+'" text-anchor="'+o2[2]+'" style="font-size:'+fs+'px;'+(L.p.hl?'':'fill:#5b6478;font-weight:600')+'">'+esc(L.p.lab)+'</text>';L.done=1;break;}
-    if(!L.done&&L.p.hl){var by=L.cy+L.r+fs+2>m.t+ih?L.cy-L.r-6:L.cy+L.r+fs+2,bxx=Math.min(W-m.r-w/2,Math.max(m.l+w/2,L.cx));out+='<text class="cr" x="'+bxx.toFixed(1)+'" y="'+by.toFixed(1)+'" text-anchor="middle" style="font-size:'+fs+'px;paint-order:stroke;stroke:#fff;stroke-width:4px">'+esc(L.p.lab)+'</text>';}});return out;};
+  var placeLabels=function(){var out='',lines='';
+    P.forEach(function(p){if(!p.logo&&!p.hl)return;var cx=X(p.x),cy=Y(p.y),r=prad(p);BOX.push({x:cx-r,y:cy-r,w:2*r,h:2*r,self:p});});
+    if(o.arrow){var A=o.arrow,ax1=X(A.x1),ay1=Y(A.y1),ax2=X(A.x2),ay2=Y(A.y2);for(var s_=0;s_<=1.0001;s_+=0.1){BOX.push({x:ax1+(ax2-ax1)*s_-5,y:ay1+(ay2-ay1)*s_-5,w:10,h:10});}}
+    var hit=function(bx,self){return BOX.some(function(q){return q.self!==self&&bx.x<q.x+q.w&&bx.x+bx.w>q.x&&bx.y<q.y+q.h&&bx.y+bx.h>q.y;});};
+    var ANG=[0,180,-90,90,-35,35,-145,145];
+    LBL.sort(function(a2,b2){return (b2.p.hl?1e9:0)+(b2.p.pri||0)-((a2.p.hl?1e9:0)+(a2.p.pri||0));}).forEach(function(L){
+      var fs=(L.p.hl?12:10)*k,w=L.p.lab.length*fs*0.56+2,hg=fs*1.15,done=false,rings=[4,14,28,44];
+      for(var ri=0;ri<rings.length&&!done;ri++)for(var ai=0;ai<ANG.length&&!done;ai++){
+        var ang=ANG[ai]*Math.PI/180,d=L.r+rings[ri],px=L.cx+Math.cos(ang)*d,py=L.cy+Math.sin(ang)*d,ca=Math.cos(ang);
+        var bx={x:ca>0.3?px:ca<-0.3?px-w:px-w/2,y:Math.sin(ang)>0.3?py:Math.sin(ang)<-0.3?py-hg:py-hg/2,w:w,h:hg};
+        if(bx.x<m.l+2||bx.x+bx.w>W-m.r-2||bx.y<m.t+2||bx.y+bx.h>m.t+ih-2||hit(bx,L.p))continue;
+        BOX.push(bx);done=true;
+        if(ri>=1){var tx=Math.max(bx.x,Math.min(L.cx,bx.x+bx.w)),ty=Math.max(bx.y,Math.min(L.cy,bx.y+bx.h)),ddx=tx-L.cx,ddy=ty-L.cy,dl=Math.sqrt(ddx*ddx+ddy*ddy)||1;
+          lines+='<line x1="'+(L.cx+ddx/dl*L.r).toFixed(1)+'" y1="'+(L.cy+ddy/dl*L.r).toFixed(1)+'" x2="'+tx.toFixed(1)+'" y2="'+ty.toFixed(1)+'" stroke="#9aa1b4" stroke-width="1"/>';}
+        out+='<text class="cr slab'+(L.p.hl?' hl':'')+'" x="'+(bx.x+1).toFixed(1)+'" y="'+(bx.y+hg*0.8).toFixed(1)+'" style="font-size:'+fs+'px">'+esc(L.p.lab)+'</text>';}
+      if(!done&&L.p.hl){var by=L.cy+L.r+fs+2>m.t+ih?L.cy-L.r-6:L.cy+L.r+fs+2,bxx=Math.min(W-m.r-w/2,Math.max(m.l+w/2,L.cx));out+='<text class="cr slab hl" x="'+bxx.toFixed(1)+'" y="'+by.toFixed(1)+'" text-anchor="middle" style="font-size:'+fs+'px">'+esc(L.p.lab)+'</text>';}});
+    return lines+out;};
   P.filter(function(p){return !p.hl;}).forEach(function(p){h+=dot(p);});
   if(o.arrow){var A=o.arrow,x1_=X(A.x1),y1_=Y(A.y1),x2_=X(A.x2),y2_=Y(A.y2),dx=x2_-x1_,dy=y2_-y1_,L=Math.sqrt(dx*dx+dy*dy)||1,pad=(A.logo?24:10)*k;
     h+='<g class="ci" data-tip="'+esc(A.tip||'')+'">'+(A.logo?'<image href="'+A.logo+'" x="'+(x1_-14*k).toFixed(1)+'" y="'+(y1_-14*k).toFixed(1)+'" width="'+(28*k)+'" height="'+(28*k)+'" opacity=".35"/>':'<circle cx="'+x1_.toFixed(1)+'" cy="'+y1_.toFixed(1)+'" r="'+(6.5*k)+'" fill="#fff" stroke="'+(A.c||'#0b1530')+'" stroke-width="2.5"/>')
@@ -2782,7 +2797,7 @@ function scatFig(t,sub,svg){return '<div class="fg-a ar-fig">'+chFig(t,sub,svg,1
 function teamODScatter(t,s,win){
   var G=teamGames(),pts=[],ox=[],dy=[];
   Object.keys(G).forEach(function(k){var sp=win?trSplit(G[k]):{rec:G[k]};if(!sp||!sp.rec.length)return;var a=tAgg(sp.rec);if(!a)return;ox.push(a.ortg);dy.push(a.drtg);
-    pts.push({x:a.ortg,y:a.drtg,logo:logoT(k),hl:k===t,ring:teamOf(k).c,lab:k===t?nick(k):'',tip:teamOf(k).n+': offense '+f1(a.ortg)+', defense '+f1(a.drtg)+' per 100'+(win?' ('+trLab().toLowerCase()+')':'')});});
+    pts.push({x:a.ortg,y:a.drtg,logo:logoT(k),hl:k===t,ring:teamOf(k).c,lab:k===t?nick(k):k,pri:a.net,tip:teamOf(k).n+': offense '+f1(a.ortg)+', defense '+f1(a.drtg)+' per 100'+(win?' ('+trLab().toLowerCase()+')':'')});});
   if(pts.length<6)return '';
   var o={pts:pts,xl:'Offense: points scored per 100 possessions →',yl:'Defense: points allowed per 100 (better ↑)',invY:1,avg:[avg(ox),avg(dy)],quad:['GOOD DEFENSE','GOOD AT BOTH','STRUGGLING','GOOD OFFENSE']};
   if(s)o.arrow={x1:s.B.ortg,y1:s.B.drtg,x2:s.R.ortg,y2:s.R.drtg,logo:logoT(t),tip:nick(t)+' before: offense '+f1(s.B.ortg)+', defense '+f1(s.B.drtg)};
@@ -2791,7 +2806,7 @@ function teamODScatter(t,s,win){
 function teamThreeScatter(t,s){
   var G=teamGames(),pts=[],xx=[],yy=[];
   Object.keys(G).forEach(function(k){var sp=trSplit(G[k]);if(!sp)return;var a=tAgg(sp.rec);if(!a)return;xx.push(a.tpa);yy.push(a.p3);
-    pts.push({x:a.tpa,y:a.p3,logo:logoT(k),hl:k===t,ring:teamOf(k).c,lab:k===t?nick(k):'',tip:teamOf(k).n+': '+f1(a.tpa)+' threes a game at '+f1(a.p3)+'%'});});
+    pts.push({x:a.tpa,y:a.p3,logo:logoT(k),hl:k===t,ring:teamOf(k).c,lab:k===t?nick(k):k,pri:a.p3,tip:teamOf(k).n+': '+f1(a.tpa)+' threes a game at '+f1(a.p3)+'%'});});
   if(pts.length<6)return '';
   return scatFig('Three-point volume vs accuracy, '+trLab().toLowerCase(),'Each logo is a team. Right = more threes, up = better percentage. The arrow shows how the '+nick(t)+' moved from '+trLabB().toLowerCase()+'.',
     chScatter({pts:pts,xl:'Three-point attempts per game',yl:'Three-point %',avg:[avg(xx),avg(yy)],quad:['ACCURATE','MAKING LOTS','COLD','SHOOTING LOTS'],fy:function(v){return Math.round(v)+'%';},
@@ -2807,13 +2822,15 @@ function playerScatter(s){
   else if(d==='tov')cfg={xl:'Usage rate (% of team plays he finishes)',yl:'Turnovers per game (fewer ↑)',invY:1,gx:function(q){return q['USG%']*100;},gy:function(q){return q.TOV_PG;},px:[B.usg,R.usg],py:[B.tov,R.tov],t:'Usage vs turnovers',quad:['CAREFUL','BIG ROLE, CAREFUL','LOOSE','BIG ROLE, LOOSE']};
   else cfg={xl:'Usage rate (% of team plays he finishes)',yl:'True shooting %',gx:function(q){return q['USG%']*100;},gy:function(q){return q['TS%']*100;},fy:function(x){return Math.round(x)+'%';},px:[B.usg,R.usg],py:[B.ts,R.ts],t:'Usage vs efficiency',quad:['EFFICIENT','BIG ROLE + EFFICIENT','STRUGGLING','BIG ROLE']};
   var pool=D.filter(function(q){return q.MP_PG>=20&&q.G>=3&&q!==p&&(!cfg.q||cfg.q(q));}),xx=[],yy=[];
-  var pts=pool.map(function(q){var x=cfg.gx(q),y=cfg.gy(q);xx.push(x);yy.push(y);return {x:x,y:y,tip:q.Player+' ('+q.Team+'): '+f1(x)+', '+f1(y)};});
-  if(pts.length<20)return '';
-  var top=pool.slice().sort(function(a,b){return (cfg.invY?1:-1)*(cfg.gy(a)-cfg.gy(b))||(cfg.gx(b)-cfg.gx(a));}).slice(0,4);
-  top.forEach(function(q){var i=pool.indexOf(q);pts[i].lab=lastName(q.Player);pts[i].c='#8a93a6';});
+  if(pool.length<20)return '';
+  var nLab=window.innerWidth<700?16:42,pick={},byPts=pool.slice().sort(function(a,b){return b.PTS_PG-a.PTS_PG;});
+  byPts.slice(0,nLab).forEach(function(q){pick[q.nba_id]=1;});
+  [function(q){return cfg.gy(q);},function(q){return -cfg.gy(q);},function(q){return cfg.gx(q);}].forEach(function(f){pool.slice().sort(function(a,b){return f(b)-f(a);}).slice(0,3).forEach(function(q){pick[q.nba_id]=1;});});
+  var pts=pool.map(function(q){var x=cfg.gx(q),y=cfg.gy(q),on=pick[q.nba_id];xx.push(x);yy.push(y);
+    return on?{x:x,y:y,logo:logoUrl(q),pl:1,lab:lastName(q.Player),pri:q.PTS_PG,tip:q.Player+' ('+q.Team+'): '+f1(x)+', '+f1(y)}:{x:x,y:y,faint:1,tip:q.Player+' ('+q.Team+'): '+f1(x)+', '+f1(y)};});
   var c=teamOf(p.Team).c;
   pts.push({x:cfg.px[1],y:cfg.py[1],hl:1,c:c,logo:logoUrl(p),pl:1,lab:N,tip:N+' '+trLab().toLowerCase()+': '+f1(cfg.px[1])+', '+f1(cfg.py[1])});
-  return scatFig(cfg.t+': where '+N+' moved','Gray dots are every player averaging 20+ minutes this season. The arrow shows '+N+' going from his '+trLabB().toLowerCase()+' numbers (hollow) to his '+trLab().toLowerCase()+' (filled). Dashed lines = average.',
+  return scatFig(cfg.t+': where '+N+' moved','Every player averaging 20+ minutes this season. Logos and names mark the league’s top scorers and the extremes; faint dots are everyone else. The arrow shows '+N+' going from his '+trLabB().toLowerCase()+' numbers (hollow) to his '+trLab().toLowerCase()+'. Dashed lines = average.',
     chScatter({pts:pts,xl:cfg.xl,yl:cfg.yl,invY:cfg.invY,fx:cfg.fx,fy:cfg.fy,avg:[avg(xx),avg(yy)],quad:cfg.quad,arrow:{x1:cfg.px[0],y1:cfg.py[0],x2:cfg.px[1],y2:cfg.py[1],c:c,tip:N+' '+trLabB().toLowerCase()+': '+f1(cfg.px[0])+', '+f1(cfg.py[0])}}));
 }
 
@@ -2836,8 +2853,8 @@ FEAT.def=function(){
     rows:rows,mini:rows.slice(0,5).map(function(x){return {n:x.p.Player,t:x.p.Team,v:x.A.pts,lab:f1(x.A.pts)};}),
     chart:function(W){return chFig('Points per game against top-10 defenses','Bar = vs the 10 best defenses. Hollow dot = vs everyone else. Players with 3+ games in each group and 24+ minutes a night.',chRank(rows.map(function(x){return {n:x.p.Player,t:x.p.Team,v:x.A.pts,v2:x.B.pts,lab:f1(x.A.pts),tip:x.p.Player+': '+f1(x.A.pts)+' vs top-10 defenses ('+x.nv+' games), '+f1(x.B.pts)+' vs the rest'};}),{W:W,big:1,v2:'vs everyone else'}),1);},
     chart2:drop.length?function(W){return chFig('Biggest drop-off against top-10 defenses','Points per game vs the 10 best defenses (bar) and vs everyone else (hollow dot). Players scoring 18+ against the rest.',chRank(drop.map(function(x){return {n:x.p.Player,t:x.p.Team,v:x.A.pts,v2:x.B.pts,lab:f1(x.A.pts),col:'var(--fall)',tip:x.p.Player+': '+f1(x.A.pts)+' vs top-10 defenses, '+f1(x.B.pts)+' vs the rest'};}),{W:W,big:1,v2:'vs everyone else'}),1);}:null,
-    chart3:function(){var top6=rows.slice(0,6);return chFig('Scoring vs the best defenses vs everyone else','Each dot is a player (24+ minutes, 3+ games in each group). Above the dashed line = scores more against top-10 defenses. Labeled: the top 6.',
-      chScatter({pts:out.map(function(x){var hl=top6.indexOf(x)>=0;return {x:x.B.pts,y:x.A.pts,c:hl?teamOf(x.p.Team).c:(x.A.pts>=x.B.pts?'#1f8a4c':'#c2341f'),hl:hl,logo:hl?logoUrl(x.p):null,pl:1,lab:hl?lastName(x.p.Player):'',tip:x.p.Player+': '+f1(x.A.pts)+' vs top-10 defenses, '+f1(x.B.pts)+' vs the rest'};}),xl:'Points per game vs everyone else',yl:'Points per game vs top-10 defenses',diag:'SAME AGAINST BOTH'}),1);},
+    chart3:function(){var top6=out.slice().sort(function(a,b){return b.A.pts+b.B.pts-a.A.pts-a.B.pts;}).slice(0,window.innerWidth<700?14:34);return chFig('Scoring vs the best defenses vs everyone else','Each player has 24+ minutes a night and 3+ games in each group. Above the dashed line = scores more against top-10 defenses. Logos and names mark the top scorers.',
+      chScatter({pts:out.map(function(x){var hl=top6.indexOf(x)>=0;return {x:x.B.pts,y:x.A.pts,c:x.A.pts>=x.B.pts?'#1f8a4c':'#c2341f',faint:!hl,logo:hl?logoUrl(x.p):null,pl:1,pri:x.A.pts+x.B.pts,lab:hl?lastName(x.p.Player):'',tip:x.p.Player+': '+f1(x.A.pts)+' vs top-10 defenses, '+f1(x.B.pts)+' vs the rest'};}),xl:'Points per game vs everyone else',yl:'Points per game vs top-10 defenses',diag:'SAME AGAINST BOTH'}),1);},
     table:{h:['Player','Games vs top 10','PTS vs top 10','PTS vs rest','TS% vs top 10','TS% vs rest'],r:rows.map(function(x){return [x.p,x.nv,f1(x.A.pts),f1(x.B.pts),pct1(x.A.ts),pct1(x.B.ts)];})},
     how:'Top-10 defenses are ranked by points allowed per 100 possessions this season: '+top.map(function(t){return t+' '+f1(A[t].drtg);}).join(', ')+'. Early in the season, these rankings still move around a lot.'};
 };
@@ -2851,7 +2868,7 @@ FEAT.eff=function(){
     lede:'<b>Scoring a lot is one thing. Scoring a lot without needing the ball every trip is another.</b> These players get the most points out of every shot, free throw trip and possession they use.',
     nut:'We counted every field goal attempt plus free throw trips (0.44 per free throw, the standard way to turn free throws into possessions), then divided points by that total.',
     rows:rows,mini:rows.slice(0,5).map(function(x){return {n:x.p.Player,t:x.p.Team,v:x.pps,lab:x.pps.toFixed(2)};}),
-    chart:function(W){return chFig('Points per game vs shot attempts per game','Each dot is a player scoring 15+. Dots above the dashed line get more points per shot than average. Labeled: the 6 most efficient 18+ scorers.',chScatter({pts:pool.map(function(x){var hl=rows.slice(0,6).indexOf(x)>=0;return {x:x.tsa,y:x.p.PTS_PG,hl:hl,logo:hl?logoUrl(x.p):null,pl:1,lab:hl?lastName(x.p.Player):'',c:x.p.PTS_PG>=x.tsa*lg?'#1f8a4c':'#c2341f',tip:x.p.Player+': '+f1(x.p.PTS_PG)+' points per game on '+f1(x.p.FGA_PG)+' shots and '+f1(x.p.FTA_PG)+' free throws per game'};}),xl:'Shot attempts per game (shots + 0.44 × free throws)',yl:'Points per game',slope:lg,slopeL:'LEAGUE AVERAGE'}),1);},
+    chart:function(W){return chFig('Points per game vs shot attempts per game','Every player scoring 15+ points per game. Above the dashed line = more points per shot than average. Logos and names mark the top scorers and the most efficient.',chScatter({pts:pool.map(function(x){var hl=x.p.PTS_PG>=(window.innerWidth<700?24:19)||rows.slice(0,6).indexOf(x)>=0;return {x:x.tsa,y:x.p.PTS_PG,faint:!hl,logo:hl?logoUrl(x.p):null,pl:1,pri:x.p.PTS_PG,lab:hl?lastName(x.p.Player):'',c:x.p.PTS_PG>=x.tsa*lg?'#1f8a4c':'#c2341f',tip:x.p.Player+': '+f1(x.p.PTS_PG)+' points per game on '+f1(x.p.FGA_PG)+' shots and '+f1(x.p.FTA_PG)+' free throws per game'};}),xl:'Shot attempts per game (shots + 0.44 × free throws)',yl:'Points per game',slope:lg,slopeL:'LEAGUE AVERAGE'}),1);},
     chart2:function(W){return chFig('Points per shot attempt','Players scoring 18+ points per game.',chRank(rows.map(function(x){return {n:x.p.Player,t:x.p.Team,v:x.pps,lab:x.pps.toFixed(2),tip:x.p.Player+': '+x.pps.toFixed(2)+' points per shot attempt'};}),{W:W,big:1,min:1}),1);},
     table:{h:['Player','PTS','Shots','Free throws','Usage','Pts per attempt'],r:rows.map(function(x){return [x.p,f1(x.p.PTS_PG),f1(x.p.FGA_PG),f1(x.p.FTA_PG),f1(x.p['USG%']*100)+'%',x.pps.toFixed(2)];})},
     how:'Points per shot attempt = points ÷ (field goal attempts + 0.44 × free throw attempts). League average among 15+ point scorers is '+lg.toFixed(2)+'. Season to date.'};
@@ -2870,9 +2887,9 @@ FEAT.min=function(){
     rows:rows,mini:rows.slice(0,5).map(function(x){return {n:x.p.Player,t:x.p.Team,v:x.pp*100,v2:x.mp*100,lab:'+'+Math.round(x.pp*100)+'%'};}),
     chart:function(W){return chFig('Minutes vs production: how much each went up','Bar = change in points + rebounds + assists. Hollow dot = change in minutes. '+trLab()+' vs before. Ranked by how much faster production grew than minutes.',chRank(rows.map(function(x){return {n:x.p.Player,t:x.p.Team,v:x.pp*100,v2:x.mp*100,lab:'+'+Math.round(x.pp*100)+'%',tip:x.p.Player+': minutes '+f1(x.B.min)+' → '+f1(x.R.min)+' (+'+Math.round(x.mp*100)+'%), pts+reb+ast '+f1(x.B.pra)+' → '+f1(x.R.pra)+' (+'+Math.round(x.pp*100)+'%)'};}),{W:W,big:1,v2:'minutes change',pct:1}),1);},
     chart3:function(){var pool=[];D.forEach(function(p){var g=GL[String(p.nba_id)];if(!g)return;var sp=trSplit(g);if(!sp||sp.pri.length<3)return;var R=pAgg(p,sp.rec),B=pAgg(p,sp.pri);if(R.min<15||B.min<8||B.pra<=0)return;pool.push({p:p,mp:(R.min/B.min-1)*100,pp:(R.pra/B.pra-1)*100});});
-      var top6=rows.slice(0,6).map(function(x){return x.p;});
-      return chFig('Change in minutes vs change in production','Each dot is a player, '+trLab().toLowerCase()+' vs before. Above the dashed line = production grew faster than minutes. Labeled: the top 6.',
-      chScatter({pts:pool.map(function(x){var hl=top6.indexOf(x.p)>=0;return {x:x.mp,y:x.pp,c:hl?teamOf(x.p.Team).c:(x.pp>=x.mp?'#1f8a4c':'#c2341f'),hl:hl,logo:hl?logoUrl(x.p):null,pl:1,lab:hl?lastName(x.p.Player):'',tip:x.p.Player+': minutes '+(x.mp>0?'+':'')+Math.round(x.mp)+'%, production '+(x.pp>0?'+':'')+Math.round(x.pp)+'%'};}),xl:'Change in minutes (%)',yl:'Change in pts + reb + ast (%)',diag:'GREW EVENLY',fx:function(v){return Math.round(v)+'%';},fy:function(v){return Math.round(v)+'%';}}),1);},
+      var top6=pool.slice().sort(function(a,b){return Math.abs(b.pp)+Math.abs(b.mp)-Math.abs(a.pp)-Math.abs(a.mp);}).slice(0,window.innerWidth<700?14:30).map(function(x){return x.p;});
+      return chFig('Change in minutes vs change in production','Each dot is a player, '+trLab().toLowerCase()+' vs before. Above the dashed line = production grew faster than minutes. Logos and names mark the biggest movers.',
+      chScatter({pts:pool.map(function(x){var hl=top6.indexOf(x.p)>=0;return {x:x.mp,y:x.pp,c:x.pp>=x.mp?'#1f8a4c':'#c2341f',faint:!hl,logo:hl?logoUrl(x.p):null,pl:1,pri:Math.abs(x.pp)+Math.abs(x.mp),lab:hl?lastName(x.p.Player):'',tip:x.p.Player+': minutes '+(x.mp>0?'+':'')+Math.round(x.mp)+'%, production '+(x.pp>0?'+':'')+Math.round(x.pp)+'%'};}),xl:'Change in minutes (%)',yl:'Change in pts + reb + ast (%)',diag:'GREW EVENLY',fx:function(v){return Math.round(v)+'%';},fy:function(v){return Math.round(v)+'%';}}),1);},
     table:{h:['Player','Minutes before','Minutes now','Pts+reb+ast before','Pts+reb+ast now','Per 36 now'],r:rows.map(function(x){return [x.p,f1(x.B.min),f1(x.R.min),f1(x.B.pra),f1(x.R.pra),f1(x.R.pra/x.R.min*36)];})},
     how:'Window: '+trLab().toLowerCase()+' vs the games before it. Players need 18+ minutes now, a 4+ minute jump, and production growing at least 1.5 times faster than minutes.'};
 };
