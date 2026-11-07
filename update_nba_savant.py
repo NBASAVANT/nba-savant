@@ -37,6 +37,7 @@ import re
 import sys
 import tempfile
 import time
+START_TIME = time.time()
 import unicodedata
 from datetime import datetime, timedelta
 
@@ -578,18 +579,23 @@ def save_shot_cache(season, data):
 
 def download_shots(players, season):
     cache = load_shot_cache(season)
-    shot_data = {pid: s for pid, s in cache.items() if s}
+    shot_data = dict(cache)          # players with no shots are saved as [] so they aren't fetched twice
     if shot_data:
         print('       (resuming: %d shot charts already saved from earlier today)' % len(shot_data))
     total, failed = len(players), 0
+    budget = float(os.environ.get('NBS_BUDGET', '0') or 0)   # seconds; 0 = no limit
     for idx, p in enumerate(players):
         key = str(p['nba_id'])
         if key in shot_data:
             continue
+        if budget and time.time() - START_TIME > budget:
+            save_shot_cache(season, shot_data)
+            done = sum(1 for pl in players if str(pl['nba_id']) in shot_data)
+            print('PAUSED: shot charts %d of %d done' % (done, total))
+            raise SystemExit(3)
         try:
             shots = fetch_shots(p['nba_id'], season)
-            if shots:
-                shot_data[key] = shots
+            shot_data[key] = shots or []
             time.sleep(0.6)
         except Exception:  # noqa: BLE001
             failed += 1
@@ -598,7 +604,7 @@ def download_shots(players, season):
             print('       ... %d/%d players' % (idx + 1, total))
             save_shot_cache(season, shot_data)
     save_shot_cache(season, shot_data)
-    return shot_data, failed
+    return {k: v for k, v in shot_data.items() if v}, failed
 
 
 # ───────────────────────── Due to Break Out / Due to Cool Off ─────────────────────────

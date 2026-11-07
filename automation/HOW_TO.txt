@@ -1,16 +1,11 @@
-NBA SAVANT AUTO-UPDATE
+NBA SAVANT UPDATES (manual only)
 
-Setup (one time): open Terminal and paste
-  bash ~/Documents/GitHub/nba-savant/automation/install_auto_update.sh
+There is no scheduled update anymore. Nothing runs unless you start it.
 
-That schedules an update every night at 2:00 AM and runs one right away.
-Each run: pulls new stats, rebuilds index.html, commits and pushes to GitHub.
+To update the site:
+  - Ask Claude in chat to update it, or
+  - Double-click "Update NBA Savant.command" in the nba-savant folder yourself.
 
-Log of every run:  ~/Library/Logs/nba-savant-update.log
-Run an update any time:  launchctl kickstart gui/$(id -u)/com.nbasavant.update
-Turn it off:  launchctl bootout gui/$(id -u)/com.nbasavant.update
-
-Notes
-- The Mac has to be on. If it is asleep at 2:00 AM, the update runs as soon as it wakes.
-- If the log says it couldn't open the folder: System Settings > Privacy & Security >
-  Full Disk Access > + > Cmd+Shift+G > /bin/bash > Open, then run the setup again.
+Each update: pulls new stats from NBA.com, rebuilds index.html, pushes it to GitHub,
+and Cloudflare publishes it about a minute later. Your Mac must be on.
+Log: ~/Library/Logs/nba-savant-update.log
