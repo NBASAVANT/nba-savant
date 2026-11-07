@@ -1057,6 +1057,7 @@ html.intro #hmMain::after{content:'';position:absolute;inset:0;background:var(--
 .bx-d span{font-weight:800;font-size:10px;letter-spacing:.14em;color:var(--t3)}
 .bx-d b{font-weight:900;font-size:26px;font-stretch:66%;color:var(--navy);margin-top:2px}
 .bx-d:first-child{border-left:0}
+
 .bx{flex:none;width:176px;padding:9px 14px 10px;border-left:1px solid var(--rule);color:var(--t3)}
 .bx:hover{background:var(--tint)}
 .bx-f{font-weight:800;font-size:9.5px;letter-spacing:.14em;color:var(--t4);margin-bottom:5px}
@@ -1064,16 +1065,17 @@ html.intro #hmMain::after{content:'';position:absolute;inset:0;background:var(--
 .bx-r img{width:22px;height:22px;flex:none}
 .bx-r b{margin-left:auto;font-weight:800;font-size:19px;font-stretch:76%}
 .bx-r i{font-style:normal;font-size:10px;color:var(--navy);width:8px}
-.bx-r:not(.w) i{display:none}.bx-r:not(.w) b{margin-right:8px}
 .bx-r.w{color:var(--navy)}.bx-r.w b{font-weight:900}
 .bx-p{font-size:11px;color:var(--t3);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hm-f1{grid-template-columns:minmax(0,1fr) minmax(0,1.22fr);align-items:start}
 .hm-rt{min-width:0}
 .hm-bnr{position:relative}
 .hm-bnr .rafter{position:relative;height:3px;background:var(--navy)}
-.hm-bnr .banners{zoom:.62;padding:0;gap:14px;max-width:none}
+.hm-bnr{max-width:1000px;margin:0 auto}
+.hm-bnr .banners{padding:0 0 10px;gap:16px;max-width:none}
+.hm-rt2{margin-top:0!important}
 .hm-bcap{display:none}
-.hm-rt2{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:28px;margin-top:26px}
+.hm-rt2{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:28px}
 .pbx{position:relative;overflow:hidden;border-radius:12px;flex:none}
 .pbx .lg{position:absolute;right:-18%;top:-14%;width:95%;opacity:.22}
 .pbx .hs{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:92%;width:auto}
@@ -2764,12 +2766,12 @@ function boxScores(){
   var G=(META.games||[]).slice();
   if(!G.length){teamGames();var seen={};Object.keys(TGI).forEach(function(k){var o=TGI[k];if(o.o.indexOf('@')!==0)return;var hm=o.o.split(' ').pop(),h2=TGI[hm+'|'+o.d];if(!h2||seen[k])return;seen[k]=1;G.push([o.d,o.t,o.pts,hm,h2.pts]);});G.sort(function(a,b){return anDate(a[0])-anDate(b[0]);});}
   if(!G.length)return '';
-  var ds=[];G.forEach(function(g){if(ds.indexOf(g[0])<0)ds.push(g[0]);});ds=ds.slice(-2).reverse();
+  var ds=[];G.forEach(function(g){if(ds.indexOf(g[0])<0)ds.push(g[0]);});var nw=new Date(),td=(nw.getMonth()+1)+'/'+nw.getDate();ds=ds.indexOf(td)>=0?[td]:ds.slice(-1);
   var h='<div class="hm-box">';
   ds.forEach(function(d){var dt=anDate(d);h+='<div class="bx-d"><span>'+MON[dt.getMonth()].toUpperCase()+'</span><b>'+dt.getDate()+'</b></div>';
     G.filter(function(g){return g[0]===d;}).forEach(function(g){
       var top=null;D.forEach(function(p){if(p.Team!==g[1]&&p.Team!==g[3])return;(GL[String(p.nba_id)]||[]).forEach(function(x){if(x[0]===d&&(!top||x[4]>top.x[4]))top={p:p,x:x};});});
-      var aw=g[2]>g[4],row=function(t,s,w){return '<div class="bx-r'+(w?' w':'')+'">'+img(logoT(t),'')+'<span>'+t+'</span><b>'+s+'</b>'+(w?'<i>◂</i>':'')+'</div>';};
+      var aw=g[2]>g[4],row=function(t,s,w){return '<div class="bx-r'+(w?' w':'')+'">'+img(logoT(t),'')+'<span>'+t+'</span><b>'+s+'</b></div>';};
       var href=top?'#s/n/'+top.p.nba_id+'/'+d.replace('/','-'):'#t/'+(aw?g[1]:g[3]);
       h+='<a class="bx" href="'+href+'"><div class="bx-f">FINAL</div>'+row(g[1],g[2],aw)+row(g[3],g[4],!aw)+(top?'<div class="bx-p">'+esc(lastName(top.p.Player))+' '+top.x[4]+' pts · '+top.x[5]+' reb · '+top.x[6]+' ast</div>':'')+'</a>';});});
   return h+'</div>';
@@ -2793,7 +2795,7 @@ function buildHome(){
   if(pS.length){var L=pS[0],vv=VERD[L.v],sm=window.innerWidth<700;
     h+='<a class="hm-la" href="'+stHref(L)+'"><div class="hm-lh">'+pbx(L.p,'lg')+'<div class="hm-lt"><div class="kick '+vv[2]+'">'+KICK[L.v]+' · '+esc(nick(L.p.Team))+'</div><h2>'+esc(L.w.h)+'</h2><p class="dek">'+esc(L.w.k)+'</p></div></div>'
       +'<div class="fg-a hm-lc">'+chFig(L.w.chartT+': '+lastName(L.p.Player),trLabB()+' vs '+trLab().toLowerCase()+' (shaded). Numbers on each bar.',chBars({v:L.w.c.v,g:gmOf(L.s.g),nr:L.s.sp.rec.length,col:L.w.col,unit:L.w.c.unit,yl:L.w.c.yl,big:1,W:sm?360:760,H:sm?220:250,note:L.w.note}),0)+'</div></a>';}
-  h+='</div><div class="hm-rt"><div class="hm-bnr"><div class="rafter"></div><div class="banners" id="banners"></div><div class="hm-bcap">Category leaders · per game</div></div><div class="hm-rt2"><div class="hm-top"><h3 class="hm-h3">Top stories</h3>';
+  h+='</div><div class="hm-rt"><div class="hm-rt2"><div class="hm-top"><h3 class="hm-h3">Top stories</h3>';
   var tops=pS.slice(1,4).concat(tS.slice(0,2)).slice(0,5);
   tops.forEach(function(o){var vv=VERD[o.v],mini,cap;
     if(o.p){var all=o.s.g.slice(-10);mini=hmMini(all.map(function(x){return x[4];}),Math.min(o.s.sp.rec.length,all.length),o.w.col.indexOf('rise')>=0?'#1f8a4c':o.w.col.indexOf('fall')>=0?'#c2341f':'#69718a');cap='PTS each game';}
@@ -2817,6 +2819,7 @@ function buildHome(){
   var upL=mv.slice().sort(function(a,b){return b.d-a.d;}).slice(0,4),dnL=mv.slice().sort(function(a,b){return a.d-b.d;}).slice(0,4);
   var row=function(o){var u=o.d>=0;return '<a class="hm-mv" href="#p'+o.p.nba_id+'"><div class="x-av" style="background:'+teamOf(o.p.Team).c+'">'+img(logoUrl(o.p),'lg')+img(headSm(o.p.nba_id),'hs')+'</div><span class="nm">'+esc(o.p.Player)+'<i>'+esc(o.p.Team)+' · '+f1(o.B.pra)+' → '+f1(o.R.pra)+'</i></span><b style="color:'+(u?'var(--rise)':'var(--fall)')+'">'+(u?'+':'−')+f1(Math.abs(o.d))+'</b></a>';};
   if(mv.length)h+='<section class="hm-sec hm-hc"><div><h3 class="hm-h3">Heating up</h3><div class="hm-prs">Pts + reb + ast, '+trLab().toLowerCase()+' vs before</div>'+upL.map(row).join('')+'</div><div><h3 class="hm-h3">Cooling off</h3><div class="hm-prs">Pts + reb + ast, '+trLab().toLowerCase()+' vs before</div>'+dnL.map(row).join('')+'</div></section>';
+  h+='<section class="hm-sec hm-bsec"><div class="x-sechd"><h2 class="x-h2">Category leaders</h2><div class="x-meta">Per game</div></div><div class="hm-bnr"><div class="rafter"></div><div class="banners" id="banners"></div></div></section>';
   TRW=save;
   el.innerHTML=h;buildBanners();trAnimate(el);
 }
