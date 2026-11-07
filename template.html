@@ -1049,20 +1049,31 @@ html.intro #hmMain{position:relative}
 html.intro #hmMain::after{content:'';position:absolute;inset:0;background:var(--surface);z-index:60;pointer-events:none;animation:fadeOut .4s ease 4.55s both}
 
 
-/* ---------- home v2: compact banners, photos ---------- */
-.hero{grid-template-columns:1fr;border-bottom:1px solid var(--rule2)}
-.hero-l{display:none}
-.stage{padding:0 0 16px;overflow:visible}
-.banners{max-width:1440px;margin:0 auto;padding:0 44px;gap:16px}
-.bn-ph,.stage-cap{display:none}
-.bn-wire{height:10px}
-.bn-body{padding-bottom:18px}
-.bn-s1{margin-top:6px;height:4px}
-.bn-cat{padding:7px 8px 0;flex-direction:row;justify-content:center;align-items:baseline;gap:6px}
-.bn-v{font-size:min(40px,24cqi);margin-top:2px}
-.bn-name{padding:5px 10px;border-top-width:3px}
-.bn-name img{width:20px;height:20px}
-.bn-nm{font-size:13px}
+/* ---------- home v3: box scores, banners above top stories ---------- */
+.hero{display:none}
+.hm-box{display:flex;align-items:stretch;border-bottom:1px solid var(--rule2);margin:0 -44px;padding:0 44px;overflow-x:auto;scrollbar-width:none;background:#fff}
+.hm-box::-webkit-scrollbar{display:none}
+.bx-d{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 14px;border-left:3px solid var(--navy);background:var(--tint);line-height:1}
+.bx-d span{font-weight:800;font-size:10px;letter-spacing:.14em;color:var(--t3)}
+.bx-d b{font-weight:900;font-size:26px;font-stretch:66%;color:var(--navy);margin-top:2px}
+.bx-d:first-child{border-left:0}
+.bx{flex:none;width:176px;padding:9px 14px 10px;border-left:1px solid var(--rule);color:var(--t3)}
+.bx:hover{background:var(--tint)}
+.bx-f{font-weight:800;font-size:9.5px;letter-spacing:.14em;color:var(--t4);margin-bottom:5px}
+.bx-r{display:flex;align-items:center;gap:8px;height:26px;font-weight:700;font-size:14px}
+.bx-r img{width:22px;height:22px;flex:none}
+.bx-r b{margin-left:auto;font-weight:800;font-size:19px;font-stretch:76%}
+.bx-r i{font-style:normal;font-size:10px;color:var(--navy);width:8px}
+.bx-r:not(.w) i{display:none}.bx-r:not(.w) b{margin-right:8px}
+.bx-r.w{color:var(--navy)}.bx-r.w b{font-weight:900}
+.bx-p{font-size:11px;color:var(--t3);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hm-f1{grid-template-columns:minmax(0,1fr) minmax(0,1.22fr);align-items:start}
+.hm-rt{min-width:0}
+.hm-bnr{position:relative}
+.hm-bnr .rafter{position:relative;height:3px;background:var(--navy)}
+.hm-bnr .banners{zoom:.62;padding:0;gap:14px;max-width:none}
+.hm-bcap{display:none}
+.hm-rt2{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:28px;margin-top:26px}
 .pbx{position:relative;overflow:hidden;border-radius:12px;flex:none}
 .pbx .lg{position:absolute;right:-18%;top:-14%;width:95%;opacity:.22}
 .pbx .hs{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:92%;width:auto}
@@ -1088,10 +1099,14 @@ html.intro #hmMain::after{content:'';position:absolute;inset:0;background:var(--
 .ac-s b{font-weight:900;font-size:26px;font-stretch:66%;color:var(--navy);letter-spacing:0;line-height:1}
 .ac-go{display:flex;flex-direction:column;align-items:flex-end;font-weight:700;font-size:14px;color:var(--blue);white-space:nowrap;padding-left:8px}
 .ac-go i{font-style:normal;font-weight:600;font-size:11px;color:var(--t4);margin-top:3px}
+@media (max-width:1250px){
+  .hm-f1{grid-template-columns:minmax(0,1fr)}
+}
 @media (max-width:900px){
-  .banners{padding:0 18px 4px}
-  .bn{width:118px}
-  .bn-v{font-size:34px}
+  .hm-box{margin:0 -18px;padding:0 18px}
+  .hm-bnr .banners{zoom:1;padding:0 0 12px}
+  .hm-bcap{display:none}
+  .hm-rt2{grid-template-columns:1fr;gap:26px}
   .pbx.lg{width:120px;height:120px}
   .hm-lh{gap:14px}
   .hm-la h2{font-size:28px}
@@ -1238,7 +1253,6 @@ html.intro #hmMain::after{content:'';position:absolute;inset:0;background:var(--
         <circle cx="187" cy="287" r="226" fill="none" stroke="rgba(11,21,48,.16)" stroke-width="2"/>
       </svg>
       <div class="rafter"></div>
-      <div class="banners" id="banners"></div>
       <div class="stage-cap">CATEGORY LEADERS · PER GAME</div>
     </div>
   </section>
@@ -2093,7 +2107,8 @@ function teamGames(){
       if(!o){o=TGI[k]={t:p.Team,d:x[0],dt:anDate(x[0]),o:x[1],wl:x[2],min:0,pts:0,fgm:0,fga:0,tpm:0,tpa:0,ftm:0,fta:0,oreb:0,tov:0,ast:0,pm:0};}
       o.min+=x[3];o.pts+=x[4];o.ast+=x[6];o.tov+=x[9];o.fgm+=x[10];o.fga+=x[11];o.tpm+=x[12];o.tpa+=x[13];o.ftm+=x[14];o.fta+=x[15];o.oreb+=x[16];o.pm+=x[19];
     });});
-  Object.keys(TGI).forEach(function(k){var o=TGI[k];o.opp=Math.round(o.pts-o.pm/5);o.poss=o.fga+0.44*o.fta-o.oreb+o.tov;(TGM[o.t]=TGM[o.t]||[]).push(o);});
+  var FS={};(META.games||[]).forEach(function(g){FS[g[1]+'|'+g[0]]=[g[2],g[4]];FS[g[3]+'|'+g[0]]=[g[4],g[2]];});
+  Object.keys(TGI).forEach(function(k){var o=TGI[k];o.opp=Math.round(o.pts-o.pm/5);if(FS[k]){o.pts=FS[k][0];o.opp=FS[k][1];}o.poss=o.fga+0.44*o.fta-o.oreb+o.tov;(TGM[o.t]=TGM[o.t]||[]).push(o);});
   Object.keys(TGM).forEach(function(t){TGM[t].sort(function(a,b){return a.dt-b.dt;});});
   return TGM;
 }
@@ -2744,26 +2759,41 @@ function hmTicker(ds){
     out.push('<a href="#t/'+o.t+'"><b>'+o.t+'</b> def. '+opp+(top?' · '+esc(lastName(top.p.Player))+' '+top.x[4]:'')+'</a>');});
   return out.length?'<div class="hm-tick"><div class="k">Latest games</div><div class="hm-tr">'+out.slice(0,10).join('')+'</div></div>':'';
 }
+var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function boxScores(){
+  var G=(META.games||[]).slice();
+  if(!G.length){teamGames();var seen={};Object.keys(TGI).forEach(function(k){var o=TGI[k];if(o.o.indexOf('@')!==0)return;var hm=o.o.split(' ').pop(),h2=TGI[hm+'|'+o.d];if(!h2||seen[k])return;seen[k]=1;G.push([o.d,o.t,o.pts,hm,h2.pts]);});G.sort(function(a,b){return anDate(a[0])-anDate(b[0]);});}
+  if(!G.length)return '';
+  var ds=[];G.forEach(function(g){if(ds.indexOf(g[0])<0)ds.push(g[0]);});ds=ds.slice(-2).reverse();
+  var h='<div class="hm-box">';
+  ds.forEach(function(d){var dt=anDate(d);h+='<div class="bx-d"><span>'+MON[dt.getMonth()].toUpperCase()+'</span><b>'+dt.getDate()+'</b></div>';
+    G.filter(function(g){return g[0]===d;}).forEach(function(g){
+      var top=null;D.forEach(function(p){if(p.Team!==g[1]&&p.Team!==g[3])return;(GL[String(p.nba_id)]||[]).forEach(function(x){if(x[0]===d&&(!top||x[4]>top.x[4]))top={p:p,x:x};});});
+      var aw=g[2]>g[4],row=function(t,s,w){return '<div class="bx-r'+(w?' w':'')+'">'+img(logoT(t),'')+'<span>'+t+'</span><b>'+s+'</b>'+(w?'<i>◂</i>':'')+'</div>';};
+      var href=top?'#s/n/'+top.p.nba_id+'/'+d.replace('/','-'):'#t/'+(aw?g[1]:g[3]);
+      h+='<a class="bx" href="'+href+'"><div class="bx-f">FINAL</div>'+row(g[1],g[2],aw)+row(g[3],g[4],!aw)+(top?'<div class="bx-p">'+esc(lastName(top.p.Player))+' '+top.x[4]+' pts · '+top.x[5]+' reb · '+top.x[6]+' ast</div>':'')+'</a>';});});
+  return h+'</div>';
+}
 function hmMini(vals,nr,col){var n=vals.length,mx=Math.max.apply(null,vals.map(Math.abs).concat([1])),neg=vals.some(function(v){return v<0;}),base=neg?34:58,s='<svg viewBox="0 0 120 64" class="mini">';
   vals.forEach(function(v,i){var hh=Math.abs(v)/mx*(neg?28:52),x=2+i*(116/n);s+='<rect x="'+x.toFixed(1)+'" y="'+(v>=0?base-hh:base).toFixed(1)+'" width="'+(116/n*.64).toFixed(1)+'" height="'+Math.max(1,hh).toFixed(1)+'" rx="1" fill="'+(i>=n-nr?(neg?(v>=0?'#1f8a4c':'#c2341f'):col):'#cfd5e1')+'"/>';});
   return s+(neg?'<line x1="0" x2="120" y1="34" y2="34" stroke="#0b1530" stroke-width="1"/>':'')+'</svg>';}
 function buildHome(){
   if(!D.length){$('vHome').innerHTML='<div class="page"><div class="empty"><b>No player data yet.</b></div></div>';return;}
   $('heroEb').textContent='DATA THROUGH '+String(META.updated).toUpperCase()+' · '+META.season+' SEASON';
-  buildBanners();buildRB();
+  buildRB();
   var el=$('hmMain');if(!el)return;
   if(!Object.keys(GL).length){el.innerHTML='';return;}
   var save=TRW;TRW='5';var pS=playerStories();if(!pS.length){TRW='season';pS=playerStories();}
   var tS=teamStories();
   pS=pS.map(function(s){return {p:s.p,v:s.v,s:s,w:pWrite(s)};});tS=tS.map(function(s){return {t:s.t,v:s.v,s:s,w:tWrite(s)};});
   var h='',bg=bestGames();
-  h+=hmTicker(bg.d);
+  h+=boxScores();
   /* lead + top stories + power rankings */
   h+='<section class="hm-sec hm-f1"><div class="hm-lead">';
   if(pS.length){var L=pS[0],vv=VERD[L.v],sm=window.innerWidth<700;
     h+='<a class="hm-la" href="'+stHref(L)+'"><div class="hm-lh">'+pbx(L.p,'lg')+'<div class="hm-lt"><div class="kick '+vv[2]+'">'+KICK[L.v]+' · '+esc(nick(L.p.Team))+'</div><h2>'+esc(L.w.h)+'</h2><p class="dek">'+esc(L.w.k)+'</p></div></div>'
       +'<div class="fg-a hm-lc">'+chFig(L.w.chartT+': '+lastName(L.p.Player),trLabB()+' vs '+trLab().toLowerCase()+' (shaded). Numbers on each bar.',chBars({v:L.w.c.v,g:gmOf(L.s.g),nr:L.s.sp.rec.length,col:L.w.col,unit:L.w.c.unit,yl:L.w.c.yl,big:1,W:sm?360:760,H:sm?220:250,note:L.w.note}),0)+'</div></a>';}
-  h+='</div><div class="hm-top"><h3 class="hm-h3">Top stories</h3>';
+  h+='</div><div class="hm-rt"><div class="hm-bnr"><div class="rafter"></div><div class="banners" id="banners"></div><div class="hm-bcap">Category leaders · per game</div></div><div class="hm-rt2"><div class="hm-top"><h3 class="hm-h3">Top stories</h3>';
   var tops=pS.slice(1,4).concat(tS.slice(0,2)).slice(0,5);
   tops.forEach(function(o){var vv=VERD[o.v],mini,cap;
     if(o.p){var all=o.s.g.slice(-10);mini=hmMini(all.map(function(x){return x[4];}),Math.min(o.s.sp.rec.length,all.length),o.w.col.indexOf('rise')>=0?'#1f8a4c':o.w.col.indexOf('fall')>=0?'#c2341f':'#69718a');cap='PTS each game';}
@@ -2774,7 +2804,7 @@ function buildHome(){
   var A=allTeamAgg(),pr=Object.keys(A).filter(function(t){return A[t];}).sort(function(a,b){return A[b].net-A[a].net;});
   h+='<div class="hm-pr"><h3 class="hm-h3">Power rankings</h3><div class="hm-prs">By net rating, points per 100 possessions</div><ol class="hm-pl">'+pr.map(function(t,i){var a=A[t];
     return '<li'+(i>=10?' class="more"':'')+'><a href="#t/'+t+'"><span class="rk">'+(i+1)+'</span>'+img(logoT(t),'')+'<span class="nm">'+esc(nick(t))+'</span><span class="rc">'+a.w+'-'+a.l+'</span><b style="color:'+(a.net>=0?'var(--rise)':'var(--fall)')+'">'+(a.net>0?'+':a.net<0?'−':'')+f1(Math.abs(a.net))+'</b></a></li>';}).join('')
-    +'</ol><button type="button" class="hm-prb" data-prall>Show all 30 ▾</button></div></section>';
+    +'</ol><button type="button" class="hm-prb" data-prall>Show all 30 ▾</button></div></div></div></section>';
   /* best recent games */
   if(bg.g.length){h+='<section class="hm-sec"><div class="x-sechd"><h2 class="x-h2">Best recent games</h2><div class="x-meta">'+bg.d.join(' & ')+'</div></div><div class="hm-bn">'+bg.g.map(function(o){var p=o.p,x=o.x,tm=teamOf(p.Team),td=[x[4],x[5],x[6]].filter(function(v){return v>=10;}).length>=3,g=GL[String(p.nba_id)],hi=g.length>=3&&x[4]>=Math.max.apply(null,g.map(function(y){return y[4];}));
     return '<a class="hm-bc" href="#s/n/'+p.nba_id+'/'+x[0].replace('/','-')+'"><div class="hd" style="background:'+tm.c+'">'+img(logoUrl(p),'lg')+img(headSm(p.nba_id),'hs')+'<div class="big">'+(td?x[4]+'·'+x[5]+'·'+x[6]:x[4])+'<small>'+(td?'TRIPLE-DOUBLE':'POINTS')+'</small></div></div>'
@@ -2788,7 +2818,7 @@ function buildHome(){
   var row=function(o){var u=o.d>=0;return '<a class="hm-mv" href="#p'+o.p.nba_id+'"><div class="x-av" style="background:'+teamOf(o.p.Team).c+'">'+img(logoUrl(o.p),'lg')+img(headSm(o.p.nba_id),'hs')+'</div><span class="nm">'+esc(o.p.Player)+'<i>'+esc(o.p.Team)+' · '+f1(o.B.pra)+' → '+f1(o.R.pra)+'</i></span><b style="color:'+(u?'var(--rise)':'var(--fall)')+'">'+(u?'+':'−')+f1(Math.abs(o.d))+'</b></a>';};
   if(mv.length)h+='<section class="hm-sec hm-hc"><div><h3 class="hm-h3">Heating up</h3><div class="hm-prs">Pts + reb + ast, '+trLab().toLowerCase()+' vs before</div>'+upL.map(row).join('')+'</div><div><h3 class="hm-h3">Cooling off</h3><div class="hm-prs">Pts + reb + ast, '+trLab().toLowerCase()+' vs before</div>'+dnL.map(row).join('')+'</div></section>';
   TRW=save;
-  el.innerHTML=h;trAnimate(el);
+  el.innerHTML=h;buildBanners();trAnimate(el);
 }
 document.addEventListener('click',function(e){var b=e.target.closest('[data-prall]');if(!b)return;var l=b.parentNode.querySelector('.hm-pl');var o=l.classList.toggle('all');b.textContent=o?'Show top 10 ▴':'Show all 30 ▾';});
 

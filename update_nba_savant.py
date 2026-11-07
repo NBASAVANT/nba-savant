@@ -264,6 +264,38 @@ def fetch_clutch(season):
     return with_retries(call, 'clutch stats', attempts=3, base_wait=10, timeout=60)
 
 
+def fetch_team_logs(season):
+    """Every team's game-by-game result (exact final scores), in one request."""
+    from nba_api.stats.endpoints import leaguegamelog
+
+    def call(t):
+        return leaguegamelog.LeagueGameLog(
+            season=season, season_type_all_star='Regular Season',
+            player_or_team_abbreviation='T', timeout=t).get_data_frames()[0]
+
+    return with_retries(call, 'team game logs', attempts=3, base_wait=10, timeout=60)
+
+
+def build_games(rows):
+    """Final scores as [date 'M/D', away, away pts, home, home pts], oldest first."""
+    games = {}
+    for r in rows:
+        if r.get('WL') not in ('W', 'L'):   # still being played
+            continue
+        gid = str(r.get('GAME_ID'))
+        d = str(r.get('GAME_DATE'))[:10]
+        try:
+            md = '%d/%d' % (int(d[5:7]), int(d[8:10]))
+        except ValueError:
+            continue
+        g = games.setdefault(gid, {'d': md, 'key': d})
+        side = 'home' if ' vs. ' in str(r.get('MATCHUP', '')) else 'away'
+        g[side] = (r.get('TEAM_ABBREVIATION'), num(r.get('PTS'), 0))
+    out = [[g['d'], g['away'][0], g['away'][1], g['home'][0], g['home'][1]]
+           for g in sorted(games.values(), key=lambda x: x['key']) if 'home' in g and 'away' in g]
+    return out
+
+
 def apply_clutch(players, df):
     """Attach clutch totals (CL_*) to each player. Returns how many players got them."""
     by_id = {p['nba_id']: p for p in players}
@@ -945,7 +977,7 @@ def write_atomic(path, text):
     os.replace(tmp, path)
 
 
-def restyle(rescore=False, clutch_season=None):
+def restyle(rescore=False, clutch_season=None, scores_season=None):
     """Rebuild index.html from its own embedded data with the latest template.html.
     rescore=True also recomputes the Break Out / Cool Off picks from that data."""
     path = os.path.join(HERE, 'index.html')
@@ -967,6 +999,13 @@ def restyle(rescore=False, clutch_season=None):
             print('Clutch players: %d' % apply_clutch(players, fetch_clutch(clutch_season)))
         except Exception as e:  # noqa: BLE001
             print('Could not get clutch stats (%s). Your site was NOT changed.' % e)
+            return 1
+    if scores_season:
+        try:
+            meta['games'] = build_games(fetch_team_logs(scores_season).to_dict('records'))
+            print('Final scores: %d games' % len(meta['games']))
+        except Exception as e:  # noqa: BLE001
+            print('Could not get final scores (%s). Your site was NOT changed.' % e)
             return 1
     if rescore:
         an = build_analytics(players, shots, meta.get('lg'), meta.get('gamesSoFar', 0), logs)
@@ -1009,6 +1048,8 @@ def main(argv):
         return datatest(season)
     if any(a.lower() == 'clutch' for a in argv):
         return restyle(clutch_season=season)
+    if any(a.lower() == 'scores' for a in argv):
+        return restyle(scores_season=season)
     for a in argv:
         if re.match(r'^\d{4}-\d{2}$', a):
             season = a
@@ -1146,6 +1187,10 @@ def main(argv):
         'an': analytics,
         'anHist': history,
     }
+    try:
+        meta['games'] = build_games(fetch_team_logs(season).to_dict('records'))
+    except Exception as e:  # noqa: BLE001
+        print('       (Skipped final scores: %s)' % e)
 
     with open(os.path.join(HERE, 'template.html'), 'r', encoding='utf-8') as f:
         template = f.read()
