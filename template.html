@@ -835,6 +835,51 @@ b.v-real,b.v-bad,b.v-opp,b.v-luck,b.v-norm{border:none}
 .tc-v b{font-weight:800}
 @media (prefers-reduced-motion: reduce){.tc,.tch .gb,.tch .cln,.tch .cdm,.tch .cdl{transition:none}}
 
+.tc{color:inherit;text-decoration:none}
+.tc-more{margin-top:auto;font-weight:800;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue)}
+.tr2 section{margin-top:40px}
+.tr2 .x-sechd{margin-bottom:18px}
+.tr-key{margin-top:0;align-self:flex-end;padding-bottom:6px}
+.tr-hov{color:var(--t4)}
+.tch .ci{cursor:pointer}
+.tch .ci:hover .chit{fill:rgba(11,21,48,.05)}
+.tch .ci:hover .cl{fill:var(--navy);font-weight:700}
+.ctip{position:fixed;left:0;top:0;z-index:300;pointer-events:none;background:var(--navy);color:#fff;font-weight:700;font-size:13px;line-height:1;padding:9px 12px;border-radius:6px;white-space:nowrap;opacity:0;transition:opacity .12s;box-shadow:0 6px 16px rgba(11,21,48,.25)}
+.ctip.on{opacity:1}
+.st-art>.link{display:inline-block;margin-bottom:18px}
+.st-hd{display:flex;gap:24px;align-items:center;padding-bottom:22px;border-bottom:3px solid var(--navy)}
+.tc-ph.st-ph{width:128px;height:128px;border-radius:16px}
+.st-h{font-weight:900;font-size:46px;line-height:1.02;font-stretch:72%;margin:10px 0 14px;color:var(--navy)}
+.st-chart{margin-top:24px;padding:26px 26px 18px;cursor:default}
+.st-chart:hover{box-shadow:0 1px 0 rgba(11,21,48,.04),0 10px 24px -14px rgba(11,21,48,.28)}
+.st-cols{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:34px}
+.st-sh{padding-bottom:8px;border-bottom:3px solid var(--navy);margin:0 0 14px}
+h2.st-sh.gg{margin-top:38px}
+.st-why{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:14px}
+.st-why li{font-size:16px;line-height:1.55;padding-left:18px;position:relative}
+.st-why li:before{content:'';position:absolute;left:0;top:.62em;width:7px;height:7px;background:var(--navy);border-radius:50%}
+.st-why li.st-how{color:var(--t3);font-size:14px}
+.st-btn{margin-top:22px;display:inline-flex;padding:0 22px}
+.st-num,.st-gl{width:100%;border-collapse:collapse;font-size:14px}
+.st-num th,.st-num td,.st-gl th,.st-gl td{padding:9px 8px;border-bottom:1px solid var(--rule);text-align:right;white-space:nowrap}
+.st-num th:first-child,.st-num td:first-child{text-align:left}
+.st-num th,.st-gl th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
+.st-wrap{overflow-x:auto}
+.st-gl{min-width:560px}
+.st-gl th:nth-child(-n+3),.st-gl td:nth-child(-n+3){text-align:left}
+.st-gl tr.rec td{background:var(--tint)}
+.st-gl .w{color:var(--rise);font-weight:800}.st-gl .l{color:var(--fall);font-weight:800}
+.st-win{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:34px;font-weight:800;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
+@media (max-width:900px){
+  .st-cols{grid-template-columns:1fr;gap:28px}
+  .st-hd{gap:14px;align-items:flex-start}
+  .tc-ph.st-ph{width:76px;height:76px;border-radius:12px}
+  .st-h{font-size:30px}
+  .st-chart{padding:16px 12px 10px}
+  .tr-key{gap:10px 14px;font-size:10px}
+  .tr-hov{display:none}
+}
+
 /* ---------- teams menu ---------- */
 .nav-tm{position:relative;display:flex;align-items:center}
 .nav-tmb{background:none;border:0;font:inherit;font-weight:600;font-size:14px;color:var(--t3);cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;transition:color .15s}
@@ -983,6 +1028,7 @@ b.v-real,b.v-bad,b.v-opp,b.v-luck,b.v-norm{border:none}
 <main id="vPlayers" class="page" hidden></main>
 <main id="vPlayer" class="page" hidden></main>
 <main id="vTeam" class="page" hidden></main>
+<main id="vStory" class="page" hidden></main>
 
 <footer class="ftr"><div>NBA SAVANT · PERCENTILES AMONG QUALIFIED PLAYERS</div><div id="ftrDate"></div></footer>
 </div>
@@ -1885,9 +1931,9 @@ function absentMates(p,rec){
 function listNames(a){a=a.map(function(x){return lastName(x.q.Player);});return a.length<3?a.join(' and '):a.slice(0,-1).join(', ')+' and '+a[a.length-1];}
 
 function lgTS(){var p=0,a=0,G=teamGames();Object.keys(G).forEach(function(t){G[t].forEach(function(o){p+=o.pts;a+=o.fga+0.44*o.fta;});});return a?p/(2*a)*100:57;}
-function playerStories(){
+function playerStories(only){
   var LG=lg3(),LTS=lgTS(),out=[];
-  D.forEach(function(p){
+  (only?[only]:D).forEach(function(p){
     var g=GL[String(p.nba_id)];if(!g)return;var sp=trSplit(g);if(!sp||sp.pri.length<3)return;
     var R=pAgg(p,sp.rec),B=pAgg(p,sp.pri);if(R.min<18)return;
     var dPRA=R.pra-B.pra,dTS=R.ts-B.ts,dMIN=R.min-B.min,dPTS=R.pts-B.pts;
@@ -1913,152 +1959,166 @@ function playerStories(){
     }
     out.push({p:p,g:g,sp:sp,R:R,B:B,v:v,drv:drv,mates:mates,base:base,hasTrack:hasTrack,LG:LG,LTS:LTS,up:up,s:trig*Math.sqrt(R.min/30)*Math.sqrt(Math.max(R.pra,B.pra)/20)});
   });
-  return out.sort(function(a,b){return b.s-a.s;}).slice(0,4);
+  return only?out:out.sort(function(a,b){return b.s-a.s;}).slice(0,4);
 }
 
 var VERD={REAL:['REAL','v-real'],SLUMP:['SLUMP','v-bad'],OPPORTUNITY:['OPPORTUNITY','v-opp'],LUCK:['PARTLY LUCK','v-luck'],COLD:['PARTLY LUCK','v-luck'],NORMAL:['BACK TO NORMAL','v-norm']};
+var SHORTN={'Victor Wembanyama':'Wemby','Giannis Antetokounmpo':'Giannis','Shai Gilgeous-Alexander':'SGA','LeBron James':'LeBron'};
+function sn(p){return SHORTN[p.Player]||lastName(p.Player);}
+function ps(n){return n+'’s';}
+function gmOf(g){return g.map(function(y){return {o:y[1],d:y[0],ab:y[1].split(' ').pop()};});}
 function pWrite(s){
-  var p=s.p,R=s.R,B=s.B,L=lastName(p.Player),wl=trLab().toLowerCase(),h,t,why,chart;
-  var pts=function(x){return x.g.map(function(y){return y[4];});};
-  var col=s.up?'var(--rise)':'var(--fall)';
-  var lb=function(){return s.g.map(function(y){var o=y[1].split(' ');return o[o.length-1];});};
-  var nr=s.sp.rec.length,all=s.g;
+  var p=s.p,R=s.R,B=s.B,N=sn(p),h,t,why,chart,ch,all=s.g,gm=gmOf(all),nr=s.sp.rec.length;
+  var col=s.up?'var(--rise)':'var(--fall)',r0=function(v){return Math.round(v);};
+  var col_=function(i){return all.map(function(y){return y[i];});};
   if(s.v==='REAL'){
-    if(s.drv==='involved'){h=poss_(L)+' '+f1(R.pts)+' a game is real: he’s more involved and more efficient';
-      t='Points each game. Usage '+f1(B.usg)+'% → '+f1(R.usg)+'%, true shooting '+f1(B.ts)+'% → '+f1(R.ts)+'%. Usually one goes up and the other comes down.';
-      why='A bigger role and better efficiency at the same time usually lasts.';chart=cBars(all.map(function(y){return y[4];}),lb(),nr,col,'PTS');}
-    else if(s.drv==='rim'){h=poss_(L)+' jump is real: he’s attacking the rim instead of settling for threes';
-      t='Free throws each game. Threes '+f1(B.tpa)+' → '+f1(R.tpa)+' a game, free throws '+f1(B.fta)+' → '+f1(R.fta)+', true shooting '+f1(B.ts)+'% → '+f1(R.ts)+'%.';
-      why='Shot choices last longer than hot streaks.';chart=cBars(all.map(function(y){return y[15];}),lb(),nr,col,'FTA');}
-    else if(s.drv==='eff'){h=poss_(L)+' efficiency jump is real: '+f1(R.ts)+'% true shooting, and it isn’t just threes';
-      t='Points '+f1(B.pts)+' → '+f1(R.pts)+', true shooting '+f1(B.ts)+'% → '+f1(R.ts)+'%'+(R.p3!==null?', with '+f1(R.p3)+'% from three':'')+'.';
+    if(s.drv==='involved'){h=ps(N)+' '+r0(R.pts)+' a game is because he’s more involved and more efficient';
+      t='Usage '+f1(B.usg)+'% → '+f1(R.usg)+'%, true shooting '+f1(B.ts)+'% → '+f1(R.ts)+'%. Usually one goes up and the other comes down.';
+      why='A bigger role and better efficiency at the same time usually lasts.';ch=['bars',col_(4),'points'];}
+    else if(s.drv==='rim'){h=ps(N)+' '+r0(R.pts)+' a game is because he’s attacking the rim, not settling for threes';
+      t='Threes '+f1(B.tpa)+' → '+f1(R.tpa)+' a game, free throws '+f1(B.fta)+' → '+f1(R.fta)+', true shooting '+f1(B.ts)+'% → '+f1(R.ts)+'%.';
+      why='Shot choices last longer than hot streaks.';ch=['bars',col_(15),'free throw attempts'];}
+    else if(s.drv==='eff'){h=ps(N)+' true shooting is up a lot and it’s not a fluke';
+      t='True shooting '+f1(B.ts)+'% → '+f1(R.ts)+'%, points '+f1(B.pts)+' → '+f1(R.pts)+(R.p3!==null?', and only '+f1(R.p3)+'% from three, so it isn’t hot three-point shooting':'')+'.';
       why='Not driven by three-point luck, so it’s more likely to hold.';
-      chart=cDumb([{l:'TS%',b:B.ts,a:R.ts,good:1},{l:'PTS',b:B.pts,a:R.pts,good:1},{l:'TOV',b:B.tov,a:R.tov,good:0}]);}
-    else if(s.drv==='tov'){h=L+' is quietly better, and it’s real: turnovers down from '+f1(B.tov)+' to '+f1(R.tov);
-      t='Points '+f1(B.pts)+' → '+f1(R.pts)+', true shooting '+f1(B.ts)+'% → '+f1(R.ts)+'%, turnovers '+f1(B.tov)+' → '+f1(R.tov)+' a game.';
+      ch=['dumb',[{l:'TS%',b:B.ts,a:R.ts,good:1},{l:'PTS',b:B.pts,a:R.pts,good:1},{l:'TOV',b:B.tov,a:R.tov,good:0}]];}
+    else if(s.drv==='tov'){h=N+' cut his turnovers from '+f1(B.tov)+' to '+f1(R.tov)+' and it’s not a fluke';
+      t='Turnovers '+f1(B.tov)+' → '+f1(R.tov)+' a game, true shooting '+f1(B.ts)+'% → '+f1(R.ts)+'%, points '+f1(B.pts)+' → '+f1(R.pts)+'.';
       why='Cleaner decisions tend to stick.';
-      chart=cDumb([{l:'TS%',b:B.ts,a:R.ts,good:1},{l:'PTS',b:B.pts,a:R.pts,good:1},{l:'TOV',b:B.tov,a:R.tov,good:0}]);}
-    else if(s.drv==='pass'){h=poss_(L)+' growth is real: he’s creating far more for teammates';
+      ch=['dumb',[{l:'TOV',b:B.tov,a:R.tov,good:0},{l:'TS%',b:B.ts,a:R.ts,good:1},{l:'PTS',b:B.pts,a:R.pts,good:1}]];}
+    else if(s.drv==='pass'){h=ps(N)+' assists are up because he’s creating more for teammates';
       t='Assist rate '+f1(B.astp)+'% → '+f1(R.astp)+'%, assists '+f1(B.ast)+' → '+f1(R.ast)+' a game.';
-      why='Playmaking changes tend to stick.';
-      chart=cDumb([{l:'AST%',b:B.astp,a:R.astp,good:1},{l:'AST',b:B.ast,a:R.ast,good:1},{l:'TOV',b:B.tov,a:R.tov,good:0}]);}
-    else if(s.drv==='min'){h=poss_(L)+' bigger role is real: he’s earned '+f1(R.min-B.min)+' more minutes a game';
-      t='Minutes each game. '+f1(B.min)+' → '+f1(R.min)+' minutes, points '+f1(B.pts)+' → '+f1(R.pts)+'.';
-      why='The coach is trusting him with more minutes.';chart=cLine(all.map(function(y){return y[3];}),lb(),nr,col,'MIN','');}
-    else{h=poss_(L)+' scoring jump is real: more shots without losing efficiency';
-      t='Points each game. Shots '+f1(B.fga)+' → '+f1(R.fga)+' a game, true shooting '+f1(B.ts)+'% → '+f1(R.ts)+'%.';
-      why='More shots at steady efficiency.';chart=cBars(all.map(function(y){return y[4];}),lb(),nr,col,'PTS');}
+      why='Playmaking changes tend to stick.';ch=['bars',col_(6),'assists'];}
+    else if(s.drv==='min'){h=ps(N)+' minutes are up '+r0(R.min-B.min)+' a game because he’s earning them';
+      t='Minutes '+f1(B.min)+' → '+f1(R.min)+', points '+f1(B.pts)+' → '+f1(R.pts)+', true shooting '+f1(R.ts)+'%. No rotation teammates are missing.';
+      why='The coach is trusting him with more minutes.';ch=['line',col_(3),'minutes',''];}
+    else{h=ps(N)+' '+r0(R.pts)+' a game is because he’s shooting more without losing efficiency';
+      t='Shots '+f1(B.fga)+' → '+f1(R.fga)+' a game, true shooting '+f1(B.ts)+'% → '+f1(R.ts)+'%.';
+      why='More shots at steady efficiency.';ch=['bars',col_(4),'points'];}
   }else if(s.v==='OPPORTUNITY'){
-    h=poss_(L)+' bigger role is opportunity: '+listNames(s.mates.slice(0,3))+(s.mates.length>1?' are':' is')+' out';
-    t='Minutes each game. '+s.mates.slice(0,3).map(function(m){return lastName(m.q.Player)+' hasn’t played since '+m.last;}).join(', ')+'. Points '+f1(B.pts)+' → '+f1(R.pts)+'.';
+    h=ps(N)+' minutes are up because '+listNames(s.mates.slice(0,3))+(s.mates.length>1?' are':' is')+' out';
+    t=s.mates.slice(0,3).map(function(m){return lastName(m.q.Player)+' hasn’t played since '+m.last;}).join('. ')+'. Minutes '+f1(B.min)+' → '+f1(R.min)+', points '+f1(B.pts)+' → '+f1(R.pts)+'.';
     why='A pickup while they’re out; it fades when they return.';
-    chart=cLine(all.map(function(y){return y[3];}),lb(),nr,'var(--rise)','MIN',s.mates.length+(s.mates.length>1?' ROTATION PLAYERS OUT':' ROTATION PLAYER OUT'));
-  }else if(s.v==='LUCK'||s.v==='COLD'){
-    var hot=s.v==='LUCK';
-    h=hot?poss_(L)+' hot stretch is partly luck: '+f1(R.p3)+'% from three won’t last':poss_(L)+' cold stretch is partly bad luck: '+f1(R.p3)+'% from three should bounce back';
+    ch=['line',col_(3),'minutes',s.mates.length+(s.mates.length>1?' ROTATION PLAYERS OUT':' ROTATION PLAYER OUT')];
+  }else if(s.v==='LUCK'){
+    h=ps(N)+' hot stretch is running on '+r0(R.p3)+'% from three, and that won’t last';
     t=(s.hasTrack?'He shot '+f1(s.base)+'% on '+p.ls3a+' threes last season.':'League average is '+f1(s.base)+'% from three.')+' Threes take about 300 attempts to trust.';
-    why=hot?'Some of this cools off as his threes come back to normal.':'Expect a bounce back as his threes return to normal.';
-    chart=cDumb([{l:'3P%',b:B.p3===null?s.base:B.p3,a:R.p3,good:1,ref:s.base,refl:s.hasTrack?'LAST SEASON':'LEAGUE'},{l:'PTS',b:B.pts,a:R.pts,good:1},{l:'TS%',b:B.ts,a:R.ts,good:1}]);
+    why='Some of this cools off as his threes come back to normal.';
+    ch=['dumb',[{l:'3P%',b:B.p3===null?s.base:B.p3,a:R.p3,good:1,ref:s.base,refl:s.hasTrack?'LAST SEASON':'LEAGUE'},{l:'PTS',b:B.pts,a:R.pts,good:1},{l:'TS%',b:B.ts,a:R.ts,good:1}]];
+  }else if(s.v==='COLD'){
+    h=ps(N)+' cold stretch is mostly bad luck from three, so expect a bounce back';
+    t='Making '+f1(R.p3)+'% of his threes. '+(s.hasTrack?'He shot '+f1(s.base)+'% on '+p.ls3a+' threes last season.':'League average is '+f1(s.base)+'%.')+' Threes take about 300 attempts to trust.';
+    why='Expect a bounce back as his threes return to normal.';
+    ch=['dumb',[{l:'3P%',b:B.p3===null?s.base:B.p3,a:R.p3,good:1,ref:s.base,refl:s.hasTrack?'LAST SEASON':'LEAGUE'},{l:'PTS',b:B.pts,a:R.pts,good:1},{l:'TS%',b:B.ts,a:R.ts,good:1}]];
   }else if(s.v==='NORMAL'&&s.drv==='ts'){
-    h=L+' isn’t slumping, he’s back to normal: '+f1(R.ts)+'% true shooting is still above average';
-    t='True shooting '+f1(B.ts)+'% → '+f1(R.ts)+'%, still above the '+f1(s.LTS)+'% league average. Points '+f1(B.pts)+' → '+f1(R.pts)+'.';
+    h=ps(N)+' slump is just his shooting cooling off an extremely hot start';
+    t='True shooting '+f1(B.ts)+'% → '+f1(R.ts)+'%, still above the '+f1(s.LTS)+'% league average.';
     why='The early shooting was unusually hot; this is closer to his normal level.';
-    chart=cDumb([{l:'TS%',b:B.ts,a:R.ts,good:1,ref:s.LTS,refl:'LEAGUE'},{l:'PTS',b:B.pts,a:R.pts,good:1},{l:'USG%',b:B.usg,a:R.usg,good:1}]);
+    ch=['dumb',[{l:'TS%',b:B.ts,a:R.ts,good:1,ref:s.LTS,refl:'LEAGUE'},{l:'PTS',b:B.pts,a:R.pts,good:1},{l:'USG%',b:B.usg,a:R.usg,good:1}]];
   }else if(s.v==='NORMAL'){
-    h=L+' isn’t slumping, he’s back to normal: his hot start was the outlier';
-    t='Points each game. '+f1(B.p3)+'% from three early, '+f1(R.p3)+'% now, right around his '+f1(s.base)+'% '+(s.hasTrack?'track record':'league norm')+'.';
-    why='This is closer to his normal level.';chart=cBars(all.map(function(y){return y[4];}),lb(),nr,'var(--t3)','PTS');
+    h=ps(N)+' slump is cooling off his extremely hot start';
+    t=f1(B.p3)+'% from three early, '+f1(R.p3)+'% now, right around his '+f1(s.base)+'% '+(s.hasTrack?'track record':'league norm')+'.';
+    why='This is closer to his normal level.';ch=['bars',col_(4),'points','var(--t3)'];
   }else{
-    if(s.drv==='eff'){h=poss_(L)+' slump is real: his true shooting fell from '+f1(B.ts)+'% to '+f1(R.ts)+'%';
-      chart=cDumb([{l:'TS%',b:B.ts,a:R.ts,good:1},{l:'PTS',b:B.pts,a:R.pts,good:1},{l:'TOV',b:B.tov,a:R.tov,good:0}]);}
-    else if(s.drv==='tov'){h=poss_(L)+' slump is real: turnovers up from '+f1(B.tov)+' to '+f1(R.tov);
-      chart=cDumb([{l:'TOV',b:B.tov,a:R.tov,good:0},{l:'PTS',b:B.pts,a:R.pts,good:1},{l:'TS%',b:B.ts,a:R.ts,good:1}]);}
-    else if(s.drv==='touch'){h=poss_(L)+' slump is real: he’s getting fewer touches';
-      chart=cBars(all.map(function(y){return y[4];}),lb(),nr,'var(--fall)','PTS');}
-    else{h=poss_(L)+' slump is real: '+f1(R.pra)+' points, rebounds and assists, down from '+f1(B.pra);
-      chart=cBars(all.map(function(y){return y[4]+y[5]+y[6];}),lb(),nr,'var(--fall)','PRA');}
+    if(s.drv==='eff'){h=ps(N)+' true shooting is down a lot and it’s not bad luck';
+      ch=['dumb',[{l:'TS%',b:B.ts,a:R.ts,good:1},{l:'PTS',b:B.pts,a:R.pts,good:1},{l:'TOV',b:B.tov,a:R.tov,good:0}]];}
+    else if(s.drv==='tov'){h=ps(N)+' turnovers are up and it’s dragging his game down';
+      ch=['dumb',[{l:'TOV',b:B.tov,a:R.tov,good:0},{l:'PTS',b:B.pts,a:R.pts,good:1},{l:'TS%',b:B.ts,a:R.ts,good:1}]];}
+    else if(s.drv==='touch'){h=ps(N)+' numbers are down because he’s getting fewer touches';ch=['bars',col_(4),'points'];}
+    else{h=ps(N)+' numbers are down and it’s not bad luck';
+      ch=['bars',all.map(function(y){return y[4]+y[5]+y[6];}),'pts+reb+ast'];}
     t='Points '+f1(B.pts)+' → '+f1(R.pts)+', true shooting '+f1(B.ts)+'% → '+f1(R.ts)+'%, usage '+f1(B.usg)+'% → '+f1(R.usg)+'%.';
     why='Not explained by cold threes or fewer minutes.';
   }
-  return {h:h,t:t,why:why,chart:chart};
+  var mk=function(){
+    if(ch[0]==='bars')return cBars(ch[1],gm,nr,ch[3]||col,ch[2]);
+    if(ch[0]==='line')return cLine(ch[1],gm,nr,s.v==='OPPORTUNITY'?'var(--rise)':col,ch[2],ch[3]);
+    return cDumb(ch[1]);
+  };
+  return {h:h,t:t,why:why,chart:mk(),mk:mk};
 }
 
-function teamStories(){
+function teamStories(only){
   var G=teamGames(),out=[];
-  Object.keys(G).forEach(function(t){
-    var sp=trSplit(G[t]);if(!sp||sp.pri.length<3)return;var R=tAgg(sp.rec),B=tAgg(sp.pri);if(!R||!B)return;
+  (only?[only]:Object.keys(G)).forEach(function(t){
+    var sp=trSplit(G[t]||[]);if(!sp||sp.pri.length<3)return;var R=tAgg(sp.rec),B=tAgg(sp.pri);if(!R||!B)return;
     var dNet=R.net-B.net;if(Math.abs(dNet)<8)return;
     var dO=R.ortg-B.ortg,dD=B.drtg-R.drtg,up=dNet>0,off=Math.abs(dO)>=Math.abs(dD);
     var shoot=(R.p3-B.p3)/100*R.tpa*3/R.pace*100,v,kind;
     if(off&&shoot*dO>0&&Math.abs(shoot)>=0.4*Math.abs(dO)){v=up?'LUCK':'COLD';kind='shoot';}
     else{v=up?'REAL':'SLUMP';kind=off?'off':'def';}
-    out.push({t:t,g:G[t],sp:sp,R:R,B:B,dNet:dNet,dO:dO,dD:dD,v:v,kind:kind,up:up,s:Math.abs(dNet)});
+    out.push({t:t,g:G[t],sp:sp,R:R,B:B,dNet:dNet,dO:dO,dD:dD,shoot:shoot,v:v,kind:kind,up:up,s:Math.abs(dNet)});
   });
-  return out.sort(function(a,b){return b.s-a.s;}).slice(0,4);
+  return only?out:out.sort(function(a,b){return b.s-a.s;}).slice(0,4);
 }
 function tWrite(s){
   var N=nick(s.t),R=s.R,B=s.B,h,why,wl=trLab().toLowerCase();
-  if(s.v==='REAL'&&s.kind==='def'){h='The '+poss_(N)+' surge is real: the defense is allowing '+f1(s.dD)+' fewer points per 100';why='Defense holds up better than hot shooting.';}
+  if(s.v==='REAL'&&s.kind==='def'){h='The '+poss_(N)+' surge is because their defense got a lot better';why='Defense holds up better than hot shooting.';}
   else if(s.v==='REAL'){
-    var c=[{k:'tov',v:(B.tov-R.tov)/2,p:'fewer turnovers ('+f1(B.tov)+' → '+f1(R.tov)+' per 100)'},{k:'ftr',v:(R.ftr-B.ftr)/5,p:'more trips to the line'},{k:'ast',v:(R.ast-B.ast)/5,p:'better ball movement ('+f1(R.ast)+'% of baskets assisted)'}].sort(function(a,b){return b.v-a.v;});
-    h='The '+poss_(N)+' surge is real: '+(c[0].v>0?c[0].p:'a better offense across the board');why='Driven by habits, not hot shooting.';}
-  else if(s.v==='LUCK'){h='The '+poss_(N)+' turnaround is partly luck: it’s mostly threes falling';why='If the threes cool, the winning slows.';}
-  else if(s.v==='COLD'){h='The '+poss_(N)+' slide is partly bad luck: their threes stopped falling';why='Expect the offense to bounce back.';}
-  else if(s.kind==='def'){h='The '+poss_(N)+' slide is real: the defense is allowing '+f1(-s.dD)+' more points per 100';why='Not just bad luck: they’re giving up too much.';}
-  else{h='The '+poss_(N)+' slide is real: the offense has stalled';why='Not just cold shooting.';}
-  var t='Point margin each game. '+R.w+'-'+R.l+' in the '+wl+' ('+B.w+'-'+B.l+' before). Offense '+f1(B.ortg)+' → '+f1(R.ortg)+', defense '+f1(B.drtg)+' → '+f1(R.drtg)+' per 100'+(s.kind==='shoot'?', 3P% '+f1(B.p3)+' → '+f1(R.p3):'')+'.';
-  var g=s.g.slice(-14),nr=Math.min(s.sp.rec.length,g.length);
-  return {h:h,t:t,why:why,chart:cMargin(g.map(function(o){return o.pts-o.opp;}),g.map(function(o){var a=o.o.split(' ');return a[a.length-1];}),nr)};
+    var c=[{v:(B.tov-R.tov)/2,p:'fewer turnovers'},{v:(R.ftr-B.ftr)/5,p:'more trips to the line'},{v:(R.ast-B.ast)/5,p:'better ball movement'}].sort(function(a,b){return b.v-a.v;});
+    h='The '+poss_(N)+' surge is because of '+(c[0].v>0?c[0].p:'a better offense across the board');why='Driven by habits, not hot shooting.';}
+  else if(s.v==='LUCK'){h='The '+poss_(N)+' turnaround is mostly threes falling, and that won’t last';why='If the threes cool, the winning slows.';}
+  else if(s.v==='COLD'){h='The '+poss_(N)+' slide is mostly cold shooting, so expect a bounce back';why='Expect the offense to bounce back.';}
+  else if(s.kind==='def'){h='The '+poss_(N)+' slide is because their defense fell apart';why='Not just bad luck: they’re giving up too much.';}
+  else{h='The '+poss_(N)+' slide is because their offense stalled';why='Not just cold shooting.';}
+  var t=R.w+'-'+R.l+' in the '+wl+' ('+B.w+'-'+B.l+' before). Offense '+f1(B.ortg)+' → '+f1(R.ortg)+', defense '+f1(B.drtg)+' → '+f1(R.drtg)+' points per 100 possessions'+(s.kind==='shoot'?', three-point shooting '+f1(B.p3)+'% → '+f1(R.p3)+'%':'')+'.';
+  var mk=function(){var g=s.g.slice(-14);return cMargin(g.map(function(o){return o.pts-o.opp;}),g.map(function(o){return {o:o.o,d:o.d,ab:o.o.split(' ').pop(),wl:o.wl,sc:o.pts+'–'+o.opp};}),Math.min(s.sp.rec.length,g.length));};
+  return {h:h,t:t,why:why,chart:mk(),mk:mk};
 }
 
-/* ---------- charts (SVG, animated in when the card scrolls into view) ---------- */
+/* ---------- charts (SVG; animate in, hover shows that stat) ---------- */
 var CW=320,CH=150;
-function cBars(vals,labels,nr,col,unit){
-  vals=vals.slice(-12);labels=labels.slice(-12);nr=Math.min(nr,vals.length);
+function cTag(x,y,txt,col,anchor){return '<text class="ctg" x="'+x.toFixed(1)+'" y="'+Math.max(10,y).toFixed(1)+'" text-anchor="'+anchor+'" style="fill:'+col+'">'+esc(txt)+'</text>';}
+function tipOf(v,unit,g){return (Math.round(v*10)/10)+' '+unit+' '+g.o+', '+g.d;}
+function cBars(vals,gm,nr,col,unit){
+  vals=vals.slice(-12);gm=gm.slice(-12);nr=Math.min(nr,vals.length);
   var n=vals.length,mx=Math.max.apply(null,vals.concat([1]))*1.12,x0=10,w=CW-20,step=w/n,bw=step*0.62,base=CH-24;
   var Y=function(v){return base-v/mx*(base-34);};
   var h='<svg viewBox="0 0 '+CW+' '+CH+'" class="tch" role="img" aria-label="'+unit+' each game">';
-  vals.forEach(function(v,i){var x=x0+i*step+(step-bw)/2,rec=i>=n-nr,y=Y(v);
-    h+='<rect class="gb" style="transition-delay:'+(i*45)+'ms" x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(base-y).toFixed(1)+'" rx="3" fill="'+(rec?col:'#d5dae4')+'"/>'
-      +'<text class="cv" x="'+(x+bw/2).toFixed(1)+'" y="'+(y-4).toFixed(1)+'" text-anchor="middle"'+(rec?' style="fill:'+col+'"':'')+'>'+Math.round(v)+'</text>'
-      +'<text class="cl" x="'+(x+bw/2).toFixed(1)+'" y="'+(CH-8)+'" text-anchor="middle">'+esc(labels[i])+'</text>';});
   if(n>nr){var sx=x0+(n-nr)*step,pre=vals.slice(0,n-nr),post=vals.slice(n-nr),a=pre.reduce(function(s,v){return s+v;},0)/pre.length,b=post.reduce(function(s,v){return s+v;},0)/post.length;
-    h+='<line x1="'+sx.toFixed(1)+'" x2="'+sx.toFixed(1)+'" y1="6" y2="'+base+'" class="csp"/>'
+    h+='<line x1="'+sx.toFixed(1)+'" x2="'+sx.toFixed(1)+'" y1="16" y2="'+base+'" class="csp"/>'
       +'<line x1="'+x0+'" x2="'+(sx-3).toFixed(1)+'" y1="'+Y(a).toFixed(1)+'" y2="'+Y(a).toFixed(1)+'" class="cav" stroke="#5b6478"/>'
       +'<line x1="'+(sx+3).toFixed(1)+'" x2="'+(CW-10)+'" y1="'+Y(b).toFixed(1)+'" y2="'+Y(b).toFixed(1)+'" class="cav" stroke="'+col+'"/>'
       +cTag(x0,10,trLabB().toUpperCase()+' AVG '+f1(a),'#5b6478','start')+cTag(CW-10,10,trLab().toUpperCase()+' AVG '+f1(b),col,'end');}
+  vals.forEach(function(v,i){var x=x0+i*step+(step-bw)/2,rec=i>=n-nr,y=Y(v);
+    h+='<g class="ci" data-tip="'+esc(tipOf(v,unit,gm[i]))+'"><rect class="chit" x="'+(x0+i*step).toFixed(1)+'" y="14" width="'+step.toFixed(1)+'" height="'+(CH-14)+'" fill="transparent"/>'
+      +'<rect class="gb" style="transition-delay:'+(i*45)+'ms" x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+(base-y).toFixed(1)+'" rx="3" fill="'+(rec?col:'#d5dae4')+'"/>'
+      +'<text class="cv" x="'+(x+bw/2).toFixed(1)+'" y="'+(y-4).toFixed(1)+'" text-anchor="middle"'+(rec?' style="fill:'+col+'"':'')+'>'+Math.round(v)+'</text>'
+      +'<text class="cl" x="'+(x+bw/2).toFixed(1)+'" y="'+(CH-8)+'" text-anchor="middle">'+esc(gm[i].ab)+'</text></g>';});
   return h+'</svg>';
 }
-function cTag(x,y,txt,col,anchor){return '<text class="ctg" x="'+x.toFixed(1)+'" y="'+Math.max(10,y).toFixed(1)+'" text-anchor="'+anchor+'" style="fill:'+col+'">'+esc(txt)+'</text>';}
-function cMargin(vals,labels,nr){
+function cMargin(vals,gm,nr){
   var n=vals.length,mx=Math.max.apply(null,vals.map(Math.abs).concat([5]))*1.25,x0=10,w=CW-20,step=w/n,bw=step*0.62,mid=(CH-20)/2+4;
   var h='<svg viewBox="0 0 '+CW+' '+CH+'" class="tch" role="img" aria-label="Point margin each game">';
-  vals.forEach(function(v,i){var x=x0+i*step+(step-bw)/2,rec=i>=n-nr,bh=Math.abs(v)/mx*(mid-10),pos=v>=0;
-    var c=pos?'var(--rise)':'var(--fall)';
-    h+='<rect class="gb '+(pos?'up':'dn')+'" style="transition-delay:'+(i*45)+'ms;opacity:'+(rec?1:.38)+'" x="'+x.toFixed(1)+'" y="'+(pos?mid-bh:mid).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(1.5,bh).toFixed(1)+'" rx="2" fill="'+c+'"/>'
-      +'<text class="cv" x="'+(x+bw/2).toFixed(1)+'" y="'+(pos?mid-bh-4:mid+bh+11).toFixed(1)+'" text-anchor="middle" style="fill:'+c+(rec?'':';opacity:.6')+'">'+(v>0?'+':'')+v+'</text>'
-      +'<text class="cl" x="'+(x+bw/2).toFixed(1)+'" y="'+(CH-6)+'" text-anchor="middle">'+esc(labels[i])+'</text>';});
   h+='<line x1="6" x2="'+(CW-6)+'" y1="'+mid+'" y2="'+mid+'" stroke="#0b1530" stroke-width="1.5"/>';
   if(n>nr){var sx=x0+(n-nr)*step;h+='<line x1="'+sx.toFixed(1)+'" x2="'+sx.toFixed(1)+'" y1="4" y2="'+(CH-18)+'" class="csp"/>'+cTag(sx+4,12,trLab().toUpperCase(),'#0b1530','start');}
+  vals.forEach(function(v,i){var x=x0+i*step+(step-bw)/2,rec=i>=n-nr,bh=Math.abs(v)/mx*(mid-10),pos=v>=0,g=gm[i];
+    var c=pos?'var(--rise)':'var(--fall)',tip=(pos?'Won by ':'Lost by ')+Math.abs(v)+' '+g.o+', '+g.d+' ('+g.sc+')';
+    h+='<g class="ci" data-tip="'+esc(tip)+'"><rect class="chit" x="'+(x0+i*step).toFixed(1)+'" y="0" width="'+step.toFixed(1)+'" height="'+CH+'" fill="transparent"/>'
+      +'<rect class="gb '+(pos?'up':'dn')+'" style="transition-delay:'+(i*45)+'ms;opacity:'+(rec?1:.38)+'" x="'+x.toFixed(1)+'" y="'+(pos?mid-bh:mid).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(1.5,bh).toFixed(1)+'" rx="2" fill="'+c+'"/>'
+      +'<text class="cv" x="'+(x+bw/2).toFixed(1)+'" y="'+(pos?mid-bh-4:mid+bh+11).toFixed(1)+'" text-anchor="middle" style="fill:'+c+(rec?'':';opacity:.6')+'">'+(v>0?'+':'')+v+'</text>'
+      +'<text class="cl" x="'+(x+bw/2).toFixed(1)+'" y="'+(CH-6)+'" text-anchor="middle">'+esc(g.ab)+'</text></g>';});
   return h+'</svg>';
 }
-function cLine(vals,labels,nr,col,unit,mark){
-  vals=vals.slice(-12);labels=labels.slice(-12);nr=Math.min(nr,vals.length);
+function cLine(vals,gm,nr,col,unit,mark){
+  vals=vals.slice(-12);gm=gm.slice(-12);nr=Math.min(nr,vals.length);
   var n=vals.length,mx=Math.max.apply(null,vals)*1.08,mn=0,x0=18,w=CW-36,base=CH-24;
   var X=function(i){return x0+(n>1?i/(n-1)*w:w/2);},Y=function(v){return base-(v-mn)/(mx-mn)*(base-40);};
   var d=vals.map(function(v,i){return (i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1);}).join(' ');
   var h='<svg viewBox="0 0 '+CW+' '+CH+'" class="tch" role="img" aria-label="'+unit+' each game">'
     +'<path class="car" d="'+d+' L'+X(n-1).toFixed(1)+' '+base+' L'+X(0).toFixed(1)+' '+base+' Z" fill="'+col+'" opacity=".08"/>'
     +'<path class="cln" pathLength="1000" d="'+d+'" fill="none" stroke="'+col+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
-  vals.forEach(function(v,i){var rec=i>=n-nr;h+='<circle class="cdt" style="transition-delay:'+(300+i*50)+'ms" cx="'+X(i).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="3.5" fill="'+(rec?col:'#8a93a6')+'"/>'
-    +'<text class="cv" x="'+X(i).toFixed(1)+'" y="'+(Y(v)-8).toFixed(1)+'" text-anchor="middle"'+(rec?' style="fill:'+col+'"':'')+'>'+Math.round(v)+'</text>'
-    +'<text class="cl" x="'+X(i).toFixed(1)+'" y="'+(CH-8)+'" text-anchor="middle">'+esc(labels[i])+'</text>';});
   if(n>nr){var sx=(X(n-nr-1)+X(n-nr))/2,pre=vals.slice(0,n-nr),post=vals.slice(n-nr),a=pre.reduce(function(s,v){return s+v;},0)/pre.length,b=post.reduce(function(s,v){return s+v;},0)/post.length;
-    h+='<line x1="'+sx.toFixed(1)+'" x2="'+sx.toFixed(1)+'" y1="4" y2="'+base+'" class="csp"/>'
+    h+='<line x1="'+sx.toFixed(1)+'" x2="'+sx.toFixed(1)+'" y1="16" y2="'+base+'" class="csp"/>'
       +'<line x1="'+x0+'" x2="'+(sx-3).toFixed(1)+'" y1="'+Y(a).toFixed(1)+'" y2="'+Y(a).toFixed(1)+'" class="cav" stroke="#5b6478"/>'
       +'<line x1="'+(sx+3).toFixed(1)+'" x2="'+(CW-10)+'" y1="'+Y(b).toFixed(1)+'" y2="'+Y(b).toFixed(1)+'" class="cav" stroke="'+col+'"/>'
       +cTag(x0-8,10,trLabB().toUpperCase()+' AVG '+f1(a),'#5b6478','start')+cTag(CW-10,10,trLab().toUpperCase()+' AVG '+f1(b),col,'end')
       +(mark?cTag(sx+5,base-6,mark,'#0b1530','start'):'');}
+  var half=n>1?w/(n-1)/2:w/2;
+  vals.forEach(function(v,i){var rec=i>=n-nr;h+='<g class="ci" data-tip="'+esc(tipOf(v,unit,gm[i]))+'"><rect class="chit" x="'+(X(i)-half).toFixed(1)+'" y="14" width="'+(half*2).toFixed(1)+'" height="'+(CH-14)+'" fill="transparent"/>'
+    +'<circle class="cdt" style="transition-delay:'+(300+i*50)+'ms" cx="'+X(i).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="3.5" fill="'+(rec?col:'#8a93a6')+'"/>'
+    +'<text class="cv" x="'+X(i).toFixed(1)+'" y="'+(Y(v)-8).toFixed(1)+'" text-anchor="middle"'+(rec?' style="fill:'+col+'"':'')+'>'+Math.round(v)+'</text>'
+    +'<text class="cl" x="'+X(i).toFixed(1)+'" y="'+(CH-8)+'" text-anchor="middle">'+esc(gm[i].ab)+'</text></g>';});
   return h+'</svg>';
 }
 function cDumb(rows){
@@ -2068,36 +2128,48 @@ function cDumb(rows){
     var vals=[r.b,r.a].concat(r.ref!=null?[r.ref]:[]),lo=Math.min.apply(null,vals),hi=Math.max.apply(null,vals),pad=(hi-lo)*0.35||1;lo-=pad;hi+=pad;
     var X=function(v){return x0+(v-lo)/(hi-lo)*(x1-x0);},y=26+rh*i+rh/2,better=r.a===r.b?null:(r.a>r.b)===!!r.good;
     var c=better===null?'#5b6478':better?'var(--rise)':'var(--fall)',xb=X(r.b),xa=X(r.a);
-    h+='<text class="cr" x="4" y="'+(y+4).toFixed(1)+'">'+r.l+'</text>'
+    var tip=r.l+': '+f1(r.b)+' '+trLabB().toLowerCase()+' → '+f1(r.a)+' '+trLab().toLowerCase()+(r.ref!=null?' ('+r.refl.toLowerCase()+' '+f1(r.ref)+')':'');
+    h+='<g class="ci" data-tip="'+esc(tip)+'"><rect class="chit" x="0" y="'+(y-rh/2).toFixed(1)+'" width="'+CW+'" height="'+rh.toFixed(1)+'" fill="transparent"/>'
+      +'<text class="cr" x="4" y="'+(y+4).toFixed(1)+'">'+r.l+'</text>'
       +'<line x1="'+x0+'" x2="'+x1+'" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="#eef1f7" stroke-width="6" stroke-linecap="round"/>'
       +'<line class="cdl" x1="'+Math.min(xb,xa).toFixed(1)+'" x2="'+Math.max(xb,xa).toFixed(1)+'" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="'+c+'" stroke-width="4" stroke-linecap="round" style="transform-origin:'+xb.toFixed(1)+'px '+y.toFixed(1)+'px"/>';
     if(r.ref!=null){var xr=X(r.ref);h+='<line x1="'+xr.toFixed(1)+'" x2="'+xr.toFixed(1)+'" y1="'+(y-9).toFixed(1)+'" y2="'+(y+9).toFixed(1)+'" stroke="#0b1530" stroke-width="2" stroke-dasharray="2 2"/>'+cTag(xr,y+20,r.refl+' '+f1(r.ref),'#0b1530','middle');}
     h+='<circle cx="'+xb.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="6" fill="#fff" stroke="#8a93a6" stroke-width="2.5"/>'
       +cTag(xb,y-11,f1(r.b),'#8a93a6','middle')
-      +'<g class="cdm" style="--dx:'+(xa-xb).toFixed(1)+'px"><circle cx="'+xb.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="7.5" fill="'+c+'"/>'+cTag(xb,y-12,f1(r.a),c,'middle')+'</g>';
+      +'<g class="cdm" style="--dx:'+(xa-xb).toFixed(1)+'px"><circle cx="'+xb.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="7.5" fill="'+c+'"/>'+cTag(xb,y-12,f1(r.a),c,'middle')+'</g></g>';
   });
   return h+'</svg>';
 }
+/* hover tooltip shared by every chart */
+var CTIP=null;
+function ctip(){if(!CTIP){CTIP=document.createElement('div');CTIP.className='ctip';document.body.appendChild(CTIP);}return CTIP;}
+function ctipPos(e){var w=CTIP.offsetWidth;CTIP.style.left=Math.min(window.innerWidth-w-8,Math.max(8,e.clientX-w/2))+'px';CTIP.style.top=(e.clientY-42)+'px';}
+document.addEventListener('mouseover',function(e){var t=e.target.closest&&e.target.closest('.ci[data-tip]'),el=ctip();if(!t){el.classList.remove('on');return;}el.textContent=t.getAttribute('data-tip');ctipPos(e);el.classList.add('on');});
+window.addEventListener('hashchange',function(){if(CTIP)CTIP.classList.remove('on');});
+document.addEventListener('mousemove',function(e){if(CTIP&&CTIP.classList.contains('on')){var w=CTIP.offsetWidth;CTIP.style.left=Math.min(window.innerWidth-w-8,Math.max(8,e.clientX-w/2))+'px';CTIP.style.top=(e.clientY-42)+'px';}});
+window.addEventListener('scroll',function(){if(CTIP)CTIP.classList.remove('on');},{passive:true});
 
 function trCard(o){
   var vv=VERD[o.v],ph=o.p?'<div class="tc-ph" style="background:'+teamOf(o.p.Team).c+'">'+img(headSm(o.p.nba_id),'')+'</div>':'<div class="tc-ph tc-lg">'+img(logoT(o.t),'')+'</div>';
   var nm=o.p?'<b>'+esc(o.p.Player)+'</b><span>'+esc(nick(o.p.Team))+'</span>':'<b>'+esc(teamOf(o.t).n)+'</b><span>Team trend</span>';
-  var tc=teamOf(o.p?o.p.Team:o.t).c,link=o.p?' data-id="'+o.p.nba_id+'"':' data-team="'+o.t+'"';
-  return '<article class="tc"'+link+' style="--tc:'+tc+'"><div class="tc-top">'+ph+'<div class="tc-who">'+nm+'</div><span class="vt '+vv[1]+'">'+vv[0]+'</span></div>'
-    +'<h3 class="tc-h">'+esc(o.w.h)+'</h3><div class="tc-ch">'+o.w.chart+'</div><p class="tc-p">'+esc(o.w.t)+'</p>'
-    +'<div class="tc-v">Verdict · <b class="'+vv[1]+'">'+vv[0].charAt(0)+vv[0].slice(1).toLowerCase()+'.</b> '+esc(o.w.why)+'</div></article>';
+  var tc=teamOf(o.p?o.p.Team:o.t).c,key=o.p?'p/'+o.p.nba_id:'t/'+o.t;
+  return '<a class="tc" href="#s/'+key+'" style="--tc:'+tc+'"><div class="tc-top">'+ph+'<div class="tc-who">'+nm+'</div><span class="vt '+vv[1]+'">'+vv[0]+'</span></div>'
+    +'<h3 class="tc-h">'+esc(o.w.h)+'</h3><div class="tc-ch">'+o.w.chart+'</div><div class="tc-more">Read the breakdown →</div></a>';
+}
+function trHeader(){
+  var sub=TRW==='season'?'2nd half of the season vs the 1st half':'Last '+TRW+' games vs the rest of the season';
+  return '<div class="x-top"><div><div class="x-eb">Recent form · '+sub+' · through '+esc(META.updated)+'</div><h1 class="x-h1">Trends</h1></div>'
+    +'<div class="tr-key"><span><i style="background:var(--rise)"></i>Better</span><span><i style="background:var(--fall)"></i>Worse</span><span><i style="background:#d5dae4"></i>'+trLabB()+'</span><span><i class="dash"></i>Average</span><span class="tr-hov">Hover a bar to see that game</span></div></div>'
+    +'<div class="x-chips" role="tablist" aria-label="Window">'+[['5','Last 5'],['10','Last 10'],['season','Season']].map(function(x){return '<button type="button" role="tab" aria-selected="'+(TRW===x[0])+'" class="x-chip'+(TRW===x[0]?' on':'')+'" data-trw="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';
 }
 function buildTrends(){
-  var sub=TRW==='season'?'Second half of each player’s games vs the first half':'Last '+TRW+' games vs the rest of the season';
-  var h='<div class="xp tr2"><div class="tr-top"><div><h1 class="tr-h1">Trends</h1><div class="tr-sub">'+sub+' · through '+esc(META.updated)+'</div>'
-    +'<div class="tr-key"><span><i style="background:var(--rise)"></i>Better</span><span><i style="background:var(--fall)"></i>Worse</span><span><i style="background:#d5dae4"></i>'+trLabB()+'</span><span><i class="dash"></i>Average</span></div></div>'
-    +'<div class="tr-pills" role="tablist">'+[['5','Last 5'],['10','Last 10'],['season','Season']].map(function(x){return '<button type="button" class="tr-pill'+(TRW===x[0]?' on':'')+'" data-trw="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div></div>';
-  var need=TRW==='season'?6:+TRW+3;
-  if(!Object.keys(GL).length){h+='<div class="tr-empty">Trends need game logs, which arrive with the next stats update.</div></div>';$('vTrends').innerHTML=h;return;}
-  var ps=playerStories().map(function(s){s.w=pWrite(s);return s;}),ts=teamStories().map(function(s){s.w=tWrite(s);return s;});
+  var h='<div class="xp tr2">'+trHeader(),need=TRW==='season'?6:+TRW+3;
+  if(!Object.keys(GL).length){$('vTrends').innerHTML=h+'<div class="tr-empty">Trends need game logs, which arrive with the next stats update.</div></div>';return;}
+  var ps_=playerStories().map(function(s){s.w=pWrite(s);return s;}),ts=teamStories().map(function(s){s.w=tWrite(s);return s;});
   var empty='<div class="tr-empty">Not enough games yet for this view. It starts once teams have played '+need+' games. Try Last 5.</div>';
-  h+='<section><div class="tr-sh"><h2>Players</h2><span>The '+(ps.length||'')+' biggest changes, picked automatically from the stats</span></div>'+(ps.length?'<div class="tc-grid">'+ps.map(trCard).join('')+'</div>':empty)+'</section>';
-  h+='<section><div class="tr-sh"><h2>Teams</h2><span>Net rating per 100 possessions, '+trLab().toLowerCase()+' vs '+trLabB().toLowerCase()+'</span></div>'+(ts.length?'<div class="tc-grid">'+ts.map(trCard).join('')+'</div>':(trSplit((teamGames()[Object.keys(teamGames())[0]]||[]))?'<div class="tr-empty">No team has swung 8+ points per 100 in this view.</div>':empty))+'</section>';
+  h+='<section><div class="x-sechd"><h2 class="x-h2">Players</h2><div class="x-meta">The 4 biggest changes</div></div>'+(ps_.length?'<div class="tc-grid">'+ps_.map(trCard).join('')+'</div>':empty)+'</section>';
+  var anyT=trSplit(teamGames()[Object.keys(teamGames())[0]]||[]);
+  h+='<section><div class="x-sechd"><h2 class="x-h2">Teams</h2><div class="x-meta">Net rating per 100 possessions</div></div>'+(ts.length?'<div class="tc-grid">'+ts.map(trCard).join('')+'</div>':(anyT?'<div class="tr-empty">No team has swung 8+ points per 100 in this view.</div>':empty))+'</section>';
   h+=anSection()+'</div>';
   $('vTrends').innerHTML=h;
   trAnimate();
@@ -2110,9 +2182,55 @@ function trAnimate(){
   [].forEach.call(cards,function(c){io.observe(c);});
 }
 document.addEventListener('click',function(e){
-  var b=e.target.closest('[data-trw]');if(b){TRW=b.dataset.trw;buildTrends();return;}
-  var t=e.target.closest('[data-team]');if(t&&!t.closest('.dd')){go('#t/'+t.dataset.team);}
+  var b=e.target.closest('[data-trw]');if(b){TRW=b.dataset.trw;var sv=$('vStory');if(sv&&!sv.hidden)route();else buildTrends();}
 });
+
+/* ================= STORY ARTICLES ================= */
+function bigChart(w){var a=CW,b=CH,sm=window.innerWidth<700;CW=sm?340:620;CH=sm?200:250;var c=w.mk();CW=a;CH=b;return c;}
+function numRow(l,b,a,good,fm){
+  fm=fm||f1;var d=Math.round((a-b)*10)/10,c=d===0||good===null?'var(--t3)':((d>0)===!!good?'var(--rise)':'var(--fall)');
+  return '<tr><td>'+l+'</td><td>'+fm(b)+'</td><td><b>'+fm(a)+'</b></td><td style="color:'+c+';font-weight:800">'+(d>0?'+':d<0?'−':'')+fm(Math.abs(d))+'</td></tr>';
+}
+function showStory(kind,id){
+  var s,w,h='<div class="xp st-art"><a class="link" href="#/trends">← Trends</a>';
+  if(kind==='p'){
+    var p=byId[id];s=p&&playerStories(p)[0];
+    if(!s){$('vStory').innerHTML=h+'<div class="tr-empty">No big change for this player in this view. Try another view below.</div></div>';return;}
+    w=pWrite(s);var vv=VERD[s.v],R=s.R,B=s.B,rec=s.sp.rec,pri=s.sp.pri;
+    var trig=Math.abs(R.pra-B.pra)>=6?'his points + rebounds + assists moved '+f1(Math.abs(R.pra-B.pra))+' a game (6 needed)':Math.abs(R.min-B.min)>=6?'his minutes moved '+f1(Math.abs(R.min-B.min))+' a game (6 needed)':'his true shooting moved '+f1(Math.abs(R.ts-B.ts))+' points (8 needed)';
+    h+='<div class="st-hd" style="--tc:'+teamOf(p.Team).c+'"><div class="tc-ph st-ph" style="background:'+teamOf(p.Team).c+'">'+img(headLg(p.nba_id),'')+'</div><div style="min-width:0;flex:1"><div class="x-eb">'+esc(p.Player)+' · '+esc(teamOf(p.Team).n)+'</div><h1 class="st-h">'+esc(w.h)+'</h1><span class="vt '+vv[1]+'">'+vv[0]+'</span></div></div>';
+    h+='<div class="tc in st-chart">'+bigChart(w)+'</div>';
+    h+='<div class="st-cols"><div><h2 class="x-h2 st-sh">Why</h2><ul class="st-why"><li>'+esc(w.t)+'</li><li><b class="'+vv[1]+'">'+vv[0].charAt(0)+vv[0].slice(1).toLowerCase()+'.</b> '+esc(w.why)+'</li>'
+      +'<li class="st-how">Picked because '+trig+'. Compared his '+trLab().toLowerCase()+' ('+rec.length+' games, '+rec[0][0]+' to '+rec[rec.length-1][0]+') with his '+pri.length+' games before that.</li></ul>'
+      +'<a class="btn st-btn" href="#p'+p.nba_id+'">See '+esc(sn(p))+'’s percentile card →</a></div>'
+      +'<div><h2 class="x-h2 st-sh">The numbers</h2><table class="st-num"><tr><th></th><th>'+trLabB()+'</th><th>'+trLab()+'</th><th>Change</th></tr>'
+      +numRow('Points',B.pts,R.pts,1)+numRow('Rebounds',B.reb,R.reb,1)+numRow('Assists',B.ast,R.ast,1)+numRow('Minutes',B.min,R.min,1)
+      +numRow('True shooting %',B.ts,R.ts,1)+numRow('Usage %',B.usg,R.usg,null)+(R.p3!==null&&B.p3!==null?numRow('3-point %',B.p3,R.p3,1):'')
+      +numRow('3-point attempts',B.tpa,R.tpa,null)+numRow('Free throw attempts',B.fta,R.fta,1)+numRow('Turnovers',B.tov,R.tov,0)+numRow('Assist rate %',B.astp,R.astp,1)+'</table></div></div>';
+    h+='<h2 class="x-h2 st-sh gg">Game by game</h2><div class="st-wrap"><table class="st-gl"><tr><th>Date</th><th>Opp</th><th></th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>FG</th><th>3P</th><th>FT</th><th>TOV</th></tr>'
+      +s.g.slice().reverse().map(function(x,i){return '<tr class="'+(i<rec.length?'rec':'')+'"><td>'+x[0]+'</td><td>'+esc(x[1])+'</td><td class="'+(x[2]==='W'?'w':'l')+'">'+x[2]+'</td><td>'+x[3]+'</td><td><b>'+x[4]+'</b></td><td>'+x[5]+'</td><td>'+x[6]+'</td><td>'+x[10]+'-'+x[11]+'</td><td>'+x[12]+'-'+x[13]+'</td><td>'+x[14]+'-'+x[15]+'</td><td>'+x[9]+'</td></tr>';}).join('')+'</table></div>';
+    document.title=sn(p)+' | Trends | NBA Savant';
+  }else{
+    s=teamStories(id)[0];
+    if(!s){$('vStory').innerHTML=h+'<div class="tr-empty">No big change for this team in this view. Try another view below.</div></div>';return;}
+    w=tWrite(s);var v2=VERD[s.v],R2=s.R,B2=s.B,info=teamOf(id);
+    h+='<div class="st-hd" style="--tc:'+info.c+'"><div class="tc-ph st-ph tc-lg">'+img(logoT(id),'')+'</div><div style="min-width:0;flex:1"><div class="x-eb">'+esc(info.n)+' · team trend</div><h1 class="st-h">'+esc(w.h)+'</h1><span class="vt '+v2[1]+'">'+v2[0]+'</span></div></div>';
+    h+='<div class="tc in st-chart">'+bigChart(w)+'</div>';
+    h+='<div class="st-cols"><div><h2 class="x-h2 st-sh">Why</h2><ul class="st-why"><li>'+esc(w.t)+'</li><li><b class="'+v2[1]+'">'+v2[0].charAt(0)+v2[0].slice(1).toLowerCase()+'.</b> '+esc(w.why)+'</li>'
+      +'<li class="st-how">Picked because their net rating moved '+f1(Math.abs(s.dNet))+' points per 100 possessions (8 needed). '+(s.kind==='shoot'?'About '+Math.round(Math.abs(s.shoot)/Math.abs(s.dO)*100)+'% of the offensive change came from three-point shooting.':'The bigger change was on '+(s.kind==='def'?'defense':'offense')+'.')+'</li></ul>'
+      +'<a class="btn st-btn" href="#t/'+id+'">See the '+esc(info.n)+' page →</a></div>'
+      +'<div><h2 class="x-h2 st-sh">The numbers</h2><table class="st-num"><tr><th></th><th>'+trLabB()+'</th><th>'+trLab()+'</th><th>Change</th></tr>'
+      +'<tr><td>Record</td><td>'+B2.w+'-'+B2.l+'</td><td><b>'+R2.w+'-'+R2.l+'</b></td><td></td></tr>'
+      +numRow('Net rating',B2.net,R2.net,1)+numRow('Offense (pts per 100)',B2.ortg,R2.ortg,1)+numRow('Defense (allowed per 100)',B2.drtg,R2.drtg,0)
+      +numRow('3-point %',B2.p3,R2.p3,1)+numRow('3-point attempts',B2.tpa,R2.tpa,null)+numRow('Turnover rate',B2.tov,R2.tov,0)+numRow('Free throw rate',B2.ftr,R2.ftr,1)+numRow('Assist rate %',B2.ast,R2.ast,1)+numRow('Pace',B2.pace,R2.pace,null)+'</table></div></div>';
+    h+='<h2 class="x-h2 st-sh gg">Game by game</h2><div class="st-wrap"><table class="st-gl"><tr><th>Date</th><th>Opp</th><th></th><th>Score</th><th>Margin</th></tr>'
+      +s.g.slice().reverse().map(function(o,i){var m=o.pts-o.opp;return '<tr class="'+(i<s.sp.rec.length?'rec':'')+'"><td>'+o.d+'</td><td>'+esc(o.o)+'</td><td class="'+(o.wl==='W'?'w':'l')+'">'+o.wl+'</td><td>'+o.pts+'–'+o.opp+'</td><td style="color:'+(m>=0?'var(--rise)':'var(--fall)')+';font-weight:700">'+(m>0?'+':'')+m+'</td></tr>';}).join('')+'</table></div>';
+    document.title=info.n+' | Trends | NBA Savant';
+  }
+  h+='<div class="st-win">View: '+[['5','Last 5'],['10','Last 10'],['season','Season']].map(function(x){return '<button type="button" class="x-chip'+(TRW===x[0]?' on':'')+'" data-trw="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div></div>';
+  $('vStory').innerHTML=h;
+}
+
 
 /* ================= TEAM PAGES ================= */
 var TEAM_STATS=[
@@ -2153,7 +2271,7 @@ function showTeam(t){
   var g=G.slice(-20);
   h+='<div class="p-sec"><div class="p-sec-hd"><div class="sec-t">Form</div><div class="note">Point margin each game · last 5 highlighted</div></div>'
     +'<div class="tp-form"><div class="tp-chips">'+[['Last 5',L5],['Last 10',L10],['Season',S]].map(function(x){var a=x[1];return '<div class="tp-chip"><span>'+x[0]+'</span><b>'+a.w+'-'+a.l+'</b><em style="color:'+(a.net>=0?'var(--rise)':'var(--fall)')+'">'+sg1(a.net)+' net</em></div>';}).join('')+'</div>'
-    +'<div class="tc in tp-chart">'+cMargin(g.map(function(o){return o.pts-o.opp;}),g.map(function(o){var a=o.o.split(' ');return a[a.length-1];}),Math.min(5,g.length))+'</div></div></div>';
+    +'<div class="tc in tp-chart">'+cMargin(g.map(function(o){return o.pts-o.opp;}),g.map(function(o){return {o:o.o,d:o.d,ab:o.o.split(' ').pop(),sc:o.pts+'–'+o.opp};}),Math.min(5,g.length))+'</div></div></div>';
   /* leaders + hot/cold */
   var roster=D.filter(function(p){return p.Team===t;});
   var cats=[['PTS_PG','Points'],['TRB_PG','Rebounds'],['AST_PG','Assists'],['STL_PG','Steals'],['BLK_PG','Blocks'],['TS%','True shooting',function(p){return (p.FGA_PG||0)>=5;}]];
@@ -2198,12 +2316,12 @@ function findTeams(term){
   return Object.keys(T).filter(function(k){var n=norm(T[k].n);return n.indexOf(t)>=0||norm(k)===t||norm(nick(k)).indexOf(t)===0;}).slice(0,3);
 }
 
-var VIEWS={home:'vHome',leaders:'vLeaders',trends:'vTrends',players:'vPlayers',player:'vPlayer',team:'vTeam'};
+var VIEWS={home:'vHome',leaders:'vLeaders',trends:'vTrends',players:'vPlayers',player:'vPlayer',team:'vTeam',story:'vStory'};
 var built={};
 function go(h){if(location.hash===h)route();else location.hash=h;}
 function show(view){
   Object.keys(VIEWS).forEach(function(k){$(VIEWS[k]).hidden=k!==view;});
-  [].forEach.call(document.querySelectorAll('.nav a,.nav-tmb'),function(a){a.classList.toggle('on',a.dataset.nav===view||(view==='team'&&a.dataset.nav==='teams'));});
+  [].forEach.call(document.querySelectorAll('.nav a,.nav-tmb'),function(a){a.classList.toggle('on',a.dataset.nav===view||(view==='team'&&a.dataset.nav==='teams')||(view==='story'&&a.dataset.nav==='trends'));});
   var tmx=$('navTm');if(tmx)tmx.classList.remove('open');
   $('nav').classList.remove('open');$('menuBtn').setAttribute('aria-expanded','false');
 }
@@ -2211,6 +2329,7 @@ function route(){
   var h=location.hash||'',m=/^#p(\d+)$/.exec(h),tmm=/^#t\/([A-Z]{3})$/.exec(h);
   if(m&&byId[m[1]]){show('player');showPlayer(byId[m[1]]);}
   else if(tmm&&T[tmm[1]]){show('team');showTeam(tmm[1]);}
+  else if((m=/^#s\/(p|t)\/(\w+)$/.exec(h))){show('story');showStory(m[1],m[2]);var sc=document.querySelector('#vStory .st-chart');if(sc)setTimeout(function(){sc.classList.add('in');},60);}
   else if(h.indexOf('#/leaders')===0){
     var lm=/^#\/leaders\/([^\/]+)(?:\/(\d+))?$/.exec(h);
     if(lm)openBoard(decodeURIComponent(lm[1]),lm[2]);else if(!built.leaders){buildLeaders();}
