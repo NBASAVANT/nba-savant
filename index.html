@@ -1158,6 +1158,33 @@ html.intro #hmMain::after{content:'';position:absolute;inset:0;background:var(--
   .hp-chart{padding:14px 12px 8px}
 }
 
+
+/* ---------- number-line change chart ---------- */
+.chg{margin-top:4px}
+.chg-h,.chg-r{display:grid;grid-template-columns:minmax(140px,1.25fr) 74px minmax(0,2.6fr) 78px;align-items:center;gap:12px}
+.chg-h{font-weight:800;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);padding-bottom:8px;border-bottom:2px solid var(--navy)}
+.chg-h>span:nth-child(2),.chg-h>span:nth-child(4){text-align:right}
+.chg-h .mid{display:flex;justify-content:space-between;align-items:center}
+.chg-h .mid i{font-style:normal}.chg-h .mid .r{color:var(--fall)}.chg-h .mid .g{color:var(--rise)}.chg-h .mid .z{color:var(--navy)}
+.chg-r{padding:12px 0;border-bottom:1px solid var(--rule)}
+.chg-r .l b{display:block;font-weight:800;font-size:15px;color:var(--navy);line-height:1.2}
+.chg-r .l span{display:block;font-size:12px;color:var(--t3)}
+.chg-r .bv{text-align:right;font-weight:700;font-size:17px;color:var(--t3)}
+.chg-r .nv{text-align:right;font-weight:900;font-size:22px;font-stretch:76%}
+.chg-r .nv.g{color:var(--rise)}.chg-r .nv.r{color:var(--fall)}.chg-r .nv.n{color:var(--navy)}
+.chg-bar{position:relative;height:26px;background:linear-gradient(90deg,rgba(194,52,31,.05) 0 50%,rgba(31,138,76,.05) 50% 100%);border-radius:4px}
+.chg-bar::before{content:'';position:absolute;left:50%;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:var(--navy)}
+.chg-bar b{position:absolute;top:6px;height:14px;border-radius:3px}
+.chg-bar b.g{background:var(--rise)}.chg-bar b.r{background:var(--fall)}.chg-bar b.n{background:#9aa1b4}
+.chg-bar em{position:absolute;top:4px;font-style:normal;font-weight:800;font-size:13px;white-space:nowrap}
+.chg-bar em.g{color:var(--rise)}.chg-bar em.r{color:var(--fall)}.chg-bar em.n{color:var(--t3)}
+.chg-bar em.in{color:#fff;top:5px;font-size:12px}
+@media (max-width:700px){
+  .chg-h,.chg-r{grid-template-columns:minmax(0,1.1fr) 46px minmax(0,1.6fr) 52px;gap:8px}
+  .chg-r .l b{font-size:13px}.chg-r .l span{font-size:10.5px}.chg-r .bv{font-size:13px}.chg-r .nv{font-size:17px}
+  .chg-h{font-size:9px;letter-spacing:.04em}.chg-bar em{font-size:11px}
+}
+
 /* ---------- teams menu ---------- */
 .nav-tm{position:relative;display:flex;align-items:center}
 .nav-tmb{background:none;border:0;font:inherit;font-weight:600;font-size:14px;color:var(--t3);cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;transition:color .15s}
@@ -2266,7 +2293,10 @@ function gTS(x){var a=x[11]+0.44*x[15];return a?x[4]/(2*a)*100:0;}
    14. Charts: title = what is measured, subtitle = the takeaway with both numbers, a legend for colors, averages labeled at the line's end.
    15. Teams are shown with logos; highlighted players with their team logo.
    16. Scatters label without hover: every team gets logo + abbreviation; for players, the top scorers and extremes get logo + name
-       (about 40 on desktop, 16 on phones), placed automatically with short leader lines; everyone else is a faint dot. */
+       (about 40 on desktop, 16 on phones), placed automatically with short leader lines; everyone else is a faint dot.
+   17. Scatter titles state the takeaway (league rank before → now, or which corner the player moved to), and the subtitle says in plain words what right and up mean.
+   18. Corner labels describe BOTH axes ("SHOOT A LOT + MAKE A LOT", "COLD, FEW THREES"). Only the truly best corner is green and only the truly worst is red.
+   19. Before/after stat tables use the number line: zero in the middle, good changes go right in green, bad changes go left in red, the "now" number colored to match. */
 function pWrite(s){
   var p=s.p,R=s.R,B=s.B,N=lastName(p.Player),F=p.Player,rec=s.sp.rec,pri=s.sp.pri,all=s.g,nr=rec.length;
   var up=s.v==='REAL'||s.v==='OPPORTUNITY'||s.v==='LUCK';
@@ -2509,6 +2539,17 @@ function chMargin(o){
 }
 function cMargin(vals,gm,nr){return chMargin({v:vals,g:gm,nr:nr});}
 function fmtV(r,v){return r.pc?f1(v)+'%':r.sg?(v>0?'+':'')+f1(v):f1(v);}
+/* number line: zero in the middle, good changes go right in green, bad ones left in red */
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function chChange(rows,nb){
+  var bl=befLab(nb),rl=recLab(),rel=function(r){return r.b?(r.a-r.b)/Math.abs(r.b)*100:(r.a?100:0);},mx=Math.max.apply(null,rows.map(function(r){return Math.abs(rel(r));}).concat([10]));
+  var h='<div class="chg"><div class="chg-h"><span></span><span>'+esc(bl)+'</span><span class="mid"><i class="r">◀ Worse</i><i class="z">0</i><i class="g">Better ▶</i></span><span>'+esc(rl)+'</span></div>';
+  rows.forEach(function(r){var d=Math.round((Math.round(r.a*10)-Math.round(r.b*10)))/10,better=d===0||r.good===null?null:(d>0)===!!r.good,right=better===null?d>=0:better,cls=better===null?'n':better?'g':'r',len=Math.max(d===0?0:2,Math.min(1,Math.abs(rel(r))/mx)*46);
+    var lab=(d>0?'+':d<0?'−':'')+f1(Math.abs(d)),inn=len>30,pos=inn?(right?'left:calc(50% + '+len.toFixed(1)+'% - 6px);transform:translateX(-100%)':'right:calc(50% + '+len.toFixed(1)+'% - 6px);transform:translateX(100%)'):(right?'left:calc(50% + '+len.toFixed(1)+'% + 6px)':'right:calc(50% + '+len.toFixed(1)+'% + 6px)');
+    h+='<div class="chg-r ci" data-tip="'+esc(r.l+(r.u?' ('+r.u+')':'')+': '+fmtV(r,r.b)+' → '+fmtV(r,r.a))+'"><span class="l"><b>'+esc(r.l)+'</b>'+(r.u?'<span>'+esc(r.u)+'</span>':'')+'</span><span class="bv">'+fmtV(r,r.b)+'</span>'
+      +'<span class="chg-bar"><b class="'+cls+'" style="'+(right?'left:50%':'right:50%')+';width:'+len.toFixed(1)+'%"></b><em class="'+cls+(inn?' in':'')+'" style="'+pos+'">'+lab+'</em></span><span class="nv '+cls+'">'+fmtV(r,r.a)+'</span></div>';});
+  return h+'</div>';
+}
 function chDumb(rows,o){
   o=o||{};var W=o.W||320,big=!!o.big,k=big&&W>500?1.35:1,rh=(big?54:40)*(k>1?1.05:1),H=Math.round(rows.length*rh+(big?34:26)),x0=big?(W>500?210:120):92,x1=W-(big?30:18);
   var h='<svg viewBox="0 0 '+W+' '+H+'" class="tch'+(big?' big':'')+'" role="img" aria-label="Before and after">';
@@ -2687,7 +2728,7 @@ function showStory(kind,id){
     h+='<h2 class="ar-h2">'+esc(w.h2)+'</h2><p class="ar-p">'+esc(w.b2)+'</p>';
     h+=playerScatter(s);
     var sm=window.innerWidth<700;
-    h+='<div class="fg-a ar-fig">'+chFig('The numbers behind it',trLabB()+' (hollow) vs '+trLab().toLowerCase()+' (filled). Green = better, red = worse.',chDumb(w.dmx,{big:1,W:sm?360:860}),1)+'</div>';
+    h+='<div class="fg-a ar-fig">'+chFig('The numbers behind it','How each stat changed from '+befLab(s.sp.pri.length).toLowerCase()+' to the '+trLab().toLowerCase()+'. Green bars go right when the change helps, red bars go left when it hurts. Longer bar = bigger change.',chChange(w.dmx,s.sp.pri.length),1)+'</div>';
     var cm=chCourt(p);if(cm)h+='<div class="fg-a ar-fig ar-court">'+cm+'</div>';
     h+='<div class="ar-watch"><b>What to watch</b>'+esc(w.watch)+'</div>';
     h+='<h2 class="x-h2 st-sh gg">Game by game</h2><div class="st-wrap"><table class="st-gl"><tr><th>Date</th><th>Opp</th><th></th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>FG</th><th>3P</th><th>FT</th><th>TOV</th></tr>'
@@ -2705,7 +2746,7 @@ function showStory(kind,id){
     h+='<div class="fg-a ar-fig">'+w.big()+'</div>';
     h+='<h2 class="ar-h2">'+esc(w.h2)+'</h2><p class="ar-p">'+esc(w.b2)+'</p>';
     h+=(s.kind==='shoot'?teamThreeScatter(id,s):'')+teamODScatter(id,s,1);
-    h+='<div class="fg-a ar-fig">'+chFig('The numbers behind it',trLabB()+' (hollow) vs '+trLab().toLowerCase()+' (filled). Green = better, red = worse.',chDumb(w.dmx,{big:1,W:sm2?360:860}),1)+'</div>';
+    h+='<div class="fg-a ar-fig">'+chFig('The numbers behind it','How each stat changed from '+befLab(s.sp.pri.length).toLowerCase()+' to the '+trLab().toLowerCase()+'. Green bars go right when the change helps, red bars go left when it hurts. Longer bar = bigger change.',chChange(w.dmx,s.sp.pri.length),1)+'</div>';
     h+='<div class="ar-watch"><b>What to watch</b>'+esc(w.watch)+'</div>';
     h+='<h2 class="x-h2 st-sh gg">Game by game</h2><div class="st-wrap"><table class="st-gl"><tr><th>Date</th><th>Opp</th><th></th><th>Score</th><th>Margin</th></tr>'
       +s.g.slice().reverse().map(function(o,i){var m=o.pts-o.opp;return '<tr class="'+(i<s.sp.rec.length?'rec':'')+'"><td>'+o.d+'</td><td>'+esc(o.o)+'</td><td class="'+(o.wl==='W'?'w':'l')+'">'+o.wl+'</td><td>'+o.pts+'–'+o.opp+'</td><td style="color:'+(m>=0?'var(--rise)':'var(--fall)')+';font-weight:700">'+(m>0?'+':'')+m+'</td></tr>';}).join('')+'</table></div>';
@@ -2756,7 +2797,7 @@ function chScatter(o){
   for(var b=Math.ceil(y0/sy)*sy;b<=y1+1e-9;b+=sy)h+='<line x1="'+m.l+'" x2="'+(W-m.r)+'" y1="'+Y(b).toFixed(1)+'" y2="'+Y(b).toFixed(1)+'" class="cgr"/><text class="cax" x="'+(m.l-7)+'" y="'+(Y(b)+3.5*k).toFixed(1)+'" text-anchor="end" style="font-size:'+(9*k)+'px">'+fy(b)+'</text>';
   h+='<text class="caxt" x="'+(m.l+iw/2)+'" y="'+(H-6)+'" text-anchor="middle" style="font-size:'+(10*k)+'px">'+esc(o.xl)+'</text><text class="caxt" transform="translate('+(11*k)+','+(m.t+ih/2)+') rotate(-90)" text-anchor="middle" style="font-size:'+(10*k)+'px">'+esc(o.yl)+'</text>';
   if(o.avg){var ax=X(o.avg[0]),ay=Y(o.avg[1]);h+='<line x1="'+ax.toFixed(1)+'" x2="'+ax.toFixed(1)+'" y1="'+m.t+'" y2="'+(m.t+ih)+'" stroke="#9aa1b4" stroke-width="1.2" stroke-dasharray="4 4"/><line x1="'+m.l+'" x2="'+(W-m.r)+'" y1="'+ay.toFixed(1)+'" y2="'+ay.toFixed(1)+'" stroke="#9aa1b4" stroke-width="1.2" stroke-dasharray="4 4"/>';
-    if(o.quad){var q=o.quad,fs=8.5*k;h+=cTag(m.l+6,m.t+12*k,q[0],'#8a93a6','start',fs)+cTag(W-m.r-6,m.t+12*k,q[1],'#1f8a4c','end',fs)+cTag(m.l+6,m.t+ih-6,q[2],'#c2341f','start',fs)+cTag(W-m.r-6,m.t+ih-6,q[3],'#8a93a6','end',fs);}}
+    if(o.quad){var q=o.quad,qc=o.qc||['n','g','r','n'],CC={g:'#1f8a4c',r:'#c2341f',n:'#8a93a6'},fs=8.5*k;h+=cTag(m.l+6,m.t+12*k,q[0],CC[qc[0]],'start',fs)+cTag(W-m.r-6,m.t+12*k,q[1],CC[qc[1]],'end',fs)+cTag(m.l+6,m.t+ih-6,q[2],CC[qc[2]],'start',fs)+cTag(W-m.r-6,m.t+ih-6,q[3],CC[qc[3]],'end',fs);}}
   if(o.diag){h+='<line x1="'+X(x0)+'" y1="'+Y(x0)+'" x2="'+X(x1)+'" y2="'+Y(x1)+'" stroke="#0b1530" stroke-width="1.5" stroke-dasharray="5 4"/>'+cTag(X(x1)-6,Y(x1)+14*k,o.diag,'#0b1530','end',8.5*k);}
   if(o.slope){h+='<line x1="'+X(x0)+'" y1="'+Y(x0*o.slope)+'" x2="'+X(x1)+'" y2="'+Y(x1*o.slope)+'" stroke="#0b1530" stroke-width="1.5" stroke-dasharray="5 4"/>'+cTag(X(x1)-6,Y(x1*o.slope)-7,o.slopeL||'LEAGUE AVERAGE','#0b1530','end',8.5*k);}
   var prad=function(p){return (p.hl?(p.logo?(p.pl?14:22):7.5):(p.logo?(p.pl?8.5:12):(p.faint?3.4:4.6)))*k;};
@@ -2792,35 +2833,45 @@ function chScatter(o){
   h+=placeLabels();
   return h+'</svg>';
 }
+function qIdx(x,y,ax,ay,invY){var top=invY?y<ay:y>ay,right=x>ax;return (top?0:2)+(right?1:0);}
+function rankIn(v,arr,hi){return arr.filter(function(z){return hi?z>v+1e-9:z<v-1e-9;}).length+1;}
 function scatFig(t,sub,svg){return '<div class="fg-a ar-fig">'+chFig(t,sub,svg,1)+'</div>';}
 /* every team, recent window: offense vs defense (logos) */
 function teamODScatter(t,s,win){
-  var G=teamGames(),pts=[],ox=[],dy=[];
+  var G=teamGames(),pts=[],ox=[],dy=[],bo=[],bd=[];
   Object.keys(G).forEach(function(k){var sp=win?trSplit(G[k]):{rec:G[k]};if(!sp||!sp.rec.length)return;var a=tAgg(sp.rec);if(!a)return;ox.push(a.ortg);dy.push(a.drtg);
-    pts.push({x:a.ortg,y:a.drtg,logo:logoT(k),hl:k===t,ring:teamOf(k).c,lab:k===t?nick(k):k,pri:a.net,tip:teamOf(k).n+': offense '+f1(a.ortg)+', defense '+f1(a.drtg)+' per 100'+(win?' ('+trLab().toLowerCase()+')':'')});});
+    if(win&&sp.pri&&sp.pri.length){var pb=tAgg(sp.pri);if(pb){bo.push(pb.ortg);bd.push(pb.drtg);}}
+    pts.push({x:a.ortg,y:a.drtg,logo:logoT(k),hl:k===t,ring:teamOf(k).c,lab:k===t?nick(k):k,pri:a.net,tip:teamOf(k).n+': scores '+f1(a.ortg)+', allows '+f1(a.drtg)+' per 100 possessions'+(win?' ('+trLab().toLowerCase()+')':'')});});
   if(pts.length<6)return '';
-  var o={pts:pts,xl:'Offense: points scored per 100 possessions →',yl:'Defense: points allowed per 100 (better ↑)',invY:1,avg:[avg(ox),avg(dy)],quad:['GOOD DEFENSE','GOOD AT BOTH','STRUGGLING','GOOD OFFENSE']};
-  if(s)o.arrow={x1:s.B.ortg,y1:s.B.drtg,x2:s.R.ortg,y2:s.R.drtg,logo:logoT(t),tip:nick(t)+' before: offense '+f1(s.B.ortg)+', defense '+f1(s.B.drtg)};
-  return scatFig(win?'Where the '+nick(t)+' stand over the '+trLab().toLowerCase():'Where the '+nick(t)+' stand this season','Each logo is a team'+(win?'’s '+trLab().toLowerCase():'’s season')+'. Right = better offense, up = better defense. Dashed lines = league average.'+(s?' The arrow shows how the '+nick(t)+' moved from '+trLabB().toLowerCase()+'.':''),chScatter(o));
+  var Q=['GOOD DEFENSE, WEAK OFFENSE','GOOD AT BOTH','WEAK AT BOTH','GOOD OFFENSE, WEAK DEFENSE'],me=pts.filter(function(p){return p.hl;})[0],N=nick(t),title,sub;
+  var o={pts:pts,xl:'Offense: points scored per 100 possessions (more →)',yl:'Defense: points allowed per 100 (fewer ↑)',invY:1,avg:[avg(ox),avg(dy)],quad:Q,qc:['n','g','r','n']};
+  if(s){o.arrow={x1:s.B.ortg,y1:s.B.drtg,x2:s.R.ortg,y2:s.R.drtg,logo:logoT(t),tip:N+' '+trLabB().toLowerCase()+': scored '+f1(s.B.ortg)+', allowed '+f1(s.B.drtg)};
+    var def=s.kind==='def',rb=def?rankIn(s.B.drtg,bd,0):rankIn(s.B.ortg,bo,1),ra=def?rankIn(s.R.drtg,dy,0):rankIn(s.R.ortg,ox,1);
+    title=(def?'The '+N+' defense':'The '+N+' offense')+' went from '+ordn(rb)+' to '+ordn(ra)+' in the NBA';
+    sub='League rank over the '+trLab().toLowerCase()+' vs before. Each logo is a team’s '+trLab().toLowerCase()+'. Further right = scores more points per 100 possessions; higher = allows fewer. Dashed lines = league average. The arrow shows the '+N+' before → now.';}
+  else{var orr=rankIn(me.x,ox,1),drr=rankIn(me.y,dy,0);title='The '+N+' rank '+ordn(orr)+' on offense and '+ordn(drr)+' on defense';
+    sub='Season so far. Each logo is a team. Further right = scores more points per 100 possessions; higher = allows fewer. Dashed lines = league average. They’re in the “'+Q[qIdx(me.x,me.y,o.avg[0],o.avg[1],1)].toLowerCase()+'” corner.';}
+  return scatFig(title,sub,chScatter(o));
 }
 function teamThreeScatter(t,s){
   var G=teamGames(),pts=[],xx=[],yy=[];
   Object.keys(G).forEach(function(k){var sp=trSplit(G[k]);if(!sp)return;var a=tAgg(sp.rec);if(!a)return;xx.push(a.tpa);yy.push(a.p3);
-    pts.push({x:a.tpa,y:a.p3,logo:logoT(k),hl:k===t,ring:teamOf(k).c,lab:k===t?nick(k):k,pri:a.p3,tip:teamOf(k).n+': '+f1(a.tpa)+' threes a game at '+f1(a.p3)+'%'});});
+    pts.push({x:a.tpa,y:a.p3,logo:logoT(k),hl:k===t,ring:teamOf(k).c,lab:k===t?nick(k):k,pri:a.p3,tip:teamOf(k).n+': '+f1(a.tpa)+' three-point attempts per game, '+f1(a.p3)+'% made'});});
   if(pts.length<6)return '';
-  return scatFig('Three-point volume vs accuracy, '+trLab().toLowerCase(),'Each logo is a team. Right = more threes, up = better percentage. The arrow shows how the '+nick(t)+' moved from '+trLabB().toLowerCase()+'.',
-    chScatter({pts:pts,xl:'Three-point attempts per game',yl:'Three-point %',avg:[avg(xx),avg(yy)],quad:['ACCURATE','MAKING LOTS','COLD','SHOOTING LOTS'],fy:function(v){return Math.round(v)+'%';},
-      arrow:{x1:s.B.tpa,y1:s.B.p3,x2:s.R.tpa,y2:s.R.p3,logo:logoT(t),tip:nick(t)+' before: '+f1(s.B.tpa)+' threes a game at '+f1(s.B.p3)+'%'}}));
+  var N=nick(t),rk=rankIn(s.R.p3,yy,1);
+  return scatFig('The '+N+' made '+f1(s.R.p3)+'% of their threes over the '+trLab().toLowerCase()+', '+ordn(rk)+' in the NBA',(s.R.p3>=s.B.p3?'Up':'Down')+' from '+f1(s.B.p3)+'% before. Each logo is a team’s '+trLab().toLowerCase()+'. Further right = takes more threes per game; higher = makes a bigger share of them. Dashed lines = league average. The arrow shows the '+N+' before → now.',
+    chScatter({pts:pts,xl:'Three-point attempts per game (more →)',yl:'Three-point % (higher ↑)',avg:[avg(xx),avg(yy)],quad:['ACCURATE, FEW THREES','SHOOT A LOT + MAKE A LOT','COLD, FEW THREES','SHOOT A LOT, MISS A LOT'],qc:['n','g','r','n'],fy:function(v){return Math.round(v)+'%';},
+      arrow:{x1:s.B.tpa,y1:s.B.p3,x2:s.R.tpa,y2:s.R.p3,logo:logoT(t),tip:N+' before: '+f1(s.B.tpa)+' three-point attempts per game, '+f1(s.B.p3)+'% made'}}));
 }
 /* league backdrop (season) + this player's move from before to now */
 function playerScatter(s){
   var p=s.p,R=s.R,B=s.B,N=lastName(p.Player),v=s.v,d=s.drv,cfg;
   var three=v==='LUCK'||v==='COLD'||(v==='NORMAL'&&d!=='ts');
-  if(three)cfg={xl:'Three-point attempts per game',yl:'Three-point %',fx:null,fy:function(x){return Math.round(x)+'%';},gx:function(q){return q['3PA_PG'];},gy:function(q){return q['3P%']*100;},q:function(q){return q['3PA_PG']>=2;},px:[B.tpa,R.tpa],py:[B.p3||0,R.p3||0],t:'Three-point volume vs accuracy',quad:['ACCURATE','VOLUME + ACCURACY','COLD','VOLUME']};
-  else if(d==='pass')cfg={xl:'Usage rate (% of team plays he finishes)',yl:'Assist rate %',gx:function(q){return q['USG%']*100;},gy:function(q){return q['AST%']*100;},px:[B.usg,R.usg],py:[B.astp,R.astp],t:'Usage vs playmaking',quad:['PASS-FIRST','BIG ROLE, PLAYMAKER','SMALL ROLE','SCORER']};
-  else if(v==='OPPORTUNITY'||d==='min')cfg={xl:'Minutes per game',yl:'Points + rebounds + assists per game',gx:function(q){return q.MP_PG;},gy:function(q){return q.PTS_PG+q.TRB_PG+q.AST_PG;},px:[B.min,R.min],py:[B.pra,R.pra],t:'Minutes vs production',quad:['PRODUCTIVE','STARS','BENCH','HEAVY MINUTES']};
-  else if(d==='tov')cfg={xl:'Usage rate (% of team plays he finishes)',yl:'Turnovers per game (fewer ↑)',invY:1,gx:function(q){return q['USG%']*100;},gy:function(q){return q.TOV_PG;},px:[B.usg,R.usg],py:[B.tov,R.tov],t:'Usage vs turnovers',quad:['CAREFUL','BIG ROLE, CAREFUL','LOOSE','BIG ROLE, LOOSE']};
-  else cfg={xl:'Usage rate (% of team plays he finishes)',yl:'True shooting %',gx:function(q){return q['USG%']*100;},gy:function(q){return q['TS%']*100;},fy:function(x){return Math.round(x)+'%';},px:[B.usg,R.usg],py:[B.ts,R.ts],t:'Usage vs efficiency',quad:['EFFICIENT','BIG ROLE + EFFICIENT','STRUGGLING','BIG ROLE']};
+  if(three)cfg={xl:'Three-point attempts per game',yl:'Three-point %',fx:null,fy:function(x){return Math.round(x)+'%';},gx:function(q){return q['3PA_PG'];},gy:function(q){return q['3P%']*100;},q:function(q){return q['3PA_PG']>=2;},px:[B.tpa,R.tpa],py:[B.p3||0,R.p3||0],t:'Three-point volume vs accuracy',xs:'takes more threes per game',ys:'makes a bigger share of them',quad:['ACCURATE, FEW THREES','SHOOTS A LOT + MAKES A LOT','COLD, FEW THREES','SHOOTS A LOT, MISSES A LOT'],qc:['n','g','r','n']};
+  else if(d==='pass')cfg={xl:'Usage rate (% of team plays he finishes)',yl:'Assist rate %',gx:function(q){return q['USG%']*100;},gy:function(q){return q['AST%']*100;},px:[B.usg,R.usg],py:[B.astp,R.astp],t:'Usage vs playmaking',xs:'finishes more of his team’s plays',ys:'sets up more teammate baskets',quad:['PASS-FIRST, SMALLER ROLE','BIG ROLE, PLAYMAKER','SMALL ROLE, FEW ASSISTS','BIG ROLE, SCORER FIRST'],qc:['n','g','n','n']};
+  else if(v==='OPPORTUNITY'||d==='min')cfg={xl:'Minutes per game',yl:'Points + rebounds + assists per game',gx:function(q){return q.MP_PG;},gy:function(q){return q.PTS_PG+q.TRB_PG+q.AST_PG;},px:[B.min,R.min],py:[B.pra,R.pra],t:'Minutes vs production',xs:'plays more minutes',ys:'more points, rebounds and assists',quad:['PRODUCTIVE IN FEW MINUTES','BIG MINUTES, BIG NUMBERS','BENCH ROLE','BIG MINUTES, LOW OUTPUT'],qc:['n','g','n','r']};
+  else if(d==='tov')cfg={xl:'Usage rate (% of team plays he finishes)',yl:'Turnovers per game (fewer ↑)',invY:1,gx:function(q){return q['USG%']*100;},gy:function(q){return q.TOV_PG;},px:[B.usg,R.usg],py:[B.tov,R.tov],t:'Usage vs turnovers',xs:'finishes more of his team’s plays',ys:'fewer turnovers',quad:['SMALL ROLE, CAREFUL','BIG ROLE, CAREFUL','SMALL ROLE, CARELESS','BIG ROLE, CARELESS'],qc:['n','g','r','n']};
+  else cfg={xl:'Usage rate (% of team plays he finishes)',yl:'True shooting %',gx:function(q){return q['USG%']*100;},gy:function(q){return q['TS%']*100;},fy:function(x){return Math.round(x)+'%';},px:[B.usg,R.usg],py:[B.ts,R.ts],t:'Usage vs efficiency',xs:'finishes more of his team’s plays',ys:'scores more efficiently',quad:['EFFICIENT, SMALL ROLE','BIG ROLE + EFFICIENT','SMALL ROLE, INEFFICIENT','BIG ROLE, INEFFICIENT'],qc:['n','g','r','n']};
   var pool=D.filter(function(q){return q.MP_PG>=20&&q.G>=3&&q!==p&&(!cfg.q||cfg.q(q));}),xx=[],yy=[];
   if(pool.length<20)return '';
   var nLab=window.innerWidth<700?16:42,pick={},byPts=pool.slice().sort(function(a,b){return b.PTS_PG-a.PTS_PG;});
@@ -2830,8 +2881,10 @@ function playerScatter(s){
     return on?{x:x,y:y,logo:logoUrl(q),pl:1,lab:lastName(q.Player),pri:q.PTS_PG,tip:q.Player+' ('+q.Team+'): '+f1(x)+', '+f1(y)}:{x:x,y:y,faint:1,tip:q.Player+' ('+q.Team+'): '+f1(x)+', '+f1(y)};});
   var c=teamOf(p.Team).c;
   pts.push({x:cfg.px[1],y:cfg.py[1],hl:1,c:c,logo:logoUrl(p),pl:1,lab:N,tip:N+' '+trLab().toLowerCase()+': '+f1(cfg.px[1])+', '+f1(cfg.py[1])});
-  return scatFig(cfg.t+': where '+N+' moved','Every player averaging 20+ minutes this season. Logos and names mark the league’s top scorers and the extremes; faint dots are everyone else. The arrow shows '+N+' going from his '+trLabB().toLowerCase()+' numbers (hollow) to his '+trLab().toLowerCase()+'. Dashed lines = average.',
-    chScatter({pts:pts,xl:cfg.xl,yl:cfg.yl,invY:cfg.invY,fx:cfg.fx,fy:cfg.fy,avg:[avg(xx),avg(yy)],quad:cfg.quad,arrow:{x1:cfg.px[0],y1:cfg.py[0],x2:cfg.px[1],y2:cfg.py[1],c:c,tip:N+' '+trLabB().toLowerCase()+': '+f1(cfg.px[0])+', '+f1(cfg.py[0])}}));
+  var ax=avg(xx),ay=avg(yy),qa=qIdx(cfg.px[1],cfg.py[1],ax,ay,cfg.invY),qb=qIdx(cfg.px[0],cfg.py[0],ax,ay,cfg.invY),qn=function(i){return '“'+cfg.quad[i].toLowerCase()+'”';};
+  var title=qa!==qb?N+' moved from the '+qn(qb)+' corner to the '+qn(qa)+' corner':N+' stays in the '+qn(qa)+' corner';
+  return scatFig(title,cfg.t+'. Each logo is a player averaging 20+ minutes (top scorers and extremes named; faint dots are everyone else). Further right = '+cfg.xs+'; higher = '+cfg.ys+'. Dashed lines = league average. The arrow shows '+N+' '+trLabB().toLowerCase()+' → '+trLab().toLowerCase()+'.',
+    chScatter({pts:pts,xl:cfg.xl,yl:cfg.yl,invY:cfg.invY,fx:cfg.fx,fy:cfg.fy,avg:[ax,ay],quad:cfg.quad,qc:cfg.qc,arrow:{x1:cfg.px[0],y1:cfg.py[0],x2:cfg.px[1],y2:cfg.py[1],c:c,tip:N+' '+trLabB().toLowerCase()+': '+f1(cfg.px[0])+', '+f1(cfg.py[0])}}));
 }
 
 /* ================= THE LIST: analysis features ================= */
