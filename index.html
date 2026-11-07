@@ -1144,6 +1144,10 @@ html.intro #hmMain::after{content:'';position:absolute;inset:0;background:var(--
 .hp-v{font-weight:900;font-size:76px;font-stretch:66%;line-height:.95;margin-top:8px;color:var(--navy);white-space:nowrap}
 .hp-cmp{margin-top:8px;font-weight:800;font-size:15px}
 .hp-cmp span{font-weight:600;color:var(--t3)}
+.hp-rk{margin-top:10px;font-size:14px;color:var(--t2);font-weight:600}
+.hp-rk b{font-weight:900;font-size:20px;font-stretch:76%;color:var(--navy)}
+.hp-rk span{display:block;font-size:12px;color:var(--t3);margin-top:2px}
+.hp-t td small,.chg-r small{display:block;font-size:11px;font-weight:700;color:var(--t3);font-stretch:100%;letter-spacing:0;line-height:1.2}
 .hp-cmp.g{color:var(--rise)}.hp-cmp.r{color:var(--fall)}.hp-cmp.n{color:var(--t3)}
 .hp-t{width:100%;border-collapse:collapse;margin-top:20px}
 .hp-t th{font-weight:800;font-size:10.5px;letter-spacing:.08em;color:var(--t3);text-transform:uppercase;text-align:right;padding:0 0 6px 8px;white-space:nowrap}
@@ -2237,6 +2241,23 @@ function absentMates(p,rec){
 function listNames(a){a=a.map(function(x){return lastName(x.q.Player);});return a.length<3?a.join(' and '):a.slice(0,-1).join(', ')+' and '+a[a.length-1];}
 
 function lgTS(){var p=0,a=0,G=teamGames();Object.keys(G).forEach(function(t){G[t].forEach(function(o){p+=o.pts;a+=o.fga+0.44*o.fta;});});return a?p/(2*a)*100:57;}
+/* ---- league ranks over the same games (1st = best) ---- */
+var RKC={},LOWB={drtg:1,tov:1};
+var PK={PTS:'pts',TS:'ts',USG:'usg',FTA:'fta',P3:'p3',AST:'ast',ASTP:'astp',MIN:'min',PRA:'pra',TPM:'tpm'};
+function rkSplit(g){if(TRW==='season')return trSplit(g);var w=+TRW;return g&&g.length>=w?{rec:g.slice(-w),pri:g.slice(0,-w)}:null;}
+function rkPool(kind){var key=kind+TRW;if(RKC[key])return RKC[key];var P={rec:[],pri:[]};
+  if(kind==='t'){var G=teamGames();Object.keys(G).forEach(function(t){var sp=rkSplit(G[t]);if(!sp)return;var a=tAgg(sp.rec),b=sp.pri.length?tAgg(sp.pri):null;if(a)P.rec.push(a);if(b)P.pri.push(b);});}
+  else D.forEach(function(q){if(!(q.MP_PG>=20))return;var g=GL[String(q.nba_id)];if(!g)return;var sp=rkSplit(g);if(!sp)return;P.rec.push(pAgg(q,sp.rec));if(sp.pri.length>=3)P.pri.push(pAgg(q,sp.pri));});
+  return RKC[key]=P;}
+function rkOne(arr,k,v){var ok=arr.filter(function(x){return x[k]!=null&&(k!=='p3'||x.tpa>=2)&&(k!=='ts'||x.fga>=6);});if(v==null||ok.length<8)return null;
+  return {r:ok.filter(function(x){return LOWB[k]?x[k]<v-1e-9:x[k]>v+1e-9;}).length+1,n:ok.length};}
+function addRanks(rows,kind){var P=rkPool(kind);rows.forEach(function(r){if(!r.k||r.txt)return;var a=rkOne(P.rec,r.k,r.a),b=rkOne(P.pri,r.k,r.b);if(a&&b)r.rk={a:a.r,b:b.r,n:a.n,nb:b.n};});return rows;}
+function rkWho(kind,n){return kind==='t'?'in the NBA':'among the '+n+' players averaging 20+ minutes';}
+function rkPhrase(k,r,n){if(!LOWB[k])return ordn(r);return r<=n/2?(r===1?'fewest':ordn(r)+'-fewest'):(n-r+1===1?'most':ordn(n-r+1)+'-most');}
+var RKN={drtg:'points allowed',tov:'turnovers',ortg:'scoring per 100 possessions',net:'net rating',p3:'3-point percentage',tpm:'made threes per game',pts:'scoring',ts:'true shooting',usg:'usage rate',pra:'points + rebounds + assists',min:'minutes',ast:'assists',astp:'assist rate',fta:'free throw attempts'};
+function rkSent(r,kind){if(!r||!r.rk)return '';var q=r.rk,w=TRW==='season'?' in the second half':' over the '+trLab().toLowerCase(),nm=RKN[r.k]||r.l.toLowerCase();
+  if(LOWB[r.k])return 'That’s the '+rkPhrase(r.k,q.a,q.n)+' '+nm+' '+rkWho(kind,q.n)+w+'. Before, it was the '+rkPhrase(r.k,q.b,q.n)+'.';
+  return (kind==='t'?'Their ':'His ')+nm+' ranks '+ordn(q.a)+' '+rkWho(kind,q.n)+w+(q.a<q.b?', up from '+ordn(q.b)+' before.':q.a>q.b?', down from '+ordn(q.b)+' before.':', the same as before.');}
 function playerStories(only){
   var LG=lg3(),LTS=lgTS(),out=[];
   (only?[only]:D).forEach(function(p){
@@ -2305,7 +2326,8 @@ function gTS(x){var a=x[11]+0.44*x[15];return a?x[4]/(2*a)*100:0;}
        (about 40 on desktop, 16 on phones), placed automatically with short leader lines; everyone else is a faint dot.
    17. Scatter titles state the takeaway (league rank before → now, or which corner the player moved to), and the subtitle says in plain words what right and up mean.
    18. Corner labels describe BOTH axes ("SHOOT A LOT + MAKE A LOT", "COLD, FEW THREES"). Only the truly best corner is green and only the truly worst is red.
-   19. Before/after stat tables use the number line: zero in the middle, good changes go right in green, bad changes go left in red, the "now" number colored to match. */
+   19. Before/after stat tables use the number line: zero in the middle, good changes go right in green, bad changes go left in red, the "now" number colored to match.
+   20. Every headline stat gets its league rank over the SAME games, now and before ("28th in the NBA over the last 5, was 4th"). Players rank among everyone averaging 20+ minutes. 1st = best. */
 function pWrite(s){
   var p=s.p,R=s.R,B=s.B,N=lastName(p.Player),F=p.Player,rec=s.sp.rec,pri=s.sp.pri,all=s.g,nr=rec.length;
   var up=s.v==='REAL'||s.v==='OPPORTUNITY'||s.v==='LUCK';
@@ -2323,7 +2345,7 @@ function pWrite(s){
     TPA:{l:'Threes',u:'attempts per game',b:B.tpa,a:R.tpa,good:null},AST:{l:'Assists',u:'per game',b:B.ast,a:R.ast,good:1},ASTP:{l:'Assist rate',u:'% of teammate baskets he set up',b:B.astp,a:R.astp,good:1,pc:1},
     MIN:{l:'Minutes',u:'per game',b:B.min,a:R.min,good:1},P3:{l:'3-point %',u:'share of threes made',b:B.p3===null?s.base:B.p3,a:R.p3===null?0:R.p3,good:1,pc:1,ref:s.base,refl:s.hasTrack?'LAST SEASON':'LEAGUE AVG'},
     FGA:{l:'Shots',u:'attempts per game',b:B.fga,a:R.fga,good:null},PRA:{l:'Pts + reb + ast',u:'per game',b:B.pra,a:R.pra,good:1},
-    TPM:{l:'Made threes',u:'per game',b:B.tpm,a:R.tpm,good:1},SH3:{l:'Share of points from threes',u:'% of his points',b:B.sh3,a:R.sh3,good:null,pc:1}};
+    TPM:{l:'Made threes',u:'per game',b:B.tpm,a:R.tpm,good:1,k:'tpm'},SH3:{l:'Share of points from threes',u:'% of his points',b:B.sh3,a:R.sh3,good:null,pc:1}};
   var best=rec.reduce(function(m,x){return x[4]>m[4]?x:m;},rec[0]),worst=rec.reduce(function(m,x){return x[4]<m[4]?x:m;},rec[0]);
   var lede='<b>'+esc(F)+' has averaged '+f1(R.pts)+' points over his '+recW()+'</b>, '+(R.pts>=B.pts?'up':'down')+' from '+f1(B.pts)+' '+befW(pri.length)
     +(up&&best[4]>=R.pts+5?', capped by '+best[4]+' points '+oppName(best[1])+' on '+best[0]:(!up&&worst[4]<=R.pts-5?', including just '+worst[4]+' '+oppName(worst[1])+' on '+worst[0]:''))+'.';
@@ -2421,14 +2443,16 @@ function pWrite(s){
   var cgood=o.c.yl==='Turnovers'?R.tov<B.tov:up;
   o.col=s.v==='NORMAL'?'#69718a':cgood?'var(--rise)':'var(--fall)';
   o.lede=lede;
+  Object.keys(KS).forEach(function(k){if(PK[k])KS[k].k=PK[k];});Object.keys(D_).forEach(function(k){if(PK[k])D_[k].k=PK[k];});
   o.ksx=o.ks.filter(function(k){return k!=='P3'||(R.p3!==null&&B.p3!==null);}).map(function(k){return KS[k];});o.dmx=o.dm.map(function(k){return D_[k];}).filter(function(r){return r&&!(r.l==='3-point %'&&!R.tpa);});
+  addRanks(o.ksx,'p');addRanks(o.dmx,'p');var rs=rkSent(o.ksx[0],'p');if(rs)o.k+=' '+rs;
   var gm=gmOf(all);
   o.chartT={'Points':'Points each game','True shooting %':'True shooting each game','Free throw attempts':'Free throw attempts each game','Turnovers':'Turnovers each game','Assists':'Assists each game','Minutes':'Minutes each game','Pts + reb + ast':'Pts + reb + ast each game'}[o.c.yl];
   o.card=function(){return chFig(o.chartT,null,chBars({v:o.c.v,g:gm,nr:nr,col:o.col,unit:o.c.unit,yl:o.c.yl,note:o.note}),0);};
   o.big=function(){var sm=window.innerWidth<700;return chFig(bigTitle(s,o),o.chartT+' this season. Dashed lines show the average '+trLabB().toLowerCase()+' and during the '+trLab().toLowerCase()+'.',
     chBars({v:o.c.v,g:gm,nr:nr,col:o.col,unit:o.c.unit,yl:o.c.yl,big:1,W:sm?360:860,H:sm?260:360,note:o.note,max:1,all:1}),1);};
   var AVK={'Points':'pts','True shooting %':'ts','Free throw attempts':'fta','Turnovers':'tov','Assists':'ast','Minutes':'min','Pts + reb + ast':'pra'}[o.c.yl];
-  o.hc=o.c3?{v:o.c3.v,g:gm,nr:nr,unit:'made threes',t:'Made threes per game',av:[B.tpm,R.tpm]}:{v:o.c.v,g:gm,nr:nr,unit:o.c.unit,t:o.chartT.replace(' each game',' per game'),av:AVK?[B[AVK],R[AVK]]:null};o.hc.nb=pri.length;
+  o.hc=o.c3?{v:o.c3.v,g:gm,nr:nr,unit:'made threes',t:'Made threes per game',av:[B.tpm,R.tpm]}:{v:o.c.v,g:gm,nr:nr,unit:o.c.unit,t:o.chartT.replace(' each game',' per game'),av:AVK?[B[AVK],R[AVK]]:null};o.hc.nb=pri.length;o.hc.kind='p';
   if(o.c3)o.big3=function(){var sm=window.innerWidth<700,a=all.slice(-12);return chFig(N+' made '+f1(R.tpm)+' threes a game in the '+trLab().toLowerCase()+', '+(R.tpm>=B.tpm?'up':'down')+' from '+f1(B.tpm),'Made threes in each game, with the share of his points that came from threes: '+f0(B.sh3)+'% '+trLabB().toLowerCase()+', '+f0(R.sh3)+'% in the '+trLab().toLowerCase()+'.',
     chBars({v:o.c3.v,g:gm,nr:nr,col:o.col,unit:'made threes',yl:'Made threes',big:1,W:sm?360:860,H:sm?240:300,all:1}),1);};
   o.chart=o.card();
@@ -2476,15 +2500,16 @@ function tWrite(s){
     o.h2='Not just cold shooting';o.b2='Three-point shooting explains less than half of the drop, so something else in the offense changed.';o.watch='Watch the points per 100 possessions over the next week.';}
   o.lede='<b>The '+esc(teamOf(s.t).n)+' have gone '+R.w+'-'+R.l+' '+rec+'</b>, after starting '+B.w+'-'+B.l+'. Their net rating moved '+f1(Math.abs(s.dNet))+' points per 100 possessions '+(s.up?'in the right direction':'the wrong way')+'.';
   o.nut='Offense went from '+f1(B.ortg)+' to '+f1(R.ortg)+' points per 100 possessions and defense from '+f1(B.drtg)+' to '+f1(R.drtg)+' allowed.';
-  o.ksx=s.kind==='shoot'?[{l:'3-point percentage',a:R.p3,b:B.p3,good:1,pc:1},{l:'Made threes per game',a:R.tpm,b:B.tpm,good:1},{l:'Share of points from threes',a:R.sh3,b:B.sh3,good:null,pc:1},{l:'Record',txt:R.w+'-'+R.l,sub:B.w+'-'+B.l+' before'}]
-    :[s.kind==='def'?{l:'Points allowed per 100 possessions',a:R.drtg,b:B.drtg,good:0}:{l:'Points scored per 100 possessions',a:R.ortg,b:B.ortg,good:1},{l:'Net rating per 100 possessions',a:R.net,b:B.net,good:1,sg:1},{l:'Record',txt:R.w+'-'+R.l,sub:B.w+'-'+B.l+' before'}];
-  o.dmx=s.kind==='shoot'?[{l:'3-point %',u:'share of threes made',b:B.p3,a:R.p3,good:1,pc:1},{l:'Made threes',u:'per game',b:B.tpm,a:R.tpm,good:1},{l:'Share of points from threes',u:'% of their points',b:B.sh3,a:R.sh3,good:null,pc:1},{l:'Offense',u:'points per 100 possessions',b:B.ortg,a:R.ortg,good:1},{l:'Defense',u:'points allowed per 100',b:B.drtg,a:R.drtg,good:0}]:[{l:'Offense',u:'points per 100 possessions',b:B.ortg,a:R.ortg,good:1},{l:'Defense',u:'points allowed per 100',b:B.drtg,a:R.drtg,good:0},{l:'3-point %',u:'share of threes made',b:B.p3,a:R.p3,good:1,pc:1},{l:'Turnovers',u:'per 100 possessions',b:B.tov,a:R.tov,good:0}];
+  o.ksx=s.kind==='shoot'?[{l:'3-point percentage',a:R.p3,b:B.p3,good:1,pc:1,k:'p3'},{l:'Made threes per game',a:R.tpm,b:B.tpm,good:1,k:'tpm'},{l:'Share of points from threes',a:R.sh3,b:B.sh3,good:null,pc:1},{l:'Record',txt:R.w+'-'+R.l,sub:B.w+'-'+B.l+' before'}]
+    :[s.kind==='def'?{l:'Points allowed per 100 possessions',a:R.drtg,b:B.drtg,good:0,k:'drtg'}:{l:'Points scored per 100 possessions',a:R.ortg,b:B.ortg,good:1,k:'ortg'},{l:'Net rating per 100 possessions',a:R.net,b:B.net,good:1,sg:1,k:'net'},{l:'Record',txt:R.w+'-'+R.l,sub:B.w+'-'+B.l+' before'}];
+  o.dmx=s.kind==='shoot'?[{l:'3-point %',u:'share of threes made',b:B.p3,a:R.p3,good:1,pc:1,k:'p3'},{l:'Made threes',u:'per game',b:B.tpm,a:R.tpm,good:1,k:'tpm'},{l:'Share of points from threes',u:'% of their points',b:B.sh3,a:R.sh3,good:null,pc:1},{l:'Offense',u:'points per 100 possessions',b:B.ortg,a:R.ortg,good:1,k:'ortg'},{l:'Defense',u:'points allowed per 100',b:B.drtg,a:R.drtg,good:0,k:'drtg'}]:[{l:'Offense',u:'points per 100 possessions',b:B.ortg,a:R.ortg,good:1,k:'ortg'},{l:'Defense',u:'points allowed per 100',b:B.drtg,a:R.drtg,good:0,k:'drtg'},{l:'3-point %',u:'share of threes made',b:B.p3,a:R.p3,good:1,pc:1,k:'p3'},{l:'Turnovers',u:'per 100 possessions',b:B.tov,a:R.tov,good:0,k:'tov'}];
+  addRanks(o.ksx,'t');addRanks(o.dmx,'t');var rs=rkSent(o.ksx[0],'t');if(rs){var tail=o.k.match(/ (Shooting that hot tends to cool\.|Expect a bounce back\.)$/);o.k=tail?o.k.slice(0,-tail[0].length)+' '+rs+tail[0]:o.k+' '+rs;}
   var g=s.g.slice(-14),gm=g.map(function(x){return {o:x.o,d:x.d,ab:x.o.split(' ').pop(),sc:x.pts+'–'+x.opp};}),mv=g.map(function(x){return x.pts-x.opp;}),nr2=Math.min(n,g.length);
   o.card=function(){return chFig('Point margin each game',null,chMargin({v:mv,g:gm,nr:nr2}),0);};
   var hg=s.g.slice(-12),hgm=hg.map(function(x){return {o:x.o,d:x.d,ab:x.o.split(' ').pop()};}),hnr=Math.min(n,hg.length);
   o.hc=s.kind==='shoot'?{v:hg.map(function(x){return x.tpm;}),g:hgm,nr:hnr,unit:'made threes',t:'Made threes per game',av:[B.tpm,R.tpm]}
     :s.kind==='def'?{v:hg.map(function(x){return x.poss?Math.round(x.opp/x.poss*1000)/10:0;}),g:hgm,nr:hnr,unit:'points allowed per 100',t:'Points allowed per 100 possessions',av:[B.drtg,R.drtg]}
-    :{v:hg.map(function(x){return x.poss?Math.round(x.pts/x.poss*1000)/10:0;}),g:hgm,nr:hnr,unit:'points per 100',t:'Points scored per 100 possessions',av:[B.ortg,R.ortg]};o.hc.nb=s.sp.pri.length;
+    :{v:hg.map(function(x){return x.poss?Math.round(x.pts/x.poss*1000)/10:0;}),g:hgm,nr:hnr,unit:'points per 100',t:'Points scored per 100 possessions',av:[B.ortg,R.ortg]};o.hc.nb=s.sp.pri.length;o.hc.kind='t';
   if(s.kind==='shoot')o.big3=function(){var sm=window.innerWidth<700,gg=s.g.slice(-14);return chFig(TN+' made '+f1(R.tpm)+' threes a game in the '+trLab().toLowerCase()+', '+(R.tpm>=B.tpm?'up':'down')+' from '+f1(B.tpm),'Made threes in each game. Threes were '+f0(B.sh3)+'% of their points '+trLabB().toLowerCase()+' and '+f0(R.sh3)+'% in the '+trLab().toLowerCase()+'.',
     chBars({v:gg.map(function(x){return x.tpm;}),g:gg.map(function(x){return {o:x.o,d:x.d,ab:x.o.split(' ').pop()};}),nr:Math.min(n,gg.length),col:s.up?'var(--rise)':'var(--fall)',unit:'made threes',yl:'Made threes',big:1,all:1,W:sm?360:860,H:sm?240:300}),1);};
   o.big=function(){var sm=window.innerWidth<700;return chFig(TN+' went '+R.w+'-'+R.l+' '+rec,'Final point margin in each game. Above the line is a win.',chMargin({v:mv,g:gm,nr:nr2,big:1,W:sm?360:860,H:sm?260:340}),1);};
@@ -2554,8 +2579,8 @@ function chChange(rows,nb){
   var h='<div class="chg"><div class="chg-h"><span></span><span>'+esc(bl)+'</span><span class="mid"><i class="r">◀ Worse</i><i class="z">0</i><i class="g">Better ▶</i></span><span>'+esc(rl)+'</span></div>';
   rows.forEach(function(r){var d=Math.round((Math.round(r.a*10)-Math.round(r.b*10)))/10,better=d===0||r.good===null?null:(d>0)===!!r.good,right=better===null?d>=0:better,cls=better===null?'n':better?'g':'r',len=Math.max(d===0?0:2,Math.min(1,Math.abs(rel(r))/mx)*46);
     var lab=(d>0?'+':d<0?'−':'')+f1(Math.abs(d)),inn=len>30,pos=inn?(right?'left:calc(50% + '+len.toFixed(1)+'% - 6px);transform:translateX(-100%)':'right:calc(50% + '+len.toFixed(1)+'% - 6px);transform:translateX(100%)'):(right?'left:calc(50% + '+len.toFixed(1)+'% + 6px)':'right:calc(50% + '+len.toFixed(1)+'% + 6px)');
-    h+='<div class="chg-r ci" data-tip="'+esc(r.l+(r.u?' ('+r.u+')':'')+': '+fmtV(r,r.b)+' → '+fmtV(r,r.a))+'"><span class="l"><b>'+esc(r.l)+'</b>'+(r.u?'<span>'+esc(r.u)+'</span>':'')+'</span><span class="bv">'+fmtV(r,r.b)+'</span>'
-      +'<span class="chg-bar"><b class="'+cls+'" style="'+(right?'left:50%':'right:50%')+';width:'+len.toFixed(1)+'%"></b><em class="'+cls+(inn?' in':'')+'" style="'+pos+'">'+lab+'</em></span><span class="nv '+cls+'">'+fmtV(r,r.a)+'</span></div>';});
+    h+='<div class="chg-r ci" data-tip="'+esc(r.l+(r.u?' ('+r.u+')':'')+': '+fmtV(r,r.b)+' → '+fmtV(r,r.a))+'"><span class="l"><b>'+esc(r.l)+'</b>'+(r.u?'<span>'+esc(r.u)+'</span>':'')+'</span><span class="bv">'+fmtV(r,r.b)+(r.rk?'<small>'+ordn(r.rk.b)+'</small>':'')+'</span>'
+      +'<span class="chg-bar"><b class="'+cls+'" style="'+(right?'left:50%':'right:50%')+';width:'+len.toFixed(1)+'%"></b><em class="'+cls+(inn?' in':'')+'" style="'+pos+'">'+lab+'</em></span><span class="nv '+cls+'">'+fmtV(r,r.a)+(r.rk?'<small>'+ordn(r.rk.a)+' in NBA</small>':'')+'</span></div>';});
   return h+'</div>';
 }
 function chDumb(rows,o){
@@ -2692,10 +2717,11 @@ function heroPanel(items,hc){
   var r0=items[0],bl=befLab(hc.nb),rl=recLab(),dir=function(r){var d=Math.round((r.a-r.b)*10)/10;return {d:d,c:d===0||r.good===null?'n':((d>0)===!!r.good?'g':'r')};},z=dir(r0);
   var pc=/%|percentage/i.test(hc.t),fv=function(x){return pc?f1(x)+'%':f1(x);},up=hc.av&&hc.av[1]>=hc.av[0];
   var main='<div class="hp-l">'+esc(r0.l)+'</div><div class="hp-w">'+esc(rl)+'</div><div class="hp-v">'+(r0.txt||fmtV(r0,r0.a))+'</div>'
-    +(r0.txt?'<div class="hp-cmp n">'+esc(r0.sub)+'</div>':'<div class="hp-cmp '+z.c+'">'+(z.d>0?'▲ Up from ':z.d<0?'▼ Down from ':'Same as ')+fmtV(r0,r0.b)+'<span> '+esc(bl.toLowerCase())+'</span></div>');
+    +(r0.txt?'<div class="hp-cmp n">'+esc(r0.sub)+'</div>':'<div class="hp-cmp '+z.c+'">'+(z.d>0?'▲ Up from ':z.d<0?'▼ Down from ':'Same as ')+fmtV(r0,r0.b)+'<span> '+esc(bl.toLowerCase())+'</span></div>')
+    +(r0.rk?'<div class="hp-rk"><b>'+ordn(r0.rk.a)+'</b> of '+r0.rk.n+(hc.kind==='t'?' NBA teams':' players (20+ minutes)')+' in this stretch<span>Was '+ordn(r0.rk.b)+' ('+esc(bl.toLowerCase())+') · 1st = best</span></div>':'');
   var rows='<table class="hp-t"><tr><th></th><th>'+esc(bl)+'</th><th>'+esc(rl)+'</th></tr>'+items.slice(1).map(function(r){
     if(r.txt)return '<tr><td>'+esc(r.l)+'</td><td>'+esc(String(r.sub).replace(' before',''))+'</td><td><b>'+r.txt+'</b></td></tr>';
-    var q=dir(r);return '<tr><td>'+esc(r.l)+'</td><td>'+fmtV(r,r.b)+'</td><td><b>'+fmtV(r,r.a)+'</b><i class="'+q.c+'">'+(q.d>0?'▲':q.d<0?'▼':'')+'</i></td></tr>';}).join('')+'</table>';
+    var q=dir(r),rb=r.rk?'<small>'+ordn(r.rk.b)+'</small>':'',ra=r.rk?'<small>'+ordn(r.rk.a)+' in NBA</small>':'';return '<tr><td>'+esc(r.l)+'</td><td>'+fmtV(r,r.b)+rb+'</td><td><b>'+fmtV(r,r.a)+'</b><i class="'+q.c+'">'+(q.d>0?'▲':q.d<0?'▼':'')+'</i>'+ra+'</td></tr>';}).join('')+'</table>';
   var take=hc.av?esc(rl)+': '+fv(hc.av[1])+' on average, '+(up?'up':'down')+' from '+fv(hc.av[0])+' ('+esc(bl.toLowerCase())+')':'';
   return '<div class="fg-a hp"><div class="hp-side">'+main+rows+'</div><div class="hp-chart"><div class="hp-ct">'+esc(hc.t)+'</div>'+(take?'<div class="hp-cs">'+take+'</div>':'')
     +'<div class="hp-leg"><span><i style="background:#cdd3df"></i>'+esc(bl)+'</span><span><i style="background:#1b2440"></i>'+esc(rl)+'</span><span><i class="ln"></i>Average</span></div>'+chHero(hc)+'</div></div>';
@@ -2738,7 +2764,7 @@ function showStory(kind,id){
     h+='<h2 class="ar-h2">'+esc(w.h2)+'</h2><p class="ar-p">'+esc(w.b2)+'</p>';
     h+=playerScatter(s);
     var sm=window.innerWidth<700;
-    h+='<div class="fg-a ar-fig">'+chFig('The numbers behind it','How each stat changed from '+befLab(s.sp.pri.length).toLowerCase()+' to the '+trLab().toLowerCase()+'. Green bars go right when the change helps, red bars go left when it hurts. Longer bar = bigger change.',chChange(w.dmx,s.sp.pri.length),1)+'</div>';
+    h+='<div class="fg-a ar-fig">'+chFig('The numbers behind it','How each stat changed from '+befLab(s.sp.pri.length).toLowerCase()+' to the '+trLab().toLowerCase()+'. Green bars go right when the change helps, red bars go left when it hurts. Small numbers = league rank over the same games (1st = best).',chChange(w.dmx,s.sp.pri.length),1)+'</div>';
     var cm=chCourt(p);if(cm)h+='<div class="fg-a ar-fig ar-court">'+cm+'</div>';
     h+='<div class="ar-watch"><b>What to watch</b>'+esc(w.watch)+'</div>';
     h+='<h2 class="x-h2 st-sh gg">Game by game</h2><div class="st-wrap"><table class="st-gl"><tr><th>Date</th><th>Opp</th><th></th><th>MIN</th><th>PTS</th><th>REB</th><th>AST</th><th>FG</th><th>3P</th><th>FT</th><th>TOV</th></tr>'
@@ -2756,7 +2782,7 @@ function showStory(kind,id){
     h+='<div class="fg-a ar-fig">'+w.big()+'</div>';
     h+='<h2 class="ar-h2">'+esc(w.h2)+'</h2><p class="ar-p">'+esc(w.b2)+'</p>';
     h+=(s.kind==='shoot'?teamThreeScatter(id,s):'')+teamODScatter(id,s,1);
-    h+='<div class="fg-a ar-fig">'+chFig('The numbers behind it','How each stat changed from '+befLab(s.sp.pri.length).toLowerCase()+' to the '+trLab().toLowerCase()+'. Green bars go right when the change helps, red bars go left when it hurts. Longer bar = bigger change.',chChange(w.dmx,s.sp.pri.length),1)+'</div>';
+    h+='<div class="fg-a ar-fig">'+chFig('The numbers behind it','How each stat changed from '+befLab(s.sp.pri.length).toLowerCase()+' to the '+trLab().toLowerCase()+'. Green bars go right when the change helps, red bars go left when it hurts. Small numbers = league rank over the same games (1st = best).',chChange(w.dmx,s.sp.pri.length),1)+'</div>';
     h+='<div class="ar-watch"><b>What to watch</b>'+esc(w.watch)+'</div>';
     h+='<h2 class="x-h2 st-sh gg">Game by game</h2><div class="st-wrap"><table class="st-gl"><tr><th>Date</th><th>Opp</th><th></th><th>Score</th><th>Margin</th></tr>'
       +s.g.slice().reverse().map(function(o,i){var m=o.pts-o.opp;return '<tr class="'+(i<s.sp.rec.length?'rec':'')+'"><td>'+o.d+'</td><td>'+oppCell(o.o)+'</td><td class="'+(o.wl==='W'?'w':'l')+'">'+o.wl+'</td><td>'+o.pts+'–'+o.opp+'</td><td style="color:'+(m>=0?'var(--rise)':'var(--fall)')+';font-weight:700">'+(m>0?'+':'')+m+'</td></tr>';}).join('')+'</table></div>';
@@ -2849,7 +2875,7 @@ function scatFig(t,sub,svg){return '<div class="fg-a ar-fig">'+chFig(t,sub,svg,1
 /* every team, recent window: offense vs defense (logos) */
 function teamODScatter(t,s,win){
   var G=teamGames(),pts=[],ox=[],dy=[],bo=[],bd=[];
-  Object.keys(G).forEach(function(k){var sp=win?trSplit(G[k]):{rec:G[k]};if(!sp||!sp.rec.length)return;var a=tAgg(sp.rec);if(!a)return;ox.push(a.ortg);dy.push(a.drtg);
+  Object.keys(G).forEach(function(k){var sp=win?rkSplit(G[k]):{rec:G[k]};if(!sp||!sp.rec.length)return;var a=tAgg(sp.rec);if(!a)return;ox.push(a.ortg);dy.push(a.drtg);
     if(win&&sp.pri&&sp.pri.length){var pb=tAgg(sp.pri);if(pb){bo.push(pb.ortg);bd.push(pb.drtg);}}
     pts.push({x:a.ortg,y:a.drtg,logo:logoT(k),hl:k===t,ring:teamOf(k).c,lab:k===t?nick(k):k,pri:a.net,tip:teamOf(k).n+': scores '+f1(a.ortg)+', allows '+f1(a.drtg)+' per 100 possessions'+(win?' ('+trLab().toLowerCase()+')':'')});});
   if(pts.length<6)return '';
@@ -2865,7 +2891,7 @@ function teamODScatter(t,s,win){
 }
 function teamThreeScatter(t,s){
   var G=teamGames(),pts=[],xx=[],yy=[];
-  Object.keys(G).forEach(function(k){var sp=trSplit(G[k]);if(!sp)return;var a=tAgg(sp.rec);if(!a)return;xx.push(a.tpa);yy.push(a.p3);
+  Object.keys(G).forEach(function(k){var sp=rkSplit(G[k]);if(!sp)return;var a=tAgg(sp.rec);if(!a)return;xx.push(a.tpa);yy.push(a.p3);
     pts.push({x:a.tpa,y:a.p3,logo:logoT(k),hl:k===t,ring:teamOf(k).c,lab:k===t?nick(k):k,pri:a.p3,tip:teamOf(k).n+': '+f1(a.tpa)+' three-point attempts per game, '+f1(a.p3)+'% made'});});
   if(pts.length<6)return '';
   var N=nick(t),rk=rankIn(s.R.p3,yy,1);
