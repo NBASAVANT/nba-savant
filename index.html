@@ -2327,6 +2327,7 @@ function gTS(x){var a=x[11]+0.44*x[15];return a?x[4]/(2*a)*100:0;}
    17. Scatter titles state the takeaway (league rank before → now, or which corner the player moved to), and the subtitle says in plain words what right and up mean.
    18. Corner labels describe BOTH axes ("SHOOT A LOT + MAKE A LOT", "COLD, FEW THREES"). Only the truly best corner is green and only the truly worst is red.
    19. Before/after stat tables use the number line: zero in the middle, good changes go right in green, bad changes go left in red, the "now" number colored to match.
+   21. Streaks always count the FULL current streak from the game log, never just the games in the window. If a team lost its last 5 and the 2 before that, the headline says "lose 7 straight". Every number in an article must agree with every other number on the page.
    20. Every headline stat gets its league rank over the SAME games, now and before ("28th in the NBA over the last 5, was 4th"). Players rank among everyone averaging 20+ minutes. 1st = best. */
 function pWrite(s){
   var p=s.p,R=s.R,B=s.B,N=lastName(p.Player),F=p.Player,rec=s.sp.rec,pri=s.sp.pri,all=s.g,nr=rec.length;
@@ -2484,7 +2485,8 @@ function teamStories(only){
 function tWrite(s){
   var N=nick(s.t),TN='The '+N,R=s.R,B=s.B,o={},n=s.sp.rec.length,rec=TRW==='season'?'in the second half of their games':'in their last '+numWord(n),pl=/s$/.test(N);
   var are=' are ',tp=pl?TN+'’':TN+'’s',nk=N,rg=s.sp.rec,ng=rg.length;
-  var wins=R.w===ng?'win '+ng+' straight':R.w>ng/2?'win '+R.w+' of '+ng:'improve',loss=R.l===ng?'lose '+ng+' straight':R.l>ng/2?'lose '+R.l+' of '+ng:'slip';
+  var stk=0,lastWL=s.g.length?s.g[s.g.length-1].wl:'';for(var si=s.g.length-1;si>=0&&s.g[si].wl===lastWL;si--)stk++;
+  var wins=R.w===ng?'win '+Math.max(ng,stk)+' straight':R.w>ng/2?'win '+R.w+' of '+ng:'improve',loss=R.l===ng?'lose '+Math.max(ng,stk)+' straight':R.l>ng/2?'lose '+R.l+' of '+ng:'slip';
   if(s.v==='REAL'&&s.kind==='def'){o.h=nk+' '+wins+' behind a tougher defense';o.k='They’re allowing '+f1(R.drtg)+' points per 100 possessions, down from '+f1(B.drtg)+'.';
     o.h2='Defense travels';o.b2='Defensive improvement tends to hold up better than hot shooting, because it doesn’t depend on shots going in.';o.watch='If the defense stays near '+f0(R.drtg)+' per 100, this run is sustainable.';}
   else if(s.v==='REAL'){var c=[{v:(B.tov-R.tov)/2,p:'fewer turnovers',l:'Turnovers per 100 possessions fell from '+f1(B.tov)+' to '+f1(R.tov)+'.'},{v:(R.ftr-B.ftr)/5,p:'more trips to the line',l:'Free throw rate rose from '+f1(B.ftr)+' to '+f1(R.ftr)+'.'},{v:(R.ast-B.ast)/5,p:'better ball movement',l:'Assisted baskets rose from '+f1(B.ast)+'% to '+f1(R.ast)+'%.'}].sort(function(a,b){return b.v-a.v;});
@@ -2498,7 +2500,7 @@ function tWrite(s){
     o.h2='Not just bad luck';o.b2='The drop is on the defensive end, which isn’t explained by cold shooting.';o.watch='Watch the points allowed per 100 possessions. That number has to come down.';}
   else{o.h=nk+' '+loss+' as their offense stalls';o.k='They’re scoring '+f1(R.ortg)+' points per 100 possessions, down from '+f1(B.ortg)+'.';
     o.h2='Not just cold shooting';o.b2='Three-point shooting explains less than half of the drop, so something else in the offense changed.';o.watch='Watch the points per 100 possessions over the next week.';}
-  o.lede='<b>The '+esc(teamOf(s.t).n)+' have gone '+R.w+'-'+R.l+' '+rec+'</b>, after starting '+B.w+'-'+B.l+'. Their net rating moved '+f1(Math.abs(s.dNet))+' points per 100 possessions '+(s.up?'in the right direction':'the wrong way')+'.';
+  o.lede='<b>The '+esc(teamOf(s.t).n)+' have gone '+R.w+'-'+R.l+' '+rec+'</b>, after starting '+B.w+'-'+B.l+'.'+(stk>ng&&(R.w===ng||R.l===ng)?' Counting earlier games, they’ve '+(lastWL==='W'?'won':'lost')+' '+stk+' straight.':'')+' Their net rating moved '+f1(Math.abs(s.dNet))+' points per 100 possessions '+(s.up?'in the right direction':'the wrong way')+'.';
   o.nut='Offense went from '+f1(B.ortg)+' to '+f1(R.ortg)+' points per 100 possessions and defense from '+f1(B.drtg)+' to '+f1(R.drtg)+' allowed.';
   o.ksx=s.kind==='shoot'?[{l:'3-point percentage',a:R.p3,b:B.p3,good:1,pc:1,k:'p3'},{l:'Made threes per game',a:R.tpm,b:B.tpm,good:1,k:'tpm'},{l:'Share of points from threes',a:R.sh3,b:B.sh3,good:null,pc:1},{l:'Record',txt:R.w+'-'+R.l,sub:B.w+'-'+B.l+' before'}]
     :[s.kind==='def'?{l:'Points allowed per 100 possessions',a:R.drtg,b:B.drtg,good:0,k:'drtg'}:{l:'Points scored per 100 possessions',a:R.ortg,b:B.ortg,good:1,k:'ortg'},{l:'Net rating per 100 possessions',a:R.net,b:B.net,good:1,sg:1,k:'net'},{l:'Record',txt:R.w+'-'+R.l,sub:B.w+'-'+B.l+' before'}];
