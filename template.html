@@ -3446,7 +3446,7 @@ function findTeams(term){
 }
 
 /* ================= BETTING: projections, previews, scorecard, award ladders ================= */
-var BETP={rw:0.4,mw:0.5,of:1,pf:1,fr:1},BET={},BSTAT={pts:'Points',reb:'Rebounds',ast:'Assists',tpm:'Made threes',pra:'Pts + reb + ast',pr:'Pts + reb',pa:'Pts + ast'},BSORT={k:'pts',g:''};
+var BETP={rw:0.2,mw:0.5,fr:0.5,k3:100,of:1,pf:1,us:0.3},BET={},BSTAT={pts:'Points',reb:'Rebounds',ast:'Assists',tpm:'Made threes',pra:'Pts + reb + ast',pr:'Pts + reb',pa:'Pts + ast'},BSORT={k:'pts',g:''};
 function mdOrd(md){var a=String(md).split('/'),m=+a[0],d=+a[1];return ((m+3)%12)*32+d;}
 function seasonY(){return +String(META.season||'2026').slice(0,4);}
 function mdShift(md,k){var a=String(md).split('/'),m=+a[0],d=+a[1],dt=new Date(seasonY()+(m<9?1:0),m-1,d+k);return (dt.getMonth()+1)+'/'+dt.getDate();}
@@ -3457,22 +3457,24 @@ function oppAb(s){return String(s).split(' ').pop();}
 /* everything we know before a date (cut = mdOrd of that date) */
 function betCtx(cut){
   if(BET['c'+cut])return BET['c'+cut];
-  var G=teamGames(),TG={},TR={},o=[],pc=[];
-  Object.keys(G).forEach(function(t){TG[t]=G[t].filter(function(g){return mdOrd(g.d)<cut;});var s=tAgg(TG[t]);if(s){TR[t]={s:s,r:tAgg(TG[t].slice(-10))||s};o.push(s.ortg);pc.push(s.pace);}});
+  var G=teamGames(),TG={},TR={},o=[],pc=[],M3=0,A3=0;
+  Object.keys(G).forEach(function(t){TG[t]=G[t].filter(function(g){return mdOrd(g.d)<cut;});var s=tAgg(TG[t]);if(s){TR[t]={s:s,r:tAgg(TG[t].slice(-10))||s,miss:avg(TG[t].map(function(g){return g.fga-g.fgm;})),fga:avg(TG[t].map(function(g){return g.fga;}))};o.push(s.ortg);pc.push(s.pace);}});
   var lgO=avg(o)||112,lgP=avg(pc)||99;
   var bl=function(t,k){var x=TR[t],lg=k==='pace'?lgP:lgO;if(!x)return lg;var v=0.6*x.s[k]+0.4*x.r[k],n=x.s.n;return lg+(v-lg)*n/(n+5);};
-  var AL={},lgA={reb:0,ast:0,tpm:0},nT=0,F={};
-  Object.keys(GL).forEach(function(id){GL[id].forEach(function(x){if(!(x[3]>0)||mdOrd(x[0])>=cut)return;var op=oppAb(x[1]),a=AL[op]||(AL[op]={reb:0,ast:0,tpm:0});a.reb+=x[5];a.ast+=x[6];a.tpm+=x[12];});});
-  Object.keys(TR).forEach(function(t){var n=TG[t].length,a=AL[t];if(!a||!n)return;nT+=n;lgA.reb+=a.reb;lgA.ast+=a.ast;lgA.tpm+=a.tpm;});
-  ['reb','ast','tpm'].forEach(function(k){lgA[k]=nT?lgA[k]/nT:1;});
-  Object.keys(TR).forEach(function(t){var n=TG[t].length,a=AL[t]||{reb:0,ast:0,tpm:0},pr=TR[t].s.pace/lgP,f={};
-    ['reb','ast','tpm'].forEach(function(k){var raw=n&&lgA[k]?(a[k]/n)/pr/lgA[k]:1;f[k]=1+(raw-1)*n/(n+8);});
-    f.pts=bl(t,'drtg')/lgO;F[t]=f;});
-  return BET['c'+cut]={TG:TG,TR:TR,F:F,lgO:lgO,lgP:lgP,bl:bl,cut:cut};
+  var AL={},lgA={reb:0,ast:0,tpa:0},nT=0,F={},KS=['reb','ast','tpa'];
+  Object.keys(GL).forEach(function(id){GL[id].forEach(function(x){if(!(x[3]>0)||mdOrd(x[0])>=cut)return;M3+=x[12];A3+=x[13];var op=oppAb(x[1]),a=AL[op]||(AL[op]={reb:0,ast:0,tpa:0});a.reb+=x[5];a.ast+=x[6];a.tpa+=x[13];});});
+  Object.keys(TR).forEach(function(t){var n=TG[t].length,a=AL[t];if(!a||!n)return;nT+=n;KS.forEach(function(k){lgA[k]+=a[k];});});
+  KS.forEach(function(k){lgA[k]=nT?lgA[k]/nT:1;});
+  Object.keys(TR).forEach(function(t){var n=TG[t].length,a=AL[t]||{reb:0,ast:0,tpa:0},pr=TR[t].s.pace/lgP,f={};
+    KS.forEach(function(k){var raw=n&&lgA[k]?(a[k]/n)/pr/lgA[k]:1;f[k]=1+(raw-1)*n/(n+8);});
+    f.pts=bl(t,'drtg')/lgO;f.tpm=f.tpa;F[t]=f;});
+  return BET['c'+cut]={TG:TG,TR:TR,F:F,lgO:lgO,lgP:lgP,lg3:A3?M3/A3:0.36,bl:bl,cut:cut};
 }
 function fRank(C,k,t){var v=C.F[t]&&C.F[t][k];if(v==null)return null;var all=Object.keys(C.F).map(function(x){return C.F[x][k];});return {r:all.filter(function(z){return z>v+1e-9;}).length+1,n:all.length};}
+function missRank(C,t){var v=C.TR[t]&&C.TR[t].miss;if(v==null)return null;var all=Object.keys(C.TR).map(function(x){return C.TR[x].miss;});return {r:all.filter(function(z){return z>v+1e-9;}).length+1,n:all.length};}
+function mostFew(fr,hi){return hi?(fr.r===1?'the most':'the '+ordn(fr.r)+'-most'):(fr.n-fr.r+1===1?'the fewest':'the '+ordn(fr.n-fr.r+1)+'-fewest');}
 
-/* one team's players for one game */
+/* one team's players for one game. Every adjustment is kept separately so the "why" bullets match the math. */
 function projPlayers(t,opp,home,md,C,mg){
   var tg=C.TG[t];if(!tg||!tg.length)return [];
   var last=tg[tg.length-1].d,l5=tg.slice(-5).map(function(g){return g.d;}),b2b=last===mdShift(md,-1),cut=C.cut;
@@ -3480,20 +3482,26 @@ function projPlayers(t,opp,home,md,C,mg){
     var g=GL[String(p.nba_id)].filter(function(x){return x[3]>0&&mdOrd(x[0])<cut;});if(g.length<2)return null;
     var pl=g.map(function(x){return x[0];}),r5=l5.filter(function(d){return pl.indexOf(d)>=0;}).length;if(!r5)return null;
     var sm=avg(g.map(function(x){return x[3];})),lm=avg(g.slice(-5).map(function(x){return x[3];}));
-    return {p:p,g:g,out:pl.indexOf(last)<0,mb:(1-BETP.mw)*sm+BETP.mw*lm,sm:sm,r5:r5};}).filter(Boolean);
+    return {p:p,g:g,out:pl.indexOf(last)<0,mb:(1-BETP.mw)*sm+BETP.mw*lm,sm:sm,lm:lm,r5:r5,fga:avg(g.map(function(x){return x[11];}))};}).filter(Boolean);
   var act=ros.filter(function(r){return !r.out;}),outs=ros.filter(function(r){return r.out&&r.r5>=2&&r.mb>=12;});
   var freed=outs.reduce(function(s,r){return s+r.mb*r.r5/5;},0),wt=function(r){return r.mb*Math.max(0.05,1-r.mb/40);},S=act.reduce(function(s,r){return s+wt(r);},0)||1;
-  var pace=((C.bl(t,'pace')+C.bl(opp,'pace'))/2)/C.lgP,F=C.F[opp]||{pts:1,reb:1,ast:1,tpm:1},hf=home?1.01:0.99;
+  var outFGA=outs.reduce(function(s,r){return s+r.fga*r.r5/5;},0),tFGA=(C.TR[t]&&C.TR[t].fga)||88,oShare=outFGA/tFGA,usage=1+Math.min(0.12,0.5*oShare);
+  var pace=1+(((C.bl(t,'pace')+C.bl(opp,'pace'))/2)/C.lgP-1)*BETP.pf,F0=C.F[opp]||{pts:1,reb:1,ast:1,tpa:1,tpm:1},F={},hf=home?1.01:0.99;Object.keys(F0).forEach(function(k){F[k]=1+(F0[k]-1)*BETP.of;});usage=1+(usage-1)*BETP.us;
   return act.map(function(r){
-    var m=Math.min(40,r.mb+BETP.fr*Math.min(6,freed*wt(r)/S));if(b2b&&m>=28)m*=0.97;if(Math.abs(mg||0)>=12&&m>=28)m*=0.96;
-    var tm=r.g.reduce(function(s,x){return s+x[3];},0),g10=r.g.slice(-10),tm10=g10.reduce(function(s,x){return s+x[3];},0)||1;
-    var o={p:r.p,t:t,opp:opp,home:home,m:m,sm:r.sm,mup:m-r.sm,pace:pace,F:F,b2b:b2b,outs:outs,nG:r.g.length,g:r.g};
-    ['pts','reb','ast','tpm'].forEach(function(k){var rs=r.g.reduce(function(s,x){return s+glv(x,k);},0)/tm,rr=g10.reduce(function(s,x){return s+glv(x,k);},0)/tm10;
-      o[k]=((1-BETP.rw)*rs+BETP.rw*rr)*m*(1+(pace-1)*BETP.pf)*(1+(F[k]-1)*BETP.of)*hf;o['rf_'+k]=rs?rr/rs:1;});
+    var mT=r.mb-r.sm,mO=BETP.fr*Math.min(6,freed*wt(r)/S),base=r.sm+mT+mO,mB=b2b&&base>=28?-0.03*base:0,mX=Math.abs(mg||0)>=12&&base>=28?-0.04*base:0,m=Math.min(40,base+mB+mX);
+    var tm=r.g.reduce(function(s,x){return s+x[3];},0),g5=r.g.slice(-5),tm5=g5.reduce(function(s,x){return s+x[3];},0)||1,rw=r.g.length>5?BETP.rw:0;
+    var o={p:r.p,t:t,opp:opp,home:home,m:m,sm:r.sm,lm:r.lm,mup:m-r.sm,mT:mT,mO:mO,mB:mB,mX:mX,pace:pace,F:F,b2b:b2b,outs:outs,oShare:oShare,usage:usage,nG:r.g.length,g:r.g,mg:mg,form:{}};
+    var rate=function(k){var rs=r.g.reduce(function(s,x){return s+glv(x,k);},0)/tm,rr=g5.reduce(function(s,x){return s+glv(x,k);},0)/tm5;o.form[k]=rs?((1-rw)*rs+rw*rr)/rs:1;return rs*o.form[k];};
+    o.pts=rate('pts')*m*pace*F.pts*usage*hf;
+    o.reb=rate('reb')*m*pace*F.reb*hf;
+    o.ast=rate('ast')*m*pace*F.ast*(1+(usage-1)*0.5)*hf;
+    var a3=r.g.reduce(function(s,x){return s+x[13];},0),m3=r.g.reduce(function(s,x){return s+x[12];},0),ra=a3/tm,rra=g5.reduce(function(s,x){return s+x[13];},0)/tm5;
+    o.form.tpm=ra?((1-rw)*ra+rw*rra)/ra:1;o.p3s=a3?m3/a3:0;o.p3r=(m3+C.lg3*BETP.k3)/(a3+BETP.k3);o.a3=a3;o.tpa=ra*o.form.tpm*m*pace*F.tpa;
+    o.tpm=o.tpa*o.p3r*hf;
     o.pra=o.pts+o.reb+o.ast;o.pr=o.pts+o.reb;o.pa=o.pts+o.ast;
     var g15=r.g.slice(-15),am=avg(g15.map(function(x){return x[3];}))||1;
     Object.keys(BSTAT).forEach(function(k){o['s_'+k]=avg(r.g.map(function(x){return glv(x,k);}));o['sd_'+k]=Math.max(stdv(g15.map(function(x){return glv(x,k);}))*m/am,k==='tpm'?0.8:1.2);});
-    var m10=g10.map(function(x){return x[3];});o.mcv=stdv(m10)/(avg(m10)||1);
+    var m10=r.g.slice(-10).map(function(x){return x[3];});o.mcv=stdv(m10)/(avg(m10)||1);
     return o;}).sort(function(a,b){return b.m-a.m;});
 }
 function projGame(aw,hm,md,cut){
@@ -3501,21 +3509,46 @@ function projGame(aw,hm,md,cut){
   var ph=C.bl(hm,'ortg')*C.bl(aw,'drtg')/C.lgO*pace/100+1.4,pa=C.bl(aw,'ortg')*C.bl(hm,'drtg')/C.lgO*pace/100-1.4,mg=ph-pa;
   return {aw:aw,hm:hm,md:md,ph:ph,pa:pa,mg:mg,tot:ph+pa,pace:pace,C:C,A:projPlayers(aw,hm,0,md,C,mg),H:projPlayers(hm,aw,1,md,C,mg)};
 }
+/* every factor behind a projection, sized by how much it moves the number (e = share of his season average) */
 function bReasons(o,k){
-  var R=[],ck=k==='pra'||k==='pr'||k==='pa'?'pts':k,nm=BSTAT[ck].toLowerCase();
-  if(Math.abs(o.mup)>=2)R.push({s:o.mup>0?1:-1,t:(o.mup>0?'More minutes: ':'Fewer minutes: ')+f1(o.m)+' projected vs '+f1(o.sm)+' a game'+(o.mup>0&&o.outs.length?' with '+o.outs.slice(0,2).map(function(r){return lastName(r.p.Player);}).join(' and ')+' out':'')});
-  var rf=o['rf_'+ck];if(rf>=1.1||rf<=0.9)R.push({s:rf>1?1:-1,t:(rf>1?'Hot lately: ':'Cold lately: ')+Math.round(Math.abs(rf-1)*100)+'% '+(rf>1?'more':'fewer')+' '+nm+' per minute over his last 10 games'});
-  var f=o.F[ck],fr=fRank(betCtx(BET.cut),ck,o.opp);
-  if(f>=1.04||f<=0.96)R.push({s:f>1?1:-1,t:(f>1?'Soft matchup: ':'Tough matchup: ')+'the '+nick(o.opp)+' allow '+Math.round(Math.abs(f-1)*100)+'% '+(f>1?'more':'fewer')+' '+(ck==='pts'?'points per possession':nm)+' than average'+(fr?' ('+(f>1?ordn(fr.r)+'-most':ordn(fr.n-fr.r+1)+'-fewest')+' in the NBA)':'')});
-  if(o.pace>=1.02||o.pace<=0.98)R.push({s:o.pace>1?1:-1,t:(o.pace>1?'Fast game: ':'Slow game: ')+'about '+Math.round(Math.abs(o.pace-1)*100)+'% '+(o.pace>1?'more':'fewer')+' possessions than an average game'});
-  if(o.b2b)R.push({s:-1,t:'Second night of a back-to-back'});
-  return R;
+  var R=[],C=betCtx(BET.cut),comb=k==='pra'||k==='pr'||k==='pa',ks=k==='pra'?['pts','reb','ast']:k==='pr'?['pts','reb']:k==='pa'?['pts','ast']:[k];
+  var wsum=ks.reduce(function(s,kk){return s+o[kk];},0)||1,mix=function(f){return ks.reduce(function(s,kk){return s+o[kk]*f(kk);},0)/wsum;};
+  var nm=comb?BSTAT[k].toLowerCase():BSTAT[k].toLowerCase(),outN=o.outs.slice(0,2).map(function(r){return lastName(r.p.Player);}).join(' and '),N=nick(o.opp);
+  var add=function(e,s,t){if(Math.abs(e)>=0.02)R.push({e:Math.abs(e),s:s,t:t});};
+  if(o.mO>0.4)add(o.mO/o.sm,1,'Teammates out: with '+outN+' out, we project him for '+f1(o.mO)+' more minutes');
+  if(Math.abs(o.mT)>=1)add(o.mT/o.sm,o.mT>0?1:-1,'Minutes trending '+(o.mT>0?'up':'down')+': '+f1(o.lm)+' a game over his last 5, vs '+f1(o.sm)+' for the season');
+  if(o.mX)add(o.mX/o.sm,-1,'Blowout risk: we project a '+Math.round(Math.abs(o.mg))+'-point game, and starters sit late in blowouts');
+  if(o.mB)add(o.mB/o.sm,-1,'Second night of a back-to-back, so we trim his minutes');
+  var ue=ks.indexOf('pts')>=0||ks.indexOf('ast')>=0?mix(function(kk){return kk==='pts'?o.usage:kk==='ast'?1+(o.usage-1)*0.5:1;})-1:0;
+  if(ue>0)add(ue,1,'Bigger role: '+outN+(o.outs.length>1?' take ':' takes ')+Math.round(o.oShare*100)+'% of the team’s shots, and some go to him');
+  var fe=mix(function(kk){return o.form[kk]||1;})-1;
+  if(Math.abs(fe)>=0.04)add(fe,fe>0?1:-1,(fe>0?'Hot lately: ':'Cold lately: ')+Math.round(Math.abs(fe)/BETP.rw*100)+'% '+(fe>0?'more':'fewer')+' '+nm+' per minute over his last 5 games');
+  var oe=mix(function(kk){return o.F[kk]||1;})-1,ot;
+  if(k==='pts'){var r1=fRank(C,'pts',o.opp);ot=(oe>0?'Soft matchup: ':'Tough matchup: ')+'the '+N+' allow '+f1(C.bl(o.opp,'drtg'))+' points per 100 possessions'+(r1?' ('+mostFew(r1,oe>0)+' in the NBA)':'');}
+  else if(k==='reb'){var r2=fRank(C,'reb',o.opp),mr=missRank(C,o.opp);ot=(oe>0?'More rebounds available: ':'Fewer rebounds available: ')+'the '+N+' allow '+Math.round(Math.abs(oe)*100)+'% '+(oe>0?'more':'fewer')+' rebounds than average'+(r2?' ('+mostFew(r2,oe>0)+')':'')+(mr&&(oe>0?mr.r<=10:mr.r>=mr.n-9)?' and miss '+mostFew(mr,oe>0)+' shots':'');}
+  else if(k==='ast'){var r3=fRank(C,'ast',o.opp);ot=(oe>0?'Soft matchup: ':'Tough matchup: ')+'the '+N+' allow '+Math.round(Math.abs(oe)*100)+'% '+(oe>0?'more':'fewer')+' assists than average'+(r3?' ('+mostFew(r3,oe>0)+')':'');}
+  else if(k==='tpm'){var r4=fRank(C,'tpa',o.opp);ot=(oe>0?'Open looks: ':'Tough matchup: ')+'the '+N+' allow '+(r4?mostFew(r4,oe>0):'')+' three-point attempts. Defenses control how many threes you take more than how many fall';}
+  else{var parts=[];ks.forEach(function(kk){var f=o.F[kk]||1;if((f>1)!==(oe>0)||Math.abs(f-1)<0.02)return;var rr=fRank(C,kk,o.opp);
+      parts.push(kk==='pts'?f1(C.bl(o.opp,'drtg'))+' points per 100 possessions'+(rr?' ('+mostFew(rr,oe>0)+')':''):Math.round(Math.abs(f-1)*100)+'% '+(oe>0?'more':'fewer')+' '+(kk==='reb'?'rebounds':'assists')+' than average'+(rr?' ('+mostFew(rr,oe>0)+')':''));});
+    ot=(oe>0?'Soft matchup: ':'Tough matchup: ')+'the '+N+' allow '+(parts.length?parts.join(' and '):(oe>0?'more':'less')+' than average');}
+  add(oe,oe>0?1:-1,ot);
+  if(Math.abs(o.pace-1)>=0.015)add(o.pace-1,o.pace>1?1:-1,(o.pace>1?'Fast game: ':'Slow game: ')+'about '+Math.round(Math.abs(o.pace-1)*100)+'% '+(o.pace>1?'more':'fewer')+' possessions than an average game, so '+(o.pace>1?'more':'fewer')+' chances for everyone');
+  if(k==='tpm'&&o.a3>=10){var re=o.p3r/o.p3s-1;if(isFinite(re))add(re,re>0?1:-1,re<0?'Likely to cool: he’s making '+Math.round(o.p3s*100)+'% of his threes; shooting streaks fade, so we expect about '+Math.round(o.p3r*100)+'%':'Due to bounce back: he’s making only '+Math.round(o.p3s*100)+'% of his threes; we expect about '+Math.round(o.p3r*100)+'%');}
+  return R.sort(function(a,b){return b.e-a.e;});
+}
+/* exactly three bullets: the biggest reasons that agree with the call, then the biggest one against it, then context */
+function why3(c){
+  var o=c.o,k=c.k,dir=c.d>0?1:-1,R=c.R,pro=R.filter(function(r){return r.s===dir;}),con=R.filter(function(r){return r.s!==dir;}),out=pro.slice(0,3);
+  if(out.length<3&&con.length)out.push({s:con[0].s,t:'Working against it: '+con[0].t.replace(/^[^:]+:\s*/,'')});
+  if(out.length<3)out.push({s:0,t:'Season so far: '+f1(o['s_'+k])+' '+BSTAT[k].toLowerCase()+' a game in '+f1(o.sm)+' minutes, over '+o.nG+' games'});
+  if(out.length<3){var g=o.g.slice(-10),h=g.filter(function(x){return (glv(x,k)-o['s_'+k])*dir>0;}).length;out.push({s:0,t:'Recent games: '+(dir>0?'above':'below')+' his average in '+h+' of his last '+g.length});}
+  return out.slice(0,3);
 }
 function confPicks(list){
   var out=[];list.forEach(function(o){if(o.m<22||o.mcv>0.3||o.nG<4)return;var best=null;
     ['pts','reb','ast','tpm','pra'].forEach(function(k){if((k==='tpm'&&o.s_tpm<1.2)||(k==='ast'&&o.s_ast<2.5)||(k==='reb'&&o.s_reb<3.5))return;
       var d=o[k]-o['s_'+k],z=d/o['sd_'+k],R=bReasons(o,k),ag=R.filter(function(r){return r.s===(d>0?1:-1);}).length,ng=R.length-ag;
-      if((ag<2&&!(ag===1&&ng===0))||Math.abs(z)<0.3)return;var sc=Math.abs(z)*(0.6+0.2*ag-0.15*ng);if(!best||sc>best.sc)best={o:o,k:k,d:d,z:z,R:R,sc:sc};});
+      if((ag<2&&!(ag===1&&ng===0))||Math.abs(z)<0.3)return;var sc=Math.abs(z)*(0.6+0.2*Math.min(ag,3)-0.15*ng);if(!best||sc>best.sc)best={o:o,k:k,d:d,z:z,R:R,sc:sc};});
     if(best)out.push(best);});
   return out.sort(function(a,b){return b.sc-a.sc;}).slice(0,6);
 }
@@ -3579,7 +3612,7 @@ function pickCard(c,i){
   return '<div class="bp">'+'<div class="bp-n">'+(i+1)+'</div>'+pbx(o.p,'bp-hs')+'<div class="bp-b"><div class="bp-top"><a href="#p'+o.p.nba_id+'" class="bp-nm">'+esc(o.p.Player)+'</a><span class="bp-mu">'+img(logoT(o.t),'bp-lg')+(o.home?' vs ':' @ ')+img(logoT(o.opp),'bp-lg')+'<b>'+esc(o.opp)+'</b></span></div>'
     +'<div class="bp-num"><b>'+f1(o[k])+'</b><span>'+esc(BSTAT[k].toLowerCase())+' projected</span><em class="'+(up?'g':'r')+'">'+(up?'▲ ':'▼ ')+f1(Math.abs(c.d))+' '+(up?'above':'below')+' his '+f1(o['s_'+k])+' season average</em></div>'
     +'<div class="bp-meta"><span>Likely range <b>'+f1(lo)+' to '+f1(hi)+'</b></span><span>Topped '+f1(o[k])+' in <b>'+bc.n+' of his last '+bc.of+'</b></span><span>'+f1(o.m)+' minutes projected</span></div>'
-    +'<ul class="bp-why">'+c.R.map(function(r){return '<li class="'+(r.s>0?'g':'r')+'"><i>'+(r.s>0?'▲':'▼')+'</i>'+esc(r.t)+'</li>';}).join('')+'</ul></div></div>';
+    +'<ul class="bp-why">'+why3(c).map(function(r){return '<li class="'+(r.s>0?'g':r.s<0?'r':'n')+'"><i>'+(r.s>0?'▲':r.s<0?'▼':'•')+'</i>'+esc(r.t)+'</li>';}).join('')+'</ul></div></div>';
 }
 function gameCard(x){
   var fav=x.mg>=0?x.hm:x.aw,outs=x.A.length||x.H.length?[]:[];
