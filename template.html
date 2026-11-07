@@ -1212,6 +1212,7 @@ html.intro #hmMain::after{content:'';position:absolute;inset:0;background:var(--
 .why-x{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 .wx{display:inline-flex;align-items:center;gap:6px;padding:5px 9px 5px 6px;border:1px solid var(--rule);border-radius:999px;background:var(--tint);font-size:13px}
 .wx b{font-weight:800;color:var(--navy)}.wx em{font-style:normal;font-weight:700;color:var(--t2)}.wx em.g{color:var(--rise)}.wx em.r{color:var(--fall)}
+.stp .old{opacity:.45}
 .wx .wx-lg{width:20px;height:20px;object-fit:contain}.wx .ld-hs{width:24px;height:24px}
 @media (max-width:700px){.why-g{grid-template-columns:1fr}}
 
@@ -2371,9 +2372,9 @@ function gTS(x){var a=x[11]+0.44*x[15];return a?x[4]/(2*a)*100:0;}
    18. Corner labels describe BOTH axes ("SHOOT A LOT + MAKE A LOT", "COLD, FEW THREES"). Only the truly best corner is green and only the truly worst is red.
    19. Before/after stat tables use the number line: zero in the middle, good changes go right in green, bad changes go left in red, the "now" number colored to match.
    20. Every headline stat gets its league rank over the SAME games, now and before ("28th in the NBA over the last 5, was 4th"). Players rank among everyone averaging 20+ minutes. 1st = best.
-   21. Streaks always count the FULL current streak from the game log, never just the games in the window. If a team lost its last 5 and the 2 before that, the headline says "lose 7 straight". Every number in an article must agree with every other number on the page.
+   21. Streaks always count the FULL current streak from the game log, never just the games in the window. Lead with the stretch that tells the story: "won 4 of their last 5" beats "won 2 straight". If a team lost its last 5 and the 2 before that, the headline says "lose 7 straight". Every number in an article must agree with every other number on the page.
    22. Every story shows a rank ladder: before and now columns, the subject plus the 10 closest teams/players, numbered like the power rankings, logos/headshots and the stat.
-   23. Team stories get "What's behind it": test schedule strength, opponent three-point luck, rotation changes, plus-minus swings, home/road. Each gets a verdict (likely / small / not the reason) with the numbers. */
+   23. Team stories get "What's behind it": test schedule strength (opponents' season net rating), absences (a rotation player who stops appearing is called out as likely injured), opponent three-point luck, rotation changes, plus-minus swings, home/road. Each gets a verdict (likely / small / not the reason) with the numbers. */
 function pWrite(s){
   var p=s.p,R=s.R,B=s.B,N=lastName(p.Player),F=p.Player,rec=s.sp.rec,pri=s.sp.pri,all=s.g,nr=rec.length;
   var up=s.v==='REAL'||s.v==='OPPORTUNITY'||s.v==='LUCK';
@@ -2651,11 +2652,16 @@ function chDumb(rows,o){
   return h+'</svg>';
 }
 /* W/L boxes with the margin, one per game */
-function chStrip(gs){
-  var streak=0,w=gs.length?gs[gs.length-1].wl:'';for(var i=gs.length-1;i>=0&&gs[i].wl===w;i--)streak++;
-  var t=streak>=2?(w==='W'?'Won ':'Lost ')+streak+' straight':'Last '+gs.length+' games';
-  return '<figure class="fg"><figcaption><b>'+t+'</b><span>Each box is one game: result, final margin, opponent, date</span></figcaption><div class="stp">'+gs.map(function(o){var m=o.pts-o.opp,W=o.wl==='W';
-    return '<div class="ci" data-tip="'+esc((W?'Won by ':'Lost by ')+Math.abs(m)+' '+o.o+', '+o.d+' ('+o.pts+'–'+o.opp+')')+'"><b class="'+(W?'w':'l')+'">'+(W?'W':'L')+'<span>'+(m>0?'+':'')+m+'</span></b><i>'+esc(o.o.split(' ').pop())+'</i><em>'+o.d+'</em></div>';}).join('')+'</div></figure>';
+function chStrip(gs,nr,all){
+  all=all||gs;var streak=0,w=all.length?all[all.length-1].wl:'';for(var i=all.length-1;i>=0&&all[i].wl===w;i--)streak++;
+  nr=Math.min(nr||gs.length,gs.length);var rg=gs.slice(-nr),ww=rg.filter(function(o){return o.wl==='W';}).length,ll=nr-ww,t,sub='';
+  if(streak>=nr)t=(w==='W'?'Won ':'Lost ')+streak+' straight';
+  else if(ww>nr/2){t='Won '+ww+' of their last '+nr;}
+  else if(ll>nr/2){t='Lost '+ll+' of their last '+nr;}
+  else t='Last '+gs.length+' games';
+  if(streak>=2&&streak<nr)sub='Current streak: '+(w==='W'?'won':'lost')+' '+streak+' straight. ';
+  return '<figure class="fg"><figcaption><b>'+t+'</b><span>'+sub+'Each box is one game: result, final margin, opponent, date. The last '+nr+' are in full color.</span></figcaption><div class="stp">'+gs.map(function(o,gi){var m=o.pts-o.opp,W=o.wl==='W';
+    return '<div class="ci'+(gi<gs.length-nr?' old':'')+'" data-tip="'+esc((W?'Won by ':'Lost by ')+Math.abs(m)+' '+o.o+', '+o.d+' ('+o.pts+'–'+o.opp+')')+'"><b class="'+(W?'w':'l')+'">'+(W?'W':'L')+'<span>'+(m>0?'+':'')+m+'</span></b><i>'+esc(o.o.split(' ').pop())+'</i><em>'+o.d+'</em></div>';}).join('')+'</div></figure>';
 }
 /* court map: where a player's shots come from this season */
 var ZONES=[{k:'rim',n:'At the rim',x:0,y:14},{k:'paint',n:'Paint',x:0,y:112,up:1},{k:'mid',n:'Midrange',x:-150,y:150},{k:'cl',n:'Corner 3',x:-232,y:30},{k:'cr',n:'Corner 3',x:232,y:30},{k:'ab',n:'Above the break 3',x:0,y:290}];
@@ -2823,14 +2829,15 @@ function teamWhy(s){
   var t=s.t,N=nick(t),TN='The '+N,pri=s.sp.pri,rec=s.sp.rec,np=pri.length,nr=rec.length,def=s.kind==='def',up=s.up,A=allTeamAgg(),cards=[];
   var hs=function(p){return '<span class="ld-hs" style="background:'+teamOf(p.Team).c+'">'+img(headSm(p.nba_id),'')+'</span>';};
   var lastW=TRW==='season'?'second-half':'last '+nr,firstW=TRW==='season'?'first-half':'first '+np;
-  /* 1. schedule */
-  var oK=def?'ortg':'drtg',ab=function(o){return o.o.split(' ').pop();},oppAvg=function(gs){var v=gs.map(function(o){var a=A[ab(o)];return a?a[oK]:null;}).filter(function(v){return v!=null;});return v.length?avg(v):null;};
-  var ob=oppAvg(pri),oa=oppAvg(rec),lg=avg(Object.keys(A).filter(function(k){return A[k];}).map(function(k){return A[k][oK];}));
-  if(ob!=null&&oa!=null){var easier=def?oa<ob:oa>ob,dif=Math.abs(oa-ob),helps=easier===up,v=helps&&dif>=2.5?'L':helps&&dif>=1.2?'S':'N';
-    var what=def?'score':'allow';
+  /* 1. schedule: opponents' season net rating (points per 100 better or worse than their opponents) */
+  var ab=function(o){return o.o.split(' ').pop();},all=Object.keys(A).map(function(k){return A[k];}).filter(Boolean);
+  var oppAvg=function(gs){var v=gs.map(function(o){var a=A[ab(o)];return a?a.net:null;}).filter(function(v){return v!=null;});return v.length?avg(v):null;};
+  var ob=oppAvg(pri),oa=oppAvg(rec),sgn=function(v){return (v>0?'+':v<0?'−':'')+f1(Math.abs(v));};
+  if(ob!=null&&oa!=null){var easier=oa<ob,dif=Math.abs(oa-ob),helps=easier===up,v=helps&&dif>=3?'L':helps&&dif>=1.5?'S':'N';
     cards.push({v:v,t:v==='N'?'Not the schedule':(easier?'Easier schedule':'Tougher schedule'),
-      p:'Their '+lastW+' opponents '+what+' '+f1(oa)+' points per 100 possessions this season, compared with '+f1(ob)+' for their '+firstW+' (league average '+f1(lg)+'). '+(dif<1.2?'About the same level of competition, so the schedule doesn’t explain it.':(easier?'That’s a softer set of '+(def?'offenses':'defenses'):'That’s a tougher set of '+(def?'offenses':'defenses'))+(v==='N'?', which works against the change, so it isn’t the reason.':', which explains part of the change.')),
-      x:rec.slice().reverse().map(function(o){var a=A[ab(o)];if(!a)return '';var rr=rkOne(Object.keys(A).map(function(k){return A[k];}).filter(Boolean),oK,a[oK]);return wx(img(logoT(ab(o)),'wx-lg'),ab(o),f1(a[oK])+(rr?' · '+ordn(rr.r):''));}).join(''),xl:(def?'Each opponent’s offense this season: points per 100 · NBA rank':'Each opponent’s defense this season: points allowed per 100 · NBA rank')});}
+      p:'Their '+lastW+' opponents have an average season net rating of '+sgn(oa)+' points per 100 possessions, compared with '+sgn(ob)+' for their '+firstW+' (0 is an average team). '+(dif<1.5?'About the same level of competition, so the schedule doesn’t explain it.':(easier?'They’ve been playing weaker teams':'They’ve been playing stronger teams')+(v==='N'?', which works against the change, so it isn’t the reason.':', which explains part of the change.')),
+      x:rec.slice().reverse().map(function(o){var a=A[ab(o)];if(!a)return '';var rr=rkOne(all,'net',a.net);return wx(img(logoT(ab(o)),'wx-lg'),ab(o),sgn(a.net)+(rr?' · '+ordn(rr.r):''),a.net>=0?'':'');}).join(''),
+      xl:'Each opponent’s season net rating · NBA rank (1st = best team)'});}
   /* 2. opponent three-point shooting (needs box scores) */
   var o3=function(gs){var m=0,a=0,ok=0;gs.forEach(function(o){if(o.ob){m+=o.ob[2];a+=o.ob[3];ok++;}});return ok===gs.length&&a?m/a*100:null;};
   var pb=o3(pri),pa=o3(rec);
@@ -2838,18 +2845,28 @@ function teamWhy(s){
     cards.push({v:v3,t:v3==='N'?'Not opponent shooting luck':(up?'Opponents missing threes':'Opponents making threes'),
       p:'Opponents made '+f1(pa)+'% of their threes in the '+lastW+', compared with '+f1(pb)+'% in the '+firstW+' (league average '+f1(lg3_)+'%). '+(v3==='N'?'That isn’t a big enough swing to explain it.':'Defenses have limited control over whether open threes go in, so some of this is likely luck that could even out.'),
       x:wx('','Before',f1(pb)+'%')+wx('','Now',f1(pa)+'%',helps3===up?'g':'r')+wx('','League',f1(lg3_)+'%')});}
-  /* 3. rotation */
+  /* 3. absences, then rotation choices among players who suited up */
   var mates=D.filter(function(p){return p.Team===t&&GL[String(p.nba_id)];});
-  var mm=function(p,gs){var d={},m=0,gp=0,pm=0,sb=0;gs.forEach(function(o){d[o.d]=1;});GL[String(p.nba_id)].forEach(function(x){if(d[x[0]]&&x[3]>0){m+=x[3];gp++;pm+=x[19];sb+=x[7]+x[8];}});return {m:m/gs.length,gp:gp,pm:gp?pm/gp:0,sb:gp?sb/gp:0};};
+  var mm=function(p,gs){var d={},m=0,gp=0,pm=0,sb=0,last='';gs.forEach(function(o){d[o.d]=1;});GL[String(p.nba_id)].forEach(function(x){if(d[x[0]]&&x[3]>0){m+=x[3];gp++;pm+=x[19];sb+=x[7]+x[8];last=x[0];}});return {m:m/gs.length,mp:gp?m/gp:0,gp:gp,pm:gp?pm/gp:0,sb:gp?sb/gp:0};};
   var rot=mates.map(function(p){var a=mm(p,rec),b=mm(p,pri);return {p:p,a:a,b:b,d:a.m-b.m};}).filter(function(z){return Math.max(z.a.m,z.b.m)>=12;});
-  var mov=rot.filter(function(z){return Math.abs(z.d)>=5;}).sort(function(x,y){return Math.abs(y.d)-Math.abs(x.d);}).slice(0,4);
-  if(rot.length){var vr=mov.some(function(z){return Math.abs(z.d)>=8&&Math.max(z.a.m,z.b.m)>=20;})?'L':mov.length?'S':'N';
-    var ph=function(z){var N2=lastName(z.p.Player);return z.a.gp<nr&&z.b.m>=15&&z.a.gp<=nr/2?N2+' has played in only '+z.a.gp+' of the '+lastW+' games':N2+' is playing '+f1(z.a.m)+' minutes a game, '+(z.d>0?'up':'down')+' from '+f1(z.b.m);};
-    cards.push({v:vr,t:vr==='N'?'Same rotation':'Rotation changes',
-      p:vr==='N'?'Nobody’s minutes moved more than 5 a game, so the same players are doing it.':ph(mov[0])+(mov[1]?', and '+ph(mov[1]).replace(/^(\S)/,function(c){return c;}):'')+'. New lineups are one of the most common reasons a team’s numbers swing.',
-      x:mov.map(function(z){return wx(hs(z.p),esc(lastName(z.p.Player)),(z.d>0?'+':'−')+f1(Math.abs(z.d))+' min');}).join(''),xl:'Change in minutes per game'});}
+  var lastG=rec[nr-1].d,playedLast=function(p){return GL[String(p.nba_id)].some(function(x){return x[0]===lastG&&x[3]>0;});};
+  var out=rot.filter(function(z){return z.b.mp>=15&&z.b.gp>=Math.min(2,np)&&nr-z.a.gp>=Math.max(2,Math.ceil(nr*0.4));}).sort(function(x,y){return y.b.mp-x.b.mp;});
+  var back=rot.filter(function(z){return z.a.mp>=15&&z.a.gp>=Math.max(2,nr-1)&&np-z.b.gp>=Math.max(2,Math.ceil(np*0.5));});
+  if(out.length||back.length){var vo=up?(back.length&&back[0].a.mp>=24?'L':back.length?'S':'N'):(out[0]&&out[0].b.mp>=24?'L':out.length?'S':'N');
+    var outTxt=out.map(function(z){var N2=lastName(z.p.Player),miss=nr-z.a.gp;return N2+' (averaged '+f1(z.b.mp)+' minutes) has missed '+miss+' of the '+lastW+' games'+(z.a.gp===0||!playedLast(z.p)?' and is still out, most likely injured':'');});
+    var backTxt=back.map(function(z){return lastName(z.p.Player)+' is back, playing '+f1(z.a.mp)+' minutes a game after missing '+(np-z.b.gp)+' of the '+firstW+' games';});
+    cards.push({v:vo,t:up?(back.length?'Getting players back':'Winning without key players'):'Missing key players',
+      p:outTxt.concat(backTxt).slice(0,3).join('. ')+'. '+(up&&out.length&&!back.length?'They’ve improved despite the absences, so this doesn’t explain the jump.':'Who’s available is often the biggest reason a team’s numbers swing.')+' (Absences come from box scores. Our data doesn’t include official injury reasons.)',
+      x:out.map(function(z){return wx(hs(z.p),esc(lastName(z.p.Player)),'Out '+(nr-z.a.gp)+' of '+nr,'r');}).concat(back.map(function(z){return wx(hs(z.p),esc(lastName(z.p.Player)),'Back','g');})).join(''),xl:'Availability in the '+lastW+' games'});}
+  var OUT={};out.concat(back).forEach(function(z){OUT[z.p.nba_id]=1;});
+  var mov=rot.filter(function(z){return !OUT[z.p.nba_id]&&z.a.gp>=Math.max(1,nr-1)&&z.b.gp>=Math.max(1,np-1)&&Math.abs(z.a.mp-z.b.mp)>=5;}).sort(function(x,y){return Math.abs(y.a.mp-y.b.mp)-Math.abs(x.a.mp-x.b.mp);}).slice(0,4);
+  var vr=mov.some(function(z){return Math.abs(z.a.mp-z.b.mp)>=8&&Math.max(z.a.mp,z.b.mp)>=20;})?'L':mov.length?'S':'N';
+  var ph=function(z){return lastName(z.p.Player)+' is playing '+f1(z.a.mp)+' minutes a game, '+(z.a.mp>z.b.mp?'up':'down')+' from '+f1(z.b.mp);};
+  cards.push({v:vr,t:vr==='N'?'Same rotation':'Rotation changes',
+    p:vr==='N'?'Among players who suited up, nobody’s minutes moved more than 5 a game.':ph(mov[0])+(mov[1]?', and '+ph(mov[1]):'')+'. These are coaching choices, not absences, and new lineups often change a team’s results.',
+    x:mov.map(function(z){var d=z.a.mp-z.b.mp;return wx(hs(z.p),esc(lastName(z.p.Player)),(d>0?'+':'−')+f1(Math.abs(d))+' min');}).join(''),xl:mov.length?'Change in minutes per game played':''});
   /* 4. who's on the floor for it: plus-minus swings */
-  var pmv=rot.filter(function(z){return z.a.gp>=2&&z.b.gp>=2&&z.a.m>=12;}).sort(function(x,y){return up?(y.a.pm-y.b.pm)-(x.a.pm-x.b.pm):(x.a.pm-x.b.pm)-(y.a.pm-y.b.pm);}).slice(0,3);
+  var pmv=rot.filter(function(z){return z.a.gp>=2&&z.b.gp>=2&&z.a.mp>=12;}).sort(function(x,y){return up?(y.a.pm-y.b.pm)-(x.a.pm-x.b.pm):(x.a.pm-x.b.pm)-(y.a.pm-y.b.pm);}).slice(0,3);
   if(pmv.length){var z0=pmv[0],sg=function(v){return (v>0?'+':v<0?'−':'')+f1(Math.abs(v));};
     cards.push({v:'C',t:(up?'Biggest plus-minus jumps':'Biggest plus-minus drops'),
       p:TN+' are '+sg(z0.a.pm)+' per game with '+lastName(z0.p.Player)+' on the floor in the '+lastW+', compared with '+sg(z0.b.pm)+' before.'+(def?' His steals + blocks went from '+f1(z0.b.sb)+' to '+f1(z0.a.sb)+' a game.':'')+' Plus-minus is noisy over a few games, but it shows who was out there when it turned.',
@@ -2894,7 +2911,7 @@ function showStory(kind,id){
     h+=heroPanel(w.ksx,w.hc);
     h+=chLadder('t',w.ksx,id,s.sp.pri.length);
     h+='<p class="ar-p">'+w.lede+'</p><p class="ar-p">'+esc(w.nut)+'</p>';
-    h+='<div class="fg-a ar-fig">'+chStrip(s.g.slice(-10))+'</div>';
+    h+='<div class="fg-a ar-fig">'+chStrip(s.g.slice(-10),s.sp.rec.length,s.g)+'</div>';
     h+='<div class="fg-a ar-fig">'+w.big()+'</div>';
     h+=teamWhy(s);
     h+='<h2 class="ar-h2">'+esc(w.h2)+'</h2><p class="ar-p">'+esc(w.b2)+'</p>';
