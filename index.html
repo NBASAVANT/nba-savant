@@ -2226,6 +2226,7 @@ var VERD={REAL:['REAL','v-real','g'],SLUMP:['SLUMP','v-bad','r'],OPPORTUNITY:['O
 var KICK={REAL:'Breakout',SLUMP:'Slump',OPPORTUNITY:'Bigger role',LUCK:'Hot streak',COLD:'Cold streak',NORMAL:'Back to normal'};
 function ps(n){return n+'’s';}
 function f0(v){return String(Math.round(v));}
+function hn(v){return Math.abs(v)>=10?String(Math.round(v)):f1(v);}
 function pct1(v){return f1(v)+'%';}
 function gmOf(g){return g.map(function(y){return {o:y[1],d:y[0],ab:y[1].split(' ').pop()};});}
 function oppName(o){var a=o.split(' '),t=a.pop();return (a[0]==='@'?'at the ':'against the ')+nick(t);}
@@ -2241,7 +2242,13 @@ function gTS(x){var a=x[11]+0.44*x[15];return a?x[4]/(2*a)*100:0;}
    3. Three-point stories (hot streak, cold streak, back to normal, team shooting) always show:
       3-point %, threes made per game, and share of points from threes, plus a threes-made-each-game chart.
    4. Every chart has a title, a subtitle saying what is measured, labeled axes, direct labels and a source line.
-   5. Green means better, red means worse, gray when neither. */
+   5. Green means better, red means worse, gray when neither.
+   HEADLINE RULES
+   6. Name first, then one strong present-tense verb (climbs, cuts, slumps, cools, win, lose). No "is/are" + noun phrase.
+   7. One idea and one number. Round it (one decimal only under 10). The why and the before/after go in the subhead.
+   8. No possessive stacks ("Reaves's slump is...") and no tacked-on clauses ("and it's not a fluke"); the verdict tag carries that.
+   9. Teams: nickname first, record as "win 4 of 5" / "win 5 straight", never repeat the window ("0-5 in their last five").
+   10. Aim for 10 words or fewer. */
 function pWrite(s){
   var p=s.p,R=s.R,B=s.B,N=lastName(p.Player),F=p.Player,rec=s.sp.rec,pri=s.sp.pri,all=s.g,nr=rec.length;
   var up=s.v==='REAL'||s.v==='OPPORTUNITY'||s.v==='LUCK';
@@ -2266,43 +2273,43 @@ function pWrite(s){
   var th=function(dir){return 'He’s making '+f1(R.tpm)+' threes a game at '+pct1(R.p3||0)+', '+dir+' from '+f1(B.tpm)+' at '+pct1(B.p3||0)+'. Threes are '+f0(R.sh3)+'% of his points now, compared with '+f0(B.sh3)+'% before.';};
   var tpmC=mk(col_(12),'threes made','Threes made');
   if(s.v==='REAL'){
-    if(s.drv==='involved'){o.h=N+' is scoring '+f0(R.pts)+' a night, and he’s doing it efficiently';
+    if(s.drv==='involved'){o.h=N+' climbs to '+f0(R.pts)+' points a night with better shooting';
       o.k='His usage rate jumped from '+pct1(B.usg)+' to '+pct1(R.usg)+' while his true shooting rose from '+pct1(B.ts)+' to '+pct1(R.ts)+'. Usually one goes up and the other comes down.';
       o.nut='What makes it stand out: when a player’s role grows, his efficiency usually drops. '+N+'’s went up.';
       o.h2='It isn’t a hot shooting streak';o.b2=(R.p3!==null?'He’s making '+pct1(R.p3)+' of his threes in this stretch, so this isn’t threes suddenly falling. ':'')+'The gains are coming from a bigger role and better shots.';
       o.watch='If his three-point shooting holds or improves while the role stays this big, the scoring can keep climbing.';
       o.ks=['PTS','TS','USG'];o.dm=['TS','USG','PTS','TOV'];o.c=ptsC;}
-    else if(s.drv==='rim'){o.h=N+' is scoring '+f0(R.pts)+' a night by attacking the rim';
+    else if(s.drv==='rim'){o.h=N+' climbs to '+f0(R.pts)+' points a night by attacking the rim';
       o.k='His free throws are up from '+f1(B.fta)+' to '+f1(R.fta)+' a game while his threes dropped from '+f1(B.tpa)+' to '+f1(R.tpa)+'.';
       o.nut='Getting to the line is one of the most reliable ways to score, and his true shooting rose from '+pct1(B.ts)+' to '+pct1(R.ts)+' along with it.';
       o.h2='Shot choices last longer than hot streaks';o.b2='A player who keeps getting into the paint keeps getting free throws. That habit tends to stick more than a run of made jumpers.';
       o.watch='Keep an eye on the free throw attempts. If they stay near '+f0(R.fta)+' a game, so does the scoring.';
       o.ks=['PTS','FTA','TPA'];o.dm=['FTA','TPA','TS','PTS'];o.c=mk(col_(15),'free throw attempts','Free throw attempts');}
-    else if(s.drv==='eff'){o.h=ps(N)+' true shooting is up '+f0(R.ts-B.ts)+' points, and it’s not a fluke';
+    else if(s.drv==='eff'){o.h=N+' lifts his true shooting to '+f0(R.ts)+'% without hot threes';
       o.k=(R.p3!==null?'He’s making only '+pct1(R.p3)+' of his threes in this stretch, so the jump isn’t coming from hot three-point shooting.':'The jump isn’t coming from three-point shooting.');
       o.nut='His true shooting went from '+pct1(B.ts)+' to '+pct1(R.ts)+', and his scoring rose from '+f1(B.pts)+' to '+f1(R.pts)+' a game.';
       o.h2='Why it should hold';o.b2='Efficiency built on twos and free throws is steadier than efficiency built on threes, which swing a lot over a handful of games.';
       o.watch='If his threes start falling too, the scoring has room to grow.';
       o.ks=['TS','PTS','P3'];o.dm=['TS','PTS','TOV','USG'];o.c=tsC;}
-    else if(s.drv==='tov'){o.h=N+' has cut his turnovers from '+f1(B.tov)+' to '+f1(R.tov)+' a game';
+    else if(s.drv==='tov'){o.h=N+' cuts his turnovers from '+hn(B.tov)+' to '+hn(R.tov)+' a game';
       o.k='Cleaner decisions, and his scoring held up at '+f1(R.pts)+' a game with '+pct1(R.ts)+' true shooting.';
       o.nut='Fewer giveaways means more shots for his team, which is why this kind of change tends to show up in the standings.';
       o.h2='Why it should hold';o.b2='Ball security is more of a habit than a streak. Players who clean it up usually stay cleaner.';
       o.watch='Watch whether the low turnovers survive a tougher stretch of opponents.';
       o.ks=['TOV','PTS','TS'];o.dm=['TOV','TS','PTS','AST'];o.c=mk(col_(9),'turnovers','Turnovers');}
-    else if(s.drv==='pass'){o.h=ps(N)+' assists are up from '+f1(B.ast)+' to '+f1(R.ast)+' a game';
+    else if(s.drv==='pass'){o.h=N+(R.ast>=B.ast*1.8?' doubles his assists to '+hn(R.ast)+' a game':' raises his assists to '+hn(R.ast)+' a game');
       o.k='His assist rate rose from '+pct1(B.astp)+' to '+pct1(R.astp)+'. He’s setting up more of his teammates’ baskets.';
       o.nut='The jump is in how often he creates for others, not just in how much he has the ball.';
       o.h2='Why it should hold';o.b2='Playmaking roles change slowly. When a player starts creating more, it usually means the offense is being run through him.';
       o.watch='Next step: finding out which teammates are benefiting most.';
       o.ks=['AST','ASTP','PTS'];o.dm=['AST','ASTP','PTS','TOV'];o.c=mk(col_(6),'assists','Assists');}
-    else if(s.drv==='min'){o.h=N+' is playing '+f0(R.min-B.min)+' more minutes a night, and he’s earning them';
+    else if(s.drv==='min'){o.h=N+' earns '+f0(R.min-B.min)+' more minutes a night';
       o.k='No rotation teammates are missing. His scoring rose from '+f1(B.pts)+' to '+f1(R.pts)+' a game.';
       o.nut='Minutes are the clearest sign of how a coach feels about a player, and '+N+' is getting '+f1(R.min)+' a game now.';
       o.h2='Why it should hold';o.b2='Since nobody in the rotation is out, these minutes look like a choice, not a fill-in.';
       o.watch='If the minutes stay above 30, his counting stats will follow.';
       o.ks=['MIN','PTS','TS'];o.dm=['MIN','PTS','TS','USG'];o.c=mk(col_(3),'minutes','Minutes');}
-    else{o.h=N+' is scoring '+f0(R.pts)+' a night on more shots';
+    else{o.h=N+' climbs to '+f0(R.pts)+' points a night on more shots';
       o.k='His shots are up from '+f1(B.fga)+' to '+f1(R.fga)+' a game, and his true shooting held at '+pct1(R.ts)+'.';
       o.nut='Taking more shots usually costs efficiency. His held steady.';
       o.h2='Why it should hold';o.b2='More volume at the same efficiency is what a bigger offensive role looks like.';
@@ -2310,45 +2317,45 @@ function pWrite(s){
       o.ks=['PTS','FGA','TS'];o.dm=['FGA','TS','PTS','USG'];o.c=ptsC;}
   }else if(s.v==='OPPORTUNITY'){
     var nm=listNames(s.mates.slice(0,3));
-    o.h=ps(N)+' minutes are up '+f0(R.min-B.min)+' a night with '+nm+' out';
+    o.h=N+' gets '+f0(R.min-B.min)+' more minutes a night with '+nm+' out';
     o.k='He’s averaging '+f1(R.pts)+' points in '+f1(R.min)+' minutes. Expect that to shrink when they return.';
     o.nut=s.mates.slice(0,3).map(function(m){return lastName(m.q.Player)+' hasn’t played since '+m.last;}).join('. ')+'.';
     o.h2='A pickup, not a promotion (yet)';o.b2='The extra minutes are filling a hole in the rotation. What he does with them decides whether he keeps any of them.';
     o.watch='When '+nm+(s.mates.length>1?' return':' returns')+', watch how many of these minutes he keeps.';
     o.ks=['MIN','PTS','TS'];o.dm=['MIN','PTS','TS','USG'];o.c=mk(col_(3),'minutes','Minutes');o.note=s.mates.length+(s.mates.length>1?' teammates out':' teammate out');
   }else if(s.v==='LUCK'){
-    o.h=ps(N)+' hot stretch is running on '+f0(R.p3)+'% three-point shooting';
+    o.h=N+' rides '+f0(R.p3)+'% three-point shooting to '+f0(R.pts)+' a night';
     o.k=th('up')+' '+(s.hasTrack?'He shot '+pct1(s.base)+' from three last season.':'League average is '+pct1(s.base)+'.');
     o.nut='Three-point percentage takes hundreds of attempts to settle. Over a handful of games it swings wildly.';
     o.h2='How much is the threes?';o.b2='At his normal three-point rate he’d be scoring about '+f1(Math.max(0,s.luck))+' fewer points a game in this stretch.';
     o.watch='The rest of his game is what to watch. If it holds when the threes cool, he’s still improved.';
     o.ks=['P3','TPM','SH3','PTS'];o.dm=['P3','TPM','SH3','PTS','TS'];o.c=ptsC;o.c3=tpmC;
   }else if(s.v==='COLD'){
-    o.h=ps(N)+' slump is mostly cold three-point shooting';
+    o.h=N+' slumps as his threes stop falling';
     o.k=th('down')+' His '+(s.hasTrack?'track record':'league norm')+' is '+pct1(s.base)+'. Expect a bounce back.';
     o.nut='Three-point percentage swings a lot over a few games. Shooters this far below their norm usually climb back.';
     o.h2='The rest of his game';o.b2='Outside of the threes, his role and shot volume look similar, which is why this reads as bad luck.';
     o.watch='When the threes start falling again, the scoring should return.';
     o.ks=['P3','TPM','SH3','PTS'];o.dm=['P3','TPM','SH3','PTS','TS'];o.c=ptsC;o.c3=tpmC;
   }else if(s.v==='NORMAL'&&s.drv==='ts'){
-    o.h=ps(N)+' dip is just his shooting coming back to earth';
+    o.h=N+' cools off but still shoots above average';
     o.k='His true shooting fell from '+pct1(B.ts)+' to '+pct1(R.ts)+', still above the '+pct1(s.LTS)+' league average.';
     o.nut='The early shooting was unusually hot. This is closer to his real level, and it’s still good.';
     o.h2='Nothing is broken';o.b2='His role is about the same. Only the shooting cooled, and it cooled to a level most players would like.';
     o.watch='As long as he stays above league average, there’s no slump to worry about.';
     o.ks=['TS','PTS','USG'];o.dm=['TS','PTS','USG','TOV'];o.c=tsC;
   }else if(s.v==='NORMAL'){
-    o.h=ps(N)+' slump is just his hot start cooling off';
+    o.h=N+' cools off after a red-hot shooting start';
     o.k=th('down')+' That’s right around his '+pct1(s.base)+(s.hasTrack?' track record':' league norm')+'.';
     o.nut='His early scoring was built on threes falling at a rate almost nobody keeps up.';
     o.h2='This is his real level';o.b2='The current numbers line up with his track record, so this is what to expect going forward.';
     o.watch='Don’t expect the early-season scoring to come back, but don’t expect it to fall further either.';
     o.ks=['P3','TPM','SH3','PTS'];o.dm=['P3','TPM','SH3','PTS','TS'];o.c=ptsC;o.c3=tpmC;
   }else{
-    if(s.drv==='eff'){o.h=ps(N)+' true shooting is down '+f0(B.ts-R.ts)+' points, and it’s not bad luck';o.k='He’s at '+pct1(R.ts)+', below the '+pct1(s.LTS)+' league average, and it isn’t explained by cold threes.';o.ks=['TS','PTS','USG'];o.dm=['TS','PTS','TOV','USG'];o.c=tsC;}
-    else if(s.drv==='tov'){o.h=ps(N)+' turnovers are up from '+f1(B.tov)+' to '+f1(R.tov)+' a game';o.k='And his scoring fell from '+f1(B.pts)+' to '+f1(R.pts)+'.';o.ks=['TOV','PTS','TS'];o.dm=['TOV','PTS','TS','AST'];o.c=mk(col_(9),'turnovers','Turnovers');}
-    else if(s.drv==='touch'){o.h=N+' is getting fewer touches, and his numbers are down';o.k='His usage rate fell from '+pct1(B.usg)+' to '+pct1(R.usg)+' and his scoring from '+f1(B.pts)+' to '+f1(R.pts)+'.';o.ks=['PTS','USG','FGA'];o.dm=['USG','PTS','FGA','TS'];o.c=ptsC;}
-    else{o.h=ps(N)+' numbers are down '+f0(B.pra-R.pra)+' a game, and it’s not bad luck';o.k='Points, rebounds and assists fell from '+f1(B.pra)+' to '+f1(R.pra)+' combined, and it isn’t cold threes or fewer minutes.';o.ks=['PRA','PTS','TS'];o.dm=['PRA','PTS','TS','USG'];o.c=mk(all.map(function(y){return y[4]+y[5]+y[6];}),'pts + reb + ast','Pts + reb + ast');}
+    if(s.drv==='eff'){o.h=N+' slumps as his true shooting falls to '+f0(R.ts)+'%';o.k='He’s at '+pct1(R.ts)+', below the '+pct1(s.LTS)+' league average, and it isn’t explained by cold threes.';o.ks=['TS','PTS','USG'];o.dm=['TS','PTS','TOV','USG'];o.c=tsC;}
+    else if(s.drv==='tov'){o.h=N+' struggles as his turnovers climb to '+hn(R.tov)+' a game';o.k='And his scoring fell from '+f1(B.pts)+' to '+f1(R.pts)+'.';o.ks=['TOV','PTS','TS'];o.dm=['TOV','PTS','TS','AST'];o.c=mk(col_(9),'turnovers','Turnovers');}
+    else if(s.drv==='touch'){o.h=N+' slides as his touches dry up';o.k='His usage rate fell from '+pct1(B.usg)+' to '+pct1(R.usg)+' and his scoring from '+f1(B.pts)+' to '+f1(R.pts)+'.';o.ks=['PTS','USG','FGA'];o.dm=['USG','PTS','FGA','TS'];o.c=ptsC;}
+    else{o.h=N+' slumps, down '+f0(B.pra-R.pra)+' points, rebounds and assists a game';o.k='Points, rebounds and assists fell from '+f1(B.pra)+' to '+f1(R.pra)+' combined, and it isn’t cold threes or fewer minutes.';o.ks=['PRA','PTS','TS'];o.dm=['PRA','PTS','TS','USG'];o.c=mk(all.map(function(y){return y[4]+y[5]+y[6];}),'pts + reb + ast','Pts + reb + ast');}
     o.nut='We checked the usual excuses first: his minutes are steady and his three-point shooting isn’t unusually cold.';
     o.h2='Why it’s not just luck';o.b2='When the drop isn’t coming from threes or playing time, it usually reflects something real: a tougher role, a nagging issue, or a defense that has figured him out.';
     o.watch='Watch his '+(s.drv==='tov'?'turnovers':s.drv==='touch'?'usage rate':'true shooting')+' over the next few games to see if it turns.';
@@ -2395,19 +2402,20 @@ function teamStories(only){
 }
 function tWrite(s){
   var N=nick(s.t),TN='The '+N,R=s.R,B=s.B,o={},n=s.sp.rec.length,rec=TRW==='season'?'in the second half of their games':'in their last '+numWord(n),pl=/s$/.test(N);
-  var are=' are ',tp=pl?TN+'’':TN+'’s';
-  if(s.v==='REAL'&&s.kind==='def'){o.h=TN+are+R.w+'-'+R.l+' '+rec+', and the defense is why';o.k='They’re allowing '+f1(R.drtg)+' points per 100 possessions, down from '+f1(B.drtg)+'.';
+  var are=' are ',tp=pl?TN+'’':TN+'’s',nk=N,rg=s.sp.rec,ng=rg.length;
+  var wins=R.w===ng?'win '+ng+' straight':R.w>ng/2?'win '+R.w+' of '+ng:'improve',loss=R.l===ng?'lose '+ng+' straight':R.l>ng/2?'lose '+R.l+' of '+ng:'slip';
+  if(s.v==='REAL'&&s.kind==='def'){o.h=nk+' '+wins+' behind a tougher defense';o.k='They’re allowing '+f1(R.drtg)+' points per 100 possessions, down from '+f1(B.drtg)+'.';
     o.h2='Defense travels';o.b2='Defensive improvement tends to hold up better than hot shooting, because it doesn’t depend on shots going in.';o.watch='If the defense stays near '+f0(R.drtg)+' per 100, this run is sustainable.';}
   else if(s.v==='REAL'){var c=[{v:(B.tov-R.tov)/2,p:'fewer turnovers',l:'Turnovers per 100 possessions fell from '+f1(B.tov)+' to '+f1(R.tov)+'.'},{v:(R.ftr-B.ftr)/5,p:'more trips to the line',l:'Free throw rate rose from '+f1(B.ftr)+' to '+f1(R.ftr)+'.'},{v:(R.ast-B.ast)/5,p:'better ball movement',l:'Assisted baskets rose from '+f1(B.ast)+'% to '+f1(R.ast)+'%.'}].sort(function(a,b){return b.v-a.v;});
-    o.h=TN+are+R.w+'-'+R.l+' '+rec+' thanks to '+(c[0].v>0?c[0].p:'a better offense');o.k='They’re scoring '+f1(R.ortg)+' points per 100 possessions, up from '+f1(B.ortg)+'. '+(c[0].v>0?c[0].l:'');
+    o.h=nk+' '+wins+' behind '+(c[0].v>0?c[0].p:'a better offense');o.k='They’re scoring '+f1(R.ortg)+' points per 100 possessions, up from '+f1(B.ortg)+'. '+(c[0].v>0?c[0].l:'');
     o.h2='Habits, not hot shooting';o.b2='The offense improved without a big jump in three-point shooting, which makes it more likely to last.';o.watch='Keep watching the '+(c[0].v>0?c[0].p:'offense')+'. That’s where the improvement lives.';}
-  else if(s.v==='LUCK'){o.h=tp+' hot stretch is running on threes';o.k='They’re making '+f1(R.tpm)+' threes a game at '+pct1(R.p3)+', up from '+f1(B.tpm)+' at '+pct1(B.p3)+'. Threes are now '+f0(R.sh3)+'% of their points, up from '+f0(B.sh3)+'%. Shooting that hot tends to cool.';
+  else if(s.v==='LUCK'){o.h=nk+' '+wins+' behind a three-point surge';o.k='They’re making '+f1(R.tpm)+' threes a game at '+pct1(R.p3)+', up from '+f1(B.tpm)+' at '+pct1(B.p3)+'. Threes are now '+f0(R.sh3)+'% of their points, up from '+f0(B.sh3)+'%. Shooting that hot tends to cool.';
     o.h2='How much is the threes?';o.b2='About '+Math.round(Math.abs(s.shoot)/Math.max(0.1,Math.abs(s.dO))*100)+'% of the offensive jump came from three-point shooting alone.';o.watch='If the threes cool and they keep winning, the improvement is real.';}
-  else if(s.v==='COLD'){o.h=tp+' slide is mostly cold shooting';o.k='They’re making '+f1(R.tpm)+' threes a game at '+pct1(R.p3)+', down from '+f1(B.tpm)+' at '+pct1(B.p3)+'. Threes are '+f0(R.sh3)+'% of their points now, compared with '+f0(B.sh3)+'%. Expect a bounce back.';
+  else if(s.v==='COLD'){o.h=nk+' '+loss+' as their threes stop falling';o.k='They’re making '+f1(R.tpm)+' threes a game at '+pct1(R.p3)+', down from '+f1(B.tpm)+' at '+pct1(B.p3)+'. Threes are '+f0(R.sh3)+'% of their points now, compared with '+f0(B.sh3)+'%. Expect a bounce back.';
     o.h2='How much is the threes?';o.b2='About '+Math.round(Math.abs(s.shoot)/Math.max(0.1,Math.abs(s.dO))*100)+'% of the offensive drop came from three-point shooting alone.';o.watch='When the threes return to normal, so should the offense.';}
-  else if(s.kind==='def'){o.h=TN+are+R.w+'-'+R.l+' '+rec+' because the defense fell apart';o.k='They’re allowing '+f1(R.drtg)+' points per 100 possessions, up from '+f1(B.drtg)+'.';
+  else if(s.kind==='def'){o.h=nk+' '+loss+' as their defense collapses';o.k='They’re allowing '+f1(R.drtg)+' points per 100 possessions, up from '+f1(B.drtg)+'.';
     o.h2='Not just bad luck';o.b2='The drop is on the defensive end, which isn’t explained by cold shooting.';o.watch='Watch the points allowed per 100 possessions. That number has to come down.';}
-  else{o.h=tp+' offense has stalled';o.k='They’re scoring '+f1(R.ortg)+' points per 100 possessions, down from '+f1(B.ortg)+'.';
+  else{o.h=nk+' '+loss+' as their offense stalls';o.k='They’re scoring '+f1(R.ortg)+' points per 100 possessions, down from '+f1(B.ortg)+'.';
     o.h2='Not just cold shooting';o.b2='Three-point shooting explains less than half of the drop, so something else in the offense changed.';o.watch='Watch the points per 100 possessions over the next week.';}
   o.lede='<b>The '+esc(teamOf(s.t).n)+' have gone '+R.w+'-'+R.l+' '+rec+'</b>, after starting '+B.w+'-'+B.l+'. Their net rating moved '+f1(Math.abs(s.dNet))+' points per 100 possessions '+(s.up?'in the right direction':'the wrong way')+'.';
   o.nut='Offense went from '+f1(B.ortg)+' to '+f1(R.ortg)+' points per 100 possessions and defense from '+f1(B.drtg)+' to '+f1(R.drtg)+' allowed.';
@@ -2720,7 +2728,7 @@ FEAT.def=function(){
   var rows=out.slice().sort(function(a,b){return b.A.pts-a.A.pts;}).slice(0,10),r=rows[0],N=lastName(r.p.Player);
   var drop=out.filter(function(x){return x.B.pts>=18;}).sort(function(a,b){return (a.A.pts-a.B.pts)-(b.A.pts-b.B.pts);}).slice(0,5);
   var A=allTeamAgg();
-  return {key:'def',kick:'The List · Elite defenses',h:N+' is scoring '+f1(r.A.pts)+' a night against the NBA’s 10 best defenses',
+  return {key:'def',kick:'The List · Elite defenses',h:N+' scores '+f0(r.A.pts)+' a night against the NBA’s top 10 defenses',
     k:'That’s the most of any player. He’s at '+pct1(r.A.ts)+' true shooting in those '+r.nv+' games, compared with '+pct1(r.B.ts)+' against everyone else.',
     lede:'<b>The 10 best defenses in the league are '+top.map(function(t){return nick(t);}).slice(0,3).join(', ')+' and seven others</b>, ranked by points allowed per 100 possessions. Here’s who has scored the most against them.',
     nut:'Plenty of players pile up points against bad teams. Scoring against the best defenses is harder to fake, and it’s a decent preview of who holds up in the playoffs.',
@@ -2735,7 +2743,7 @@ FEAT.eff=function(){
   if(pool.length<8)return null;
   var q=pool.filter(function(x){return x.p.PTS_PG>=18;}),rows=q.slice().sort(function(a,b){return b.pps-a.pps;}).slice(0,10),r=rows[0],N=lastName(r.p.Player);
   var lg=pool.reduce(function(s,x){return s+x.p.PTS_PG;},0)/pool.reduce(function(s,x){return s+x.tsa;},0);
-  return {key:'eff',kick:'The List · Efficiency',h:N+' scores '+f1(r.p.PTS_PG)+' a night on just '+f1(r.p.FGA_PG)+' shots',
+  return {key:'eff',kick:'The List · Efficiency',h:N+' scores '+f0(r.p.PTS_PG)+' a night on just '+f0(r.p.FGA_PG)+' shots',
     k:'That’s '+r.pps.toFixed(2)+' points for every shot attempt, the best of anyone scoring 18 or more. He uses '+f1(r.p['USG%']*100)+'% of his team’s plays.',
     lede:'<b>Scoring a lot is one thing. Scoring a lot without needing the ball every trip is another.</b> These players get the most points out of every shot, free throw trip and possession they use.',
     nut:'We counted every field goal attempt plus free throw trips (0.44 per free throw, the standard way to turn free throws into possessions), then divided points by that total.',
@@ -2752,7 +2760,7 @@ FEAT.min=function(){
     out.push({p:p,R:R,B:B,mp:mp,pp:pp,s:pp-mp});});
   if(!out.length)return null;
   var rows=out.sort(function(a,b){return b.s-a.s;}).slice(0,10),r=rows[0],N=lastName(r.p.Player),pc=function(v){return Math.round(v*100)+'%';};
-  return {key:'min',when:trLab()+' vs before',kick:'The List · Bigger roles',h:ps(N)+' minutes are up '+pc(r.mp)+', and his production is up '+pc(r.pp),
+  return {key:'min',when:trLab()+' vs before',kick:'The List · Bigger roles',h:N+' turns '+pc(r.mp)+' more minutes into '+pc(r.pp)+' more production',
     k:'He went from '+f1(r.B.min)+' to '+f1(r.R.min)+' minutes and from '+f1(r.B.pra)+' to '+f1(r.R.pra)+' points, rebounds and assists combined. More minutes explain only part of it.',
     lede:'<b>More minutes should mean bigger numbers.</b> For these players, the numbers grew much faster than the minutes did, which means they’re also better per minute on the floor.',
     nut:'We compared each player’s '+trLab().toLowerCase()+' with the games before it, and kept only players whose points + rebounds + assists grew at least 1.5 times as fast as their minutes.',
