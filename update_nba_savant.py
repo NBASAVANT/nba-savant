@@ -290,8 +290,10 @@ def build_games(rows):
             continue
         g = games.setdefault(gid, {'d': md, 'key': d})
         side = 'home' if ' vs. ' in str(r.get('MATCHUP', '')) else 'away'
-        g[side] = (r.get('TEAM_ABBREVIATION'), num(r.get('PTS'), 0))
-    out = [[g['d'], g['away'][0], g['away'][1], g['home'][0], g['home'][1]]
+        box = [num(r.get(k), 0) for k in ('FGM', 'FGA', 'FG3M', 'FG3A', 'FTM', 'FTA', 'TOV', 'OREB', 'DREB')]
+        g[side] = (r.get('TEAM_ABBREVIATION'), num(r.get('PTS'), 0), box)
+    # [date, away, away pts, home, home pts, away box, home box]; box = FGM FGA 3PM 3PA FTM FTA TOV OREB DREB
+    out = [[g['d'], g['away'][0], g['away'][1], g['home'][0], g['home'][1], g['away'][2], g['home'][2]]
            for g in sorted(games.values(), key=lambda x: x['key']) if 'home' in g and 'away' in g]
     return out
 

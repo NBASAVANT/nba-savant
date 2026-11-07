@@ -1172,6 +1172,49 @@ html.intro #hmMain::after{content:'';position:absolute;inset:0;background:var(--
 }
 
 
+
+/* ---------- rank ladder ---------- */
+.ld{display:grid;grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr);gap:10px;align-items:start;margin-top:6px}
+.ld-h{padding-bottom:8px;border-bottom:2px solid var(--navy);margin-bottom:4px}
+.ld-h b{display:block;font-weight:800;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
+.ld-h span{font-size:13px;color:var(--t2)}.ld-h strong{font-weight:900;font-size:18px;color:var(--navy);font-stretch:76%}
+.ld-r{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:8px;border-bottom:1px solid var(--rule)}
+.ld-r i{font-style:normal;font-weight:900;font-size:17px;font-stretch:76%;color:var(--t3);width:24px;text-align:right}
+.ld-r .ld-lg{width:26px;height:26px;object-fit:contain;flex:none}
+.ld-hs{width:28px;height:28px;border-radius:50%;overflow:hidden;flex:none;display:inline-flex;align-items:flex-end;justify-content:center}
+.ld-hs img{height:100%;width:auto}
+.ld-n{min-width:0;flex:1;line-height:1.15}.ld-n b{display:block;font-weight:800;font-size:14px;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ld-n span{display:block;font-size:11.5px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ld-r em{font-style:normal;font-weight:800;font-size:15px;color:var(--t2)}
+.ld-r.me{background:var(--tint);border:2px solid var(--tc,var(--navy));border-bottom-width:2px}
+.ld-r.me i,.ld-r.me em{color:var(--navy)}.ld-r.me .ld-n b{font-size:15px}
+.ld-m{align-self:center;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 0;border-radius:12px}
+.ld-m span{font-size:18px}.ld-m b{font-weight:900;font-size:28px;font-stretch:76%;line-height:1}.ld-m em{font-style:normal;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.ld-m.g{color:var(--rise);background:rgba(31,138,76,.08)}.ld-m.r{color:var(--fall);background:rgba(194,52,31,.07)}.ld-m.n{color:var(--t3)}
+@media (max-width:700px){
+  .ld{grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr);gap:5px}
+  .ld-r{gap:5px;padding:5px 3px}.ld-r i{font-size:13px;width:18px}.ld-r .ld-lg{width:18px;height:18px}.ld-hs{width:20px;height:20px}
+  .ld-n b{font-size:12px}.ld-n span{display:none}.ld-r em{font-size:12px}.ld-h span{font-size:11px}.ld-h strong{font-size:15px}
+  .ld-m b{font-size:20px}.ld-m em{font-size:8.5px}.ld-m span{font-size:13px}
+}
+/* ---------- what's behind it ---------- */
+.why{margin:34px 0 10px}
+.why-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.why-c{border:1px solid var(--rule2);border-radius:14px;padding:16px 18px;background:var(--card,#fff)}
+.why-v{display:inline-block;font-weight:800;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:4px 9px;border-radius:999px;background:var(--tint);color:var(--t3)}
+.why-c.v-L{border:2px solid var(--navy)}.why-c.v-L .why-v{background:var(--navy);color:#fff}
+.why-c.v-S .why-v{background:#e7ebf5;color:var(--navy)}
+.why-c.v-C .why-v{background:#eef0f4;color:var(--t2)}
+.why-c.v-N{opacity:.82}.why-c.v-N .why-v{background:transparent;border:1px solid var(--rule2)}
+.why-t{display:block;font-weight:900;font-size:19px;color:var(--navy);margin:10px 0 6px;line-height:1.2}
+.why-c p{font-size:14.5px;line-height:1.5;color:var(--t2);margin:0}
+.why-xl{margin-top:12px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
+.why-x{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.wx{display:inline-flex;align-items:center;gap:6px;padding:5px 9px 5px 6px;border:1px solid var(--rule);border-radius:999px;background:var(--tint);font-size:13px}
+.wx b{font-weight:800;color:var(--navy)}.wx em{font-style:normal;font-weight:700;color:var(--t2)}.wx em.g{color:var(--rise)}.wx em.r{color:var(--fall)}
+.wx .wx-lg{width:20px;height:20px;object-fit:contain}.wx .ld-hs{width:24px;height:24px}
+@media (max-width:700px){.why-g{grid-template-columns:1fr}}
+
 /* ---------- number-line change chart ---------- */
 .chg{margin-top:4px}
 .chg-h,.chg-r{display:grid;grid-template-columns:minmax(140px,1.25fr) 74px minmax(0,2.6fr) 78px;align-items:center;gap:12px}
@@ -2187,8 +2230,8 @@ function teamGames(){
       if(!o){o=TGI[k]={t:p.Team,d:x[0],dt:anDate(x[0]),o:x[1],wl:x[2],min:0,pts:0,fgm:0,fga:0,tpm:0,tpa:0,ftm:0,fta:0,oreb:0,tov:0,ast:0,pm:0};}
       o.min+=x[3];o.pts+=x[4];o.ast+=x[6];o.tov+=x[9];o.fgm+=x[10];o.fga+=x[11];o.tpm+=x[12];o.tpa+=x[13];o.ftm+=x[14];o.fta+=x[15];o.oreb+=x[16];o.pm+=x[19];
     });});
-  var FS={};(META.games||[]).forEach(function(g){FS[g[1]+'|'+g[0]]=[g[2],g[4]];FS[g[3]+'|'+g[0]]=[g[4],g[2]];});
-  Object.keys(TGI).forEach(function(k){var o=TGI[k];o.opp=Math.round(o.pts-o.pm/5);if(FS[k]){o.pts=FS[k][0];o.opp=FS[k][1];}o.poss=o.fga+0.44*o.fta-o.oreb+o.tov;(TGM[o.t]=TGM[o.t]||[]).push(o);});
+  var FS={},FB={};(META.games||[]).forEach(function(g){FS[g[1]+'|'+g[0]]=[g[2],g[4]];FS[g[3]+'|'+g[0]]=[g[4],g[2]];if(g[5]&&g[6]){FB[g[1]+'|'+g[0]]=[g[5],g[6]];FB[g[3]+'|'+g[0]]=[g[6],g[5]];}});
+  Object.keys(TGI).forEach(function(k){var o=TGI[k];o.opp=Math.round(o.pts-o.pm/5);if(FS[k]){o.pts=FS[k][0];o.opp=FS[k][1];}if(FB[k]){o.box=FB[k][0];o.ob=FB[k][1];}o.poss=o.fga+0.44*o.fta-o.oreb+o.tov;(TGM[o.t]=TGM[o.t]||[]).push(o);});
   Object.keys(TGM).forEach(function(t){TGM[t].sort(function(a,b){return a.dt-b.dt;});});
   return TGM;
 }
@@ -2246,8 +2289,8 @@ var RKC={},LOWB={drtg:1,tov:1};
 var PK={PTS:'pts',TS:'ts',USG:'usg',FTA:'fta',P3:'p3',AST:'ast',ASTP:'astp',MIN:'min',PRA:'pra',TPM:'tpm'};
 function rkSplit(g){if(TRW==='season')return trSplit(g);var w=+TRW;return g&&g.length>=w?{rec:g.slice(-w),pri:g.slice(0,-w)}:null;}
 function rkPool(kind){var key=kind+TRW;if(RKC[key])return RKC[key];var P={rec:[],pri:[]};
-  if(kind==='t'){var G=teamGames();Object.keys(G).forEach(function(t){var sp=rkSplit(G[t]);if(!sp)return;var a=tAgg(sp.rec),b=sp.pri.length?tAgg(sp.pri):null;if(a)P.rec.push(a);if(b)P.pri.push(b);});}
-  else D.forEach(function(q){if(!(q.MP_PG>=20))return;var g=GL[String(q.nba_id)];if(!g)return;var sp=rkSplit(g);if(!sp)return;P.rec.push(pAgg(q,sp.rec));if(sp.pri.length>=3)P.pri.push(pAgg(q,sp.pri));});
+  if(kind==='t'){var G=teamGames();Object.keys(G).forEach(function(t){var sp=rkSplit(G[t]);if(!sp)return;var a=tAgg(sp.rec),b=sp.pri.length?tAgg(sp.pri):null;if(a){a.t=t;P.rec.push(a);}if(b){b.t=t;P.pri.push(b);}});}
+  else D.forEach(function(q){if(!(q.MP_PG>=20))return;var g=GL[String(q.nba_id)];if(!g)return;var sp=rkSplit(g);if(!sp||sp.pri.length<3)return;var a=pAgg(q,sp.rec),b=pAgg(q,sp.pri);a.p=q;b.p=q;P.rec.push(a);P.pri.push(b);});
   return RKC[key]=P;}
 function rkOne(arr,k,v){var ok=arr.filter(function(x){return x[k]!=null&&(k!=='p3'||x.tpa>=2)&&(k!=='ts'||x.fga>=6);});if(v==null||ok.length<8)return null;
   return {r:ok.filter(function(x){return LOWB[k]?x[k]<v-1e-9:x[k]>v+1e-9;}).length+1,n:ok.length};}
@@ -2327,8 +2370,10 @@ function gTS(x){var a=x[11]+0.44*x[15];return a?x[4]/(2*a)*100:0;}
    17. Scatter titles state the takeaway (league rank before → now, or which corner the player moved to), and the subtitle says in plain words what right and up mean.
    18. Corner labels describe BOTH axes ("SHOOT A LOT + MAKE A LOT", "COLD, FEW THREES"). Only the truly best corner is green and only the truly worst is red.
    19. Before/after stat tables use the number line: zero in the middle, good changes go right in green, bad changes go left in red, the "now" number colored to match.
+   20. Every headline stat gets its league rank over the SAME games, now and before ("28th in the NBA over the last 5, was 4th"). Players rank among everyone averaging 20+ minutes. 1st = best.
    21. Streaks always count the FULL current streak from the game log, never just the games in the window. If a team lost its last 5 and the 2 before that, the headline says "lose 7 straight". Every number in an article must agree with every other number on the page.
-   20. Every headline stat gets its league rank over the SAME games, now and before ("28th in the NBA over the last 5, was 4th"). Players rank among everyone averaging 20+ minutes. 1st = best. */
+   22. Every story shows a rank ladder: before and now columns, the subject plus the 10 closest teams/players, numbered like the power rankings, logos/headshots and the stat.
+   23. Team stories get "What's behind it": test schedule strength, opponent three-point luck, rotation changes, plus-minus swings, home/road. Each gets a verdict (likely / small / not the reason) with the numbers. */
 function pWrite(s){
   var p=s.p,R=s.R,B=s.B,N=lastName(p.Player),F=p.Player,rec=s.sp.rec,pri=s.sp.pri,all=s.g,nr=rec.length;
   var up=s.v==='REAL'||s.v==='OPPORTUNITY'||s.v==='LUCK';
@@ -2750,6 +2795,73 @@ function relStories(skip){
   var all=ps_.concat(ts);if(!all.length)return '';
   return '<div class="ar-more"><h2 class="x-h2 st-sh">More stories</h2><div class="ar-rel">'+all.map(function(o){var vv=VERD[o.v];return '<a href="'+stHref(o)+'">'+(o.p?pbx(o.p,'rl'):tbx(o.t,'rl'))+'<div class="rl-t"><span class="kick '+vv[2]+'">'+vv[0]+'</span><b>'+esc(o.w.h)+'</b><span class="rl-n">'+esc(o.p?o.p.Player+' · '+nick(o.p.Team):teamOf(o.t).n)+'</span></div></a>';}).join('')+'</div></div>';
 }
+/* ---------- ladder: where they ranked before vs now, with the 10 closest on each side ---------- */
+var RKL={drtg:'defense',ortg:'offense',net:'net rating',p3:'3-point shooting',tpm:'made threes',tov:'ball security',pts:'scoring',ts:'true shooting',usg:'usage rate',pra:'points + rebounds + assists',min:'minutes',ast:'assists',astp:'assist rate',fta:'free throw attempts'};
+function ladderRows(kind,k,which){var L=rkPool(kind)[which].filter(function(x){return x[k]!=null&&(k!=='p3'||x.tpa>=2)&&(k!=='ts'||x.fga>=6);}).map(function(x){return {x:x,v:x[k]};});
+  L.sort(function(a,b){return LOWB[k]?a.v-b.v:b.v-a.v;});L.forEach(function(z,i){z.r=i&&Math.abs(z.v-L[i-1].v)<1e-9?L[i-1].r:i+1;});return L;}
+function chLadder(kind,rows,id,nb){
+  var r=(rows||[]).filter(function(q){return q.rk&&RKL[q.k];})[0];if(!r)return '';var k=r.k,isMe=function(z){return kind==='t'?z.x.t===id:String(z.x.p.nba_id)===String(id);};
+  var cols=[['pri',befLab(nb)],['rec',recLab()]].map(function(c){var L=ladderRows(kind,k,c[0]),i=-1;L.forEach(function(z,j){if(isMe(z))i=j;});if(i<0)return null;
+    var n=L.length,s0=Math.max(0,Math.min(n-11,i-5)),me=L[i],pct=Math.round((n-me.r)/Math.max(1,n-1)*100);
+    var h='<div class="ld-c"><div class="ld-h"><b>'+esc(c[1])+'</b><span><strong>'+ordn(me.r)+'</strong> of '+n+' · better than '+pct+'%</span></div>';
+    L.slice(s0,s0+11).forEach(function(z){var mine=z===me,pic,nm,tc;
+      if(kind==='t'){pic=img(logoT(z.x.t),'ld-lg');nm='<b>'+esc(z.x.t)+'</b><span>'+esc(nick(z.x.t))+'</span>';tc=teamOf(z.x.t).c;}
+      else{tc=teamOf(z.x.p.Team).c;pic='<span class="ld-hs" style="background:'+tc+'">'+img(headSm(z.x.p.nba_id),'')+'</span>';nm='<b>'+esc(lastName(z.x.p.Player))+'</b><span>'+esc(z.x.p.Team)+'</span>';}
+      h+='<div class="ld-r'+(mine?' me':'')+'"'+(mine?' style="--tc:'+tc+'"':'')+'><i>'+z.r+'</i>'+pic+'<div class="ld-n">'+nm+'</div><em>'+fmtV(r,z.v)+'</em></div>';});
+    return {h:h+'</div>',r:me.r,n:n};});
+  if(!cols[0]||!cols[1])return '';
+  var mv=cols[0].r-cols[1].r,who=kind==='t'?'the '+nick(id):lastName(byId[id].Player),poss=kind==='t'?'The '+nick(id)+(/s$/.test(nick(id))?'’':'’s'):ps(lastName(byId[id].Player));
+  var mid='<div class="ld-m '+(mv>0?'g':mv<0?'r':'n')+'"><span>'+(mv>0?'▲':mv<0?'▼':'=')+'</span><b>'+Math.abs(mv)+'</b><em>'+(Math.abs(mv)===1?'spot':'spots')+'</em></div>';
+  var title=poss+' '+RKL[k]+(mv>0?' climbed ':mv<0?' fell ':' held at ')+(mv?'from '+ordn(cols[0].r)+' to '+ordn(cols[1].r):ordn(cols[1].r));
+  var sub=r.l+(r.u?' ('+r.u+')':'')+', ranked 1st (best) to last. Each column shows '+who+' and the 10 closest '+(kind==='t'?'teams':'players averaging 20+ minutes')+' in that stretch.';
+  return '<div class="fg-a ar-fig">'+chFig(title,sub,'<div class="ld">'+cols[0].h+mid+cols[1].h+'</div>',1)+'</div>';
+}
+/* ---------- what's behind it: test the usual explanations, give each a verdict ---------- */
+var WHYV={L:'Likely a factor',S:'Small factor',N:'Not the reason',C:'Who’s on the floor'};
+function wx(pic,a,b,cls){return '<span class="wx">'+pic+'<b>'+a+'</b><em class="'+(cls||'')+'">'+b+'</em></span>';}
+function teamWhy(s){
+  var t=s.t,N=nick(t),TN='The '+N,pri=s.sp.pri,rec=s.sp.rec,np=pri.length,nr=rec.length,def=s.kind==='def',up=s.up,A=allTeamAgg(),cards=[];
+  var hs=function(p){return '<span class="ld-hs" style="background:'+teamOf(p.Team).c+'">'+img(headSm(p.nba_id),'')+'</span>';};
+  var lastW=TRW==='season'?'second-half':'last '+nr,firstW=TRW==='season'?'first-half':'first '+np;
+  /* 1. schedule */
+  var oK=def?'ortg':'drtg',ab=function(o){return o.o.split(' ').pop();},oppAvg=function(gs){var v=gs.map(function(o){var a=A[ab(o)];return a?a[oK]:null;}).filter(function(v){return v!=null;});return v.length?avg(v):null;};
+  var ob=oppAvg(pri),oa=oppAvg(rec),lg=avg(Object.keys(A).filter(function(k){return A[k];}).map(function(k){return A[k][oK];}));
+  if(ob!=null&&oa!=null){var easier=def?oa<ob:oa>ob,dif=Math.abs(oa-ob),helps=easier===up,v=helps&&dif>=2.5?'L':helps&&dif>=1.2?'S':'N';
+    var what=def?'score':'allow';
+    cards.push({v:v,t:v==='N'?'Not the schedule':(easier?'Easier schedule':'Tougher schedule'),
+      p:'Their '+lastW+' opponents '+what+' '+f1(oa)+' points per 100 possessions this season, compared with '+f1(ob)+' for their '+firstW+' (league average '+f1(lg)+'). '+(dif<1.2?'About the same level of competition, so the schedule doesn’t explain it.':(easier?'That’s a softer set of '+(def?'offenses':'defenses'):'That’s a tougher set of '+(def?'offenses':'defenses'))+(v==='N'?', which works against the change, so it isn’t the reason.':', which explains part of the change.')),
+      x:rec.slice().reverse().map(function(o){var a=A[ab(o)];if(!a)return '';var rr=rkOne(Object.keys(A).map(function(k){return A[k];}).filter(Boolean),oK,a[oK]);return wx(img(logoT(ab(o)),'wx-lg'),ab(o),f1(a[oK])+(rr?' · '+ordn(rr.r):''));}).join(''),xl:(def?'Each opponent’s offense this season: points per 100 · NBA rank':'Each opponent’s defense this season: points allowed per 100 · NBA rank')});}
+  /* 2. opponent three-point shooting (needs box scores) */
+  var o3=function(gs){var m=0,a=0,ok=0;gs.forEach(function(o){if(o.ob){m+=o.ob[2];a+=o.ob[3];ok++;}});return ok===gs.length&&a?m/a*100:null;};
+  var pb=o3(pri),pa=o3(rec);
+  if(def&&pb!=null&&pa!=null){var lg3_=lg3(),d3=pa-pb,helps3=up?d3<0:d3>0,v3=helps3&&Math.abs(d3)>=4?'L':helps3&&Math.abs(d3)>=2?'S':'N';
+    cards.push({v:v3,t:v3==='N'?'Not opponent shooting luck':(up?'Opponents missing threes':'Opponents making threes'),
+      p:'Opponents made '+f1(pa)+'% of their threes in the '+lastW+', compared with '+f1(pb)+'% in the '+firstW+' (league average '+f1(lg3_)+'%). '+(v3==='N'?'That isn’t a big enough swing to explain it.':'Defenses have limited control over whether open threes go in, so some of this is likely luck that could even out.'),
+      x:wx('','Before',f1(pb)+'%')+wx('','Now',f1(pa)+'%',helps3===up?'g':'r')+wx('','League',f1(lg3_)+'%')});}
+  /* 3. rotation */
+  var mates=D.filter(function(p){return p.Team===t&&GL[String(p.nba_id)];});
+  var mm=function(p,gs){var d={},m=0,gp=0,pm=0,sb=0;gs.forEach(function(o){d[o.d]=1;});GL[String(p.nba_id)].forEach(function(x){if(d[x[0]]&&x[3]>0){m+=x[3];gp++;pm+=x[19];sb+=x[7]+x[8];}});return {m:m/gs.length,gp:gp,pm:gp?pm/gp:0,sb:gp?sb/gp:0};};
+  var rot=mates.map(function(p){var a=mm(p,rec),b=mm(p,pri);return {p:p,a:a,b:b,d:a.m-b.m};}).filter(function(z){return Math.max(z.a.m,z.b.m)>=12;});
+  var mov=rot.filter(function(z){return Math.abs(z.d)>=5;}).sort(function(x,y){return Math.abs(y.d)-Math.abs(x.d);}).slice(0,4);
+  if(rot.length){var vr=mov.some(function(z){return Math.abs(z.d)>=8&&Math.max(z.a.m,z.b.m)>=20;})?'L':mov.length?'S':'N';
+    var ph=function(z){var N2=lastName(z.p.Player);return z.a.gp<nr&&z.b.m>=15&&z.a.gp<=nr/2?N2+' has played in only '+z.a.gp+' of the '+lastW+' games':N2+' is playing '+f1(z.a.m)+' minutes a game, '+(z.d>0?'up':'down')+' from '+f1(z.b.m);};
+    cards.push({v:vr,t:vr==='N'?'Same rotation':'Rotation changes',
+      p:vr==='N'?'Nobody’s minutes moved more than 5 a game, so the same players are doing it.':ph(mov[0])+(mov[1]?', and '+ph(mov[1]).replace(/^(\S)/,function(c){return c;}):'')+'. New lineups are one of the most common reasons a team’s numbers swing.',
+      x:mov.map(function(z){return wx(hs(z.p),esc(lastName(z.p.Player)),(z.d>0?'+':'−')+f1(Math.abs(z.d))+' min');}).join(''),xl:'Change in minutes per game'});}
+  /* 4. who's on the floor for it: plus-minus swings */
+  var pmv=rot.filter(function(z){return z.a.gp>=2&&z.b.gp>=2&&z.a.m>=12;}).sort(function(x,y){return up?(y.a.pm-y.b.pm)-(x.a.pm-x.b.pm):(x.a.pm-x.b.pm)-(y.a.pm-y.b.pm);}).slice(0,3);
+  if(pmv.length){var z0=pmv[0],sg=function(v){return (v>0?'+':v<0?'−':'')+f1(Math.abs(v));};
+    cards.push({v:'C',t:(up?'Biggest plus-minus jumps':'Biggest plus-minus drops'),
+      p:TN+' are '+sg(z0.a.pm)+' per game with '+lastName(z0.p.Player)+' on the floor in the '+lastW+', compared with '+sg(z0.b.pm)+' before.'+(def?' His steals + blocks went from '+f1(z0.b.sb)+' to '+f1(z0.a.sb)+' a game.':'')+' Plus-minus is noisy over a few games, but it shows who was out there when it turned.',
+      x:pmv.map(function(z){return wx(hs(z.p),esc(lastName(z.p.Player)),sg(z.b.pm)+' → '+sg(z.a.pm),(z.a.pm>z.b.pm)?'g':'r');}).join(''),xl:'Plus-minus per game, before → now'});}
+  /* 5. home and road */
+  var hm=function(gs){return gs.filter(function(o){return /^vs/.test(o.o);}).length;},ha=hm(rec),hb=hm(pri),dh=ha/nr-hb/np,vh=(up?dh:-dh)>=0.4?'S':'N';
+  cards.push({v:vh,t:vh==='N'?'Not home vs road':(dh>0?'More home games':'More road games'),
+    p:ha+' of their '+lastW+' games were at home, compared with '+hb+' of their '+firstW+'. '+(vh==='N'?'The home/road mix didn’t shift enough to matter.':'Home court usually helps a little, so this is a small piece of it.'),x:''});
+  var ord={L:0,S:1,C:2,N:3};cards.sort(function(a,b){return ord[a.v]-ord[b.v];});
+  return '<section class="why"><h2 class="ar-h2">What’s behind it</h2><p class="ar-p">We checked the usual explanations for a swing like this. Here’s what the numbers say about each one.</p><div class="why-g">'
+    +cards.map(function(c){return '<div class="why-c v-'+c.v+'"><span class="why-v">'+WHYV[c.v]+'</span><b class="why-t">'+esc(c.t)+'</b><p>'+esc(c.p)+'</p>'+(c.x?(c.xl?'<div class="why-xl">'+esc(c.xl)+'</div>':'')+'<div class="why-x">'+c.x+'</div>':'')+'</div>';}).join('')+'</div></section>';
+}
 function winBar(){return '<div class="st-win">View: '+[['5','Last 5'],['10','Last 10'],['season','Season']].map(function(x){return '<button type="button" class="x-chip'+(TRW===x[0]?' on':'')+'" data-trw="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
 function showStory(kind,id){
   var s,w,h='<div class="xp"><div class="ar"><a class="link" href="#/">← Home</a>';
@@ -2761,6 +2873,7 @@ function showStory(kind,id){
     var trig=Math.abs(R.pra-B.pra)>=6?'his points + rebounds + assists moved '+f1(Math.abs(R.pra-B.pra))+' a game, past our 6-point line':Math.abs(R.min-B.min)>=6?'his minutes moved '+f1(Math.abs(R.min-B.min))+' a game, past our 6-minute line':'his true shooting moved '+f1(Math.abs(R.ts-B.ts))+' points, past our 8-point line';
     h+='<div class="kick '+vv[2]+'">'+KICK[s.v]+' · '+esc(nick(p.Team))+'</div><h1 class="ar-h">'+esc(w.h)+'</h1><p class="ar-dek">'+esc(w.k)+'</p>'+byline(trLab()+' vs '+trLabB().toLowerCase(),p);
     h+=heroPanel(w.ksx,w.hc);
+    h+=chLadder('p',w.ksx,p.nba_id,pri.length);
     h+='<p class="ar-p">'+w.lede+'</p><p class="ar-p">'+esc(w.nut)+'</p>';
     if(w.big3)h+='<div class="fg-a ar-fig">'+w.big()+'</div>';
     h+='<h2 class="ar-h2">'+esc(w.h2)+'</h2><p class="ar-p">'+esc(w.b2)+'</p>';
@@ -2779,9 +2892,11 @@ function showStory(kind,id){
     w=tWrite(s);var v2=VERD[s.v],info=teamOf(id),sm2=window.innerWidth<700;
     h+='<div class="kick '+v2[2]+'">'+(s.up?'Team surge':'Team slide')+' · '+esc(info.n)+'</div><h1 class="ar-h">'+esc(w.h)+'</h1><p class="ar-dek">'+esc(w.k)+'</p>'+byline(trLab()+' vs '+trLabB().toLowerCase(),null,id);
     h+=heroPanel(w.ksx,w.hc);
+    h+=chLadder('t',w.ksx,id,s.sp.pri.length);
     h+='<p class="ar-p">'+w.lede+'</p><p class="ar-p">'+esc(w.nut)+'</p>';
     h+='<div class="fg-a ar-fig">'+chStrip(s.g.slice(-10))+'</div>';
     h+='<div class="fg-a ar-fig">'+w.big()+'</div>';
+    h+=teamWhy(s);
     h+='<h2 class="ar-h2">'+esc(w.h2)+'</h2><p class="ar-p">'+esc(w.b2)+'</p>';
     h+=(s.kind==='shoot'?teamThreeScatter(id,s):'')+teamODScatter(id,s,1);
     h+='<div class="fg-a ar-fig">'+chFig('The numbers behind it','How each stat changed from '+befLab(s.sp.pri.length).toLowerCase()+' to the '+trLab().toLowerCase()+'. Green bars go right when the change helps, red bars go left when it hurts. Small numbers = league rank over the same games (1st = best).',chChange(w.dmx,s.sp.pri.length),1)+'</div>';
