@@ -1265,7 +1265,7 @@ html.intro #hmMain::after{content:'';position:absolute;inset:0;background:var(--
 .lb-r{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:8px 0;border-top:1px solid var(--rule)}.lb-r b{font-weight:800;color:var(--navy);font-size:14.5px}
 .lb-r span{font-weight:900;font-size:16px;text-align:right}.lb-r span.g{color:var(--rise)}.lb-r span.r{color:var(--fall)}.lb-r em{grid-column:1/-1;font-style:normal;font-size:12px;color:var(--t3)}
 .lb-c{margin:0;padding-left:18px;font-size:14px;color:var(--t2);line-height:1.7}
-.lb-days{display:flex;flex-wrap:wrap;gap:8px}.lb-d{border:1px solid var(--rule2);border-radius:10px;padding:8px 12px;min-width:92px}.lb-d b{display:block;font-size:12px;color:var(--t3)}.lb-d span{display:block;font-weight:900;font-size:20px;font-stretch:76%}.lb-d span.g{color:var(--rise)}.lb-d span.r{color:var(--fall)}.lb-d span.n{color:var(--navy)}.lb-d em{font-style:normal;font-size:11px;color:var(--t3)}
+.lb-days{display:flex;flex-wrap:wrap;gap:8px}.lb-d{border:1px solid var(--rule2);border-radius:10px;padding:8px 12px;min-width:92px}.lb-d b{display:block;font-size:12px;color:var(--t3)}.lb-d span{display:block;font-weight:900;font-size:20px;font-stretch:76%}.lb-d span.g{color:var(--rise)}.lb-d span.r{color:var(--fall)}.lb-d span.n{color:var(--navy)}.lb-d.live{border-color:var(--navy);border-width:2px}.lb-d em{font-style:normal;font-size:11px;color:var(--t3)}
 @media (max-width:700px){.lb-g{grid-template-columns:1fr}}
 .bt-note{font-size:12.5px;color:var(--t3);margin:8px 0 0}
 .bt-h3{font-weight:900;font-size:18px;color:var(--navy);margin:22px 0 10px}
@@ -3457,7 +3457,7 @@ function findTeams(term){
 }
 
 /* ================= BETTING: projections, previews, scorecard, award ladders ================= */
-var BETP={rw:0.2,mw:0.5,fr:0.5,k3:100,of:1,pf:1,us:0.3},BET={},BSTAT={pts:'Points',reb:'Rebounds',ast:'Assists',tpm:'Made threes',pra:'Pts + reb + ast',pr:'Pts + reb',pa:'Pts + ast'},BSORT={k:'pts',g:''};
+var BETP={rw:0.2,mw:0.5,fr:0.5,k3:100,of:1,pf:1,us:0.3,lw:0.6,dist:0,rk:0,pk:400,pm:4,p3w:300,th:0.6,lam:40},BET={},BSTAT={pts:'Points',reb:'Rebounds',ast:'Assists',tpm:'Made threes',pra:'Pts + reb + ast',pr:'Pts + reb',pa:'Pts + ast'},BSORT={k:'pts',g:''};
 function mdOrd(md){var a=String(md).split('/'),m=+a[0],d=+a[1];return ((m+3)%12)*32+d;}
 function seasonY(){return +String(META.season||'2026').slice(0,4);}
 function mdShift(md,k){var a=String(md).split('/'),m=+a[0],d=+a[1],dt=new Date(seasonY()+(m<9?1:0),m-1,d+k);return (dt.getMonth()+1)+'/'+dt.getDate();}
@@ -3472,14 +3472,15 @@ function betCtx(cut){
   Object.keys(G).forEach(function(t){TG[t]=G[t].filter(function(g){return mdOrd(g.d)<cut;});var s=tAgg(TG[t]);if(s){TR[t]={s:s,r:tAgg(TG[t].slice(-10))||s,miss:avg(TG[t].map(function(g){return g.fga-g.fgm;})),fga:avg(TG[t].map(function(g){return g.fga;}))};o.push(s.ortg);pc.push(s.pace);}});
   var lgO=avg(o)||112,lgP=avg(pc)||99;
   var bl=function(t,k){var x=TR[t],lg=k==='pace'?lgP:lgO;if(!x)return lg;var v=0.6*x.s[k]+0.4*x.r[k],n=x.s.n;return lg+(v-lg)*n/(n+5);};
-  var AL={},lgA={reb:0,ast:0,tpa:0},nT=0,F={},KS=['reb','ast','tpa'];
-  Object.keys(GL).forEach(function(id){GL[id].forEach(function(x){if(!(x[3]>0)||mdOrd(x[0])>=cut)return;M3+=x[12];A3+=x[13];var op=oppAb(x[1]),a=AL[op]||(AL[op]={reb:0,ast:0,tpa:0});a.reb+=x[5];a.ast+=x[6];a.tpa+=x[13];});});
+  var AL={},lgA={reb:0,ast:0,tpa:0},nT=0,F={},KS=['reb','ast','tpa'],LR={pts:0,reb:0,ast:0,tpa:0,min:0};
+  Object.keys(GL).forEach(function(id){GL[id].forEach(function(x){if(!(x[3]>0)||mdOrd(x[0])>=cut)return;M3+=x[12];A3+=x[13];LR.pts+=x[4];LR.reb+=x[5];LR.ast+=x[6];LR.tpa+=x[13];LR.min+=x[3];var op=oppAb(x[1]),a=AL[op]||(AL[op]={reb:0,ast:0,tpa:0});a.reb+=x[5];a.ast+=x[6];a.tpa+=x[13];});});
   Object.keys(TR).forEach(function(t){var n=TG[t].length,a=AL[t];if(!a||!n)return;nT+=n;KS.forEach(function(k){lgA[k]+=a[k];});});
   KS.forEach(function(k){lgA[k]=nT?lgA[k]/nT:1;});
   Object.keys(TR).forEach(function(t){var n=TG[t].length,a=AL[t]||{reb:0,ast:0,tpa:0},pr=TR[t].s.pace/lgP,f={};
     KS.forEach(function(k){var raw=n&&lgA[k]?(a[k]/n)/pr/lgA[k]:1;f[k]=1+(raw-1)*n/(n+8);});
     f.pts=bl(t,'drtg')/lgO;f.tpm=f.tpa;F[t]=f;});
-  return BET['c'+cut]={TG:TG,TR:TR,F:F,lgO:lgO,lgP:lgP,lg3:A3?M3/A3:0.36,bl:bl,cut:cut};
+  var lgR={};['pts','reb','ast','tpa'].forEach(function(k){lgR[k]=LR.min?LR[k]/LR.min:0;});
+  return BET['c'+cut]={TG:TG,TR:TR,F:F,lgO:lgO,lgP:lgP,lg3:A3?M3/A3:0.36,lgR:lgR,bl:bl,cut:cut};
 }
 function fRank(C,k,t){var v=C.F[t]&&C.F[t][k];if(v==null)return null;var all=Object.keys(C.F).map(function(x){return C.F[x][k];});return {r:all.filter(function(z){return z>v+1e-9;}).length+1,n:all.length};}
 function missRank(C,t){var v=C.TR[t]&&C.TR[t].miss;if(v==null)return null;var all=Object.keys(C.TR).map(function(x){return C.TR[x].miss;});return {r:all.filter(function(z){return z>v+1e-9;}).length+1,n:all.length};}
@@ -3492,8 +3493,10 @@ function projPlayers(t,opp,home,md,C,mg){
   var ros=D.filter(function(p){return p.Team===t&&GL[String(p.nba_id)];}).map(function(p){
     var g=GL[String(p.nba_id)].filter(function(x){return x[3]>0&&mdOrd(x[0])<cut;});if(g.length<2)return null;
     var pl=g.map(function(x){return x[0];}),r5=l5.filter(function(d){return pl.indexOf(d)>=0;}).length;if(!r5)return null;
-    var sm=avg(g.map(function(x){return x[3];})),lm=avg(g.slice(-5).map(function(x){return x[3];}));
-    return {p:p,g:g,out:pl.indexOf(last)<0,mb:(1-BETP.mw)*sm+BETP.mw*lm,sm:sm,lm:lm,r5:r5,fga:avg(g.map(function(x){return x[11];}))};}).filter(Boolean);
+    var pr=(META.prior||{})[String(p.nba_id)],sm0=avg(g.map(function(x){return x[3];})),sm=pr&&pr[0]?(sm0*g.length+BETP.pm*pr[1]/pr[0])/(g.length+BETP.pm):sm0,lm=avg(g.slice(-5).map(function(x){return x[3];}));
+    /* who's out: the official injury report for tonight when we have it, otherwise a rotation player who missed the last game */
+    var st=META.inj&&META.inj.d===md?(META.inj.p||{})[String(p.nba_id)]:null,out=st?(st==='Out'||st==='Doubtful'):pl.indexOf(last)<0;
+    return {p:p,g:g,pr:pr,out:out,q:st==='Questionable',st:st,mb:(1-BETP.mw)*sm+BETP.mw*lm,sm:sm,lm:lm,r5:r5,fga:avg(g.map(function(x){return x[11];}))};}).filter(Boolean);
   var act=ros.filter(function(r){return !r.out;}),outs=ros.filter(function(r){return r.out&&r.r5>=2&&r.mb>=12;});
   var freed=outs.reduce(function(s,r){return s+r.mb*r.r5/5;},0),wt=function(r){return r.mb*Math.max(0.05,1-r.mb/40);},S=act.reduce(function(s,r){return s+wt(r);},0)||1;
   var outFGA=outs.reduce(function(s,r){return s+r.fga*r.r5/5;},0),tFGA=(C.TR[t]&&C.TR[t].fga)||88,oShare=outFGA/tFGA,usage=1+Math.min(0.12,0.5*oShare);
@@ -3501,14 +3504,22 @@ function projPlayers(t,opp,home,md,C,mg){
   return act.map(function(r){
     var mT=r.mb-r.sm,mO=BETP.fr*Math.min(6,freed*wt(r)/S),base=r.sm+mT+mO,mB=b2b&&base>=28?-0.03*base:0,mX=Math.abs(mg||0)>=12&&base>=28?-0.04*base:0,m=Math.min(40,base+mB+mX);
     var tm=r.g.reduce(function(s,x){return s+x[3];},0),g5=r.g.slice(-5),tm5=g5.reduce(function(s,x){return s+x[3];},0)||1,rw=r.g.length>5?BETP.rw:0;
-    var o={p:r.p,t:t,opp:opp,home:home,m:m,sm:r.sm,lm:r.lm,mup:m-r.sm,mT:mT,mO:mO,mB:mB,mX:mX,pace:pace,F:F,b2b:b2b,outs:outs,oShare:oShare,usage:usage,nG:r.g.length,g:r.g,mg:mg,form:{}};
-    var rate=function(k){var rs=r.g.reduce(function(s,x){return s+glv(x,k);},0)/tm,rr=g5.reduce(function(s,x){return s+glv(x,k);},0)/tm5;o.form[k]=rs?((1-rw)*rs+rw*rr)/rs:1;return rs*o.form[k];};
-    o.pts=rate('pts')*m*pace*F.pts*usage*hf;
-    o.reb=rate('reb')*m*pace*F.reb*hf;
-    o.ast=rate('ast')*m*pace*F.ast*(1+(usage-1)*0.5)*hf;
-    var a3=r.g.reduce(function(s,x){return s+x[13];},0),m3=r.g.reduce(function(s,x){return s+x[12];},0),ra=a3/tm,rra=g5.reduce(function(s,x){return s+x[13];},0)/tm5;
-    o.form.tpm=ra?((1-rw)*ra+rw*rra)/ra:1;o.p3s=a3?m3/a3:0;o.p3r=(m3+C.lg3*BETP.k3)/(a3+BETP.k3);o.a3=a3;o.tpa=ra*o.form.tpm*m*pace*F.tpa;
-    o.tpm=o.tpa*o.p3r*hf;
+    var o={p:r.p,t:t,opp:opp,home:home,m:m,sm:r.sm,lm:r.lm,mup:m-r.sm,mT:mT,mO:mO,mB:mB,mX:mX,pace:pace,F:F,b2b:b2b,outs:outs,oShare:oShare,usage:usage,nG:r.g.length,g:r.g,mg:mg,q:r.q,st:r.st,form:{},fx:{}};
+    /* season rate, padded with last season's rate (worth up to BETP.pk minutes) when we have it */
+    var PI={pts:2,reb:3,ast:4,tpa:6},pk=r.pr&&r.pr[1]?Math.min(BETP.pk,r.pr[1]):0;
+    var srate=function(k,sum){return (sum+(pk?pk*r.pr[PI[k]]/r.pr[1]:0)+BETP.rk*(C.lgR[k]||0))/(tm+pk+BETP.rk);};
+    var ftr=(r.sm+mT)/r.sm,fout=(r.sm+mT+mO)/(r.sm+mT),flate=m/(r.sm+mT+mO);
+    var B=BET.beta||{},pw=function(f,key){return Math.pow(f,B[key]==null?1:B[key]);},ic=BET.icpt||{};
+    var build=function(k,base,f){var v=base,x={};Object.keys(f).forEach(function(key){x[key]=Math.log(f[key]||1);v*=pw(f[key]||1,key);});o.fx[k]={b:base,x:x,raw:v};return v*Math.exp(ic[k]||0);};
+    var rate=function(k){var sum=r.g.reduce(function(s,x){return s+glv(x,k);},0),rs=srate(k,sum),rr=g5.reduce(function(s,x){return s+glv(x,k);},0)/tm5,raw=sum/tm;o.form[k]=raw?((1-rw)*raw+rw*rr)/raw:1;return rs;};
+    var mf={trend:ftr,out:fout,late:flate,pace:pace,home:hf};
+    o.pts=build('pts',rate('pts')*r.sm,Object.assign({},mf,{form:o.form.pts,opp:F.pts,usage:usage}));
+    o.reb=build('reb',rate('reb')*r.sm,Object.assign({},mf,{form:o.form.reb,opp:F.reb}));
+    o.ast=build('ast',rate('ast')*r.sm,Object.assign({},mf,{form:o.form.ast,opp:F.ast,usage:1+(usage-1)*0.5}));
+    var a3=r.g.reduce(function(s,x){return s+x[13];},0),m3=r.g.reduce(function(s,x){return s+x[12];},0),rra=g5.reduce(function(s,x){return s+x[13];},0)/tm5,ra=srate('tpa',a3);
+    var pw3=r.pr&&r.pr[6]?Math.min(BETP.p3w,r.pr[6]):0,pp3=pw3?r.pr[5]/r.pr[6]:0;
+    o.form.tpm=a3?((1-rw)*(a3/tm)+rw*rra)/(a3/tm):1;o.p3s=a3?m3/a3:0;o.p3r=(m3+pw3*pp3+C.lg3*BETP.k3)/(a3+pw3+BETP.k3);o.a3=a3;o.tpa=ra*o.form.tpm*m*pace*F.tpa;
+    o.tpm=build('tpm',ra*r.sm*(o.p3s||o.p3r),Object.assign({},mf,{form:o.form.tpm,opp:F.tpa,reg:o.p3s?o.p3r/o.p3s:1}));
     o.pra=o.pts+o.reb+o.ast;o.pr=o.pts+o.reb;o.pa=o.pts+o.ast;
     var g15=r.g.slice(-15),am=avg(g15.map(function(x){return x[3];}))||1;
     Object.keys(BSTAT).forEach(function(k){o['s_'+k]=avg(r.g.map(function(x){return glv(x,k);}));o['sd_'+k]=Math.max(stdv(g15.map(function(x){return glv(x,k);}))*m/am,k==='tpm'?0.8:1.2);});
@@ -3602,78 +3613,93 @@ function seasonGrades(){
   return BET.sg={days:R,picks:P,hit:P.filter(function(z){return z.hit;}).length,inR:P.filter(function(z){return z.inR;}).length,W:W,N:N,mae:np?E.reduce(function(a,b){return a+b;},0)/np:null,base:np?B.reduce(function(a,b){return a+b;},0)/np:null};
 }
 
-/* ================= THE LEARNING LOOP =================
-   Walk forward through the season one game day at a time. On each day the model only knows what happened before it:
-   1. it projects every player and leans over or under on every stat (a "lean"),
-   2. it scores each lean with what it has learned so far (which kinds of leans have been hitting),
-   3. it publishes its 6 best as picks,
-   4. after the games it grades EVERY lean, not just the picks, and updates what it has learned.
-   So each new game day makes it a little smarter, and the record shown is exactly what it would have picked at the time. */
-var LK=40;   // shrinkage: a type needs ~40 graded leans before its record counts as much as our prior
-var LSTATS=['pts','reb','ast','tpm','pra'],LMIN={tpm:1.2,ast:2.5,reb:3.5};
-var LNAME={'sd:pts:o':'Overs on points','sd:pts:u':'Unders on points','sd:reb:o':'Overs on rebounds','sd:reb:u':'Unders on rebounds','sd:ast:o':'Overs on assists','sd:ast:u':'Unders on assists','sd:tpm:o':'Overs on made threes','sd:tpm:u':'Unders on made threes','sd:pra:o':'Overs on pts + reb + ast','sd:pra:u':'Unders on pts + reb + ast',
-  'r:out':'Leans because teammates are out','r:trend':'Leans on a minutes trend','r:blow':'Leans on blowout risk','r:b2b':'Leans on back-to-backs','r:usage':'Leans on a bigger role','r:form':'Leans on hot or cold form','r:opp':'Leans on the matchup','r:pace':'Leans on game pace','r:reg':'Leans on three-point shooting evening out',
-  'zb:1':'Small edges (projection just past the line)','zb:2':'Medium edges','zb:3':'Big edges (projection far from the line)'};
+/* ================= THE LEARNING LOOP (rebuilt Nov 8, 2026) =================
+   Goal: the best calls of the day, whatever stat or side, with chances that come from each player's own projection.
+   The model never favors a kind of bet because that kind has been winning. It learns three things, walking forward one
+   game day at a time and using only games already played:
+   1. How much to trust each adjustment (minutes trend, teammates out, blowouts and rest, form, pace, matchup, role, 3P% cooling, home).
+      After every game day it refits these strengths against what actually happened.
+   2. How big and how lopsided its misses are for each stat, so a chance of 60% means 60%.
+   3. A final check that its chances are honest overall.
+   Picks = every call whose chance clears BETP.th, best first, one per player, at most 10. Some nights that is none. */
+var LSTATS=['pts','reb','ast','tpm','pra'],LBASE=['pts','reb','ast','tpm'],LMIN={tpm:1.2,ast:2.5,reb:3.5};
+var LFAC=['trend','out','late','form','pace','opp','usage','reg','home'];
+var LFNAME={trend:'Minutes trend',out:'Teammates out',late:'Rest and blowouts',form:'Recent form',pace:'Game pace',opp:'Matchup',usage:'Bigger role',reg:'Three-point shooting evening out',home:'Home or away'};
+var LIVE='11/8';  // picks from this date on are the live record; earlier days are a test run on past games
+/* locked picks: before the model's code changes, the live picks so far are copied here so the record can never be rewritten */
+var PLOG=[];
 function lgt(p){p=Math.min(0.99,Math.max(0.01,p));return Math.log(p/(1-p));}
 function sig(x){return 1/(1+Math.exp(-x));}
-function lNew(){return {all:{n:0,h:0},g:{},bias:{},cal:{},raw:{},days:[],wins:0,games:0,ae:0,be:0,np:0};}
-function lRate(S,key){var g=S.g[key],base=S.all.n?S.all.h/S.all.n:0.5;if(!g)return base;return (g.h+LK*base)/(g.n+LK);}
-function lBias(S,k){var b=S.bias[k];return b?b.s/(b.n+60):0;}
-function zBand(z){z=Math.abs(z);return z<0.45?1:z<0.8?2:3;}
-/* every lean for one game, scored with what the model knows so far */
+function lNew(){return {sA:{},sP:{},beta:{},icpt:{},XtX:null,Xty:null,z:{},cal:{},raw:{},days:[],wins:0,games:0,ae:0,be:0,np:0,n:0,h:0};}
+/* ridge regression of log(actual/base) on the log adjustments: strengths pulled toward 1 (the original model), intercepts per stat */
+function lFit(S){
+  var nF=LFAC.length,nD=nF+LBASE.length,A=[],bv=[];
+  for(var i=0;i<nD;i++){A.push(S.XtX[i].slice());bv.push(S.Xty[i]);}
+  for(i=0;i<nF;i++){A[i][i]+=BETP.lam;bv[i]+=BETP.lam*1;}for(i=nF;i<nD;i++)A[i][i]+=1;
+  for(var c=0;c<nD;c++){var piv=c;for(var r2=c+1;r2<nD;r2++)if(Math.abs(A[r2][c])>Math.abs(A[piv][c]))piv=r2;var tmp=A[c];A[c]=A[piv];A[piv]=tmp;var tb=bv[c];bv[c]=bv[piv];bv[piv]=tb;
+    for(r2=0;r2<nD;r2++){if(r2===c||!A[c][c])continue;var f=A[r2][c]/A[c][c];for(var k2=c;k2<nD;k2++)A[r2][k2]-=f*A[c][k2];bv[r2]-=f*bv[c];}}
+  LFAC.forEach(function(k,i){S.beta[k]=Math.max(0,Math.min(2,bv[i]/A[i][i]));});
+  /* level correction per stat in plain units (ratio of actual to projected totals), not in log space, which would bias everything low */
+  LBASE.forEach(function(k){var n=S.sP[k]||0;if(!n)return;var r=(S.sA[k]||0)/n,w=(S.cnt&&S.cnt[k]||0)/((S.cnt&&S.cnt[k]||0)+300);S.icpt[k]=Math.log(1+(r-1)*w);});
+}
+function lChance(S,k,pj,sd,line,over){
+  var t=(line-pj)/sd,zs=S.z[k]||[],pn=1-ncdf(t/1.15),pe=zs.length?zs.filter(function(z){return z>t;}).length/zs.length:pn,w=zs.length/(zs.length+150),po=w*pe+(1-w)*pn,p=over?po:1-po;
+  /* honesty check: a learned stretch factor (fit on every graded call so far) pulls chances toward 50% where it has run hot */
+  var a=S.cx>0?Math.max(0.2,Math.min(1,(S.cy+20*0.55*0.0025)/(S.cx+20*0.0025))):0.55;return {p:0.5+a*(p-0.5),pr:p,rb:0};
+}
 function lLeans(x,S){
   var out=[];x.A.concat(x.H).forEach(function(o){if(o.m<18||o.nG<4||o.mcv>0.35)return;
     LSTATS.forEach(function(k){if(LMIN[k]&&o['s_'+k]<LMIN[k])return;
-      var pj=o[k]+lBias(S,k),line=bLine(o,k),d=pj-line;if(Math.abs(d)<0.05)return;
-      var over=d>0,z=d/o['sd_'+k],R=bReasons(o,k),dir=over?1:-1,pro=R.filter(function(r){return r.s===dir;}).slice(0,3);
-      var f=['sd:'+k+':'+(over?'o':'u'),'zb:'+zBand(z)].concat(pro.map(function(r){return 'r:'+r.key;}));
-      var p0=ncdf(Math.abs(z)/1.2);p0=0.5+(p0-0.5)*0.55;
-      var base=S.all.n?S.all.h/S.all.n:0.5,lo=lgt(p0)+(S.all.n?lgt(base)-lgt(0.5):0),adj=0;
-      f.forEach(function(key){adj+=lgt(lRate(S,key))-lgt(base);});
-      var pr=sig(lo+0.6*adj),rb=Math.min(5,Math.max(0,Math.floor((pr-0.5)/0.04))),q=S.raw[rb],pc=q?(q.h+50*pr)/(q.n+50):pr;
-      out.push({o:o,k:k,pj:pj,line:line,over:over,z:z,R:R,d:d,f:f,p:pc,pr:pr,rb:rb,p0:p0});});});
+      var pj=o[k],line=bLine(o,k),d=pj-line;if(Math.abs(d)<0.05)return;
+      var over=d>0,sd=o['sd_'+k],ch=lChance(S,k,pj,sd,line,over);
+      out.push({o:o,k:k,pj:pj,line:line,over:over,z:d/sd,d:d,R:bReasons(o,k),p:ch.p,pr:ch.pr,rb:ch.rb});});});
   return out;
 }
-function lPick(leans,n,minP){var seen={},out=[];leans.slice().sort(function(a,b){return b.p-a.p;}).forEach(function(c){if(out.length>=n||c.p<minP||Math.abs(c.z)<0.2||seen[c.o.p.nba_id])return;seen[c.o.p.nba_id]=1;out.push(c);});return out;}
-function lGrade(S,leans,md){
-  leans.forEach(function(c){var a=(GL[String(c.o.p.nba_id)]||[]).filter(function(r){return r[0]===md&&r[3]>0;})[0];if(!a)return;var v=glv(a,c.k),hit=c.over?v>c.line:v<c.line;c.a=v;c.hit=hit;
-    S.all.n++;if(hit)S.all.h++;
-    c.f.forEach(function(key){var g=S.g[key]||(S.g[key]={n:0,h:0});g.n++;if(hit)g.h++;});
-    var b=S.bias[c.k]||(S.bias[c.k]={s:0,n:0});b.s+=v-c.o[c.k];b.n++;
-    var rq=S.raw[c.rb]||(S.raw[c.rb]={n:0,h:0});rq.n++;if(hit)rq.h++;
-    var cb=Math.min(3,Math.floor((c.p-0.5)/0.05));if(cb>=0){var q=S.cal[cb]||(S.cal[cb]={n:0,h:0,p:0});q.n++;q.p+=c.p;if(hit)q.h++;}});
+function lPick(leans,n,minP){var seen={},out=[];leans.slice().sort(function(a,b){return b.p-a.p;}).forEach(function(c){if(out.length>=n||c.p<minP||c.o.q||seen[c.o.p.nba_id])return;seen[c.o.p.nba_id]=1;out.push(c);});return out;}
+function lAct(o,md){return (GL[String(o.p.nba_id)]||[]).filter(function(r){return r[0]===md&&r[3]>0;})[0];}
+function lLearn(S,games,leans,md){
+  var nF=LFAC.length,nD=nF+LBASE.length;if(!S.XtX){S.XtX=[];S.Xty=[];for(var i=0;i<nD;i++){S.XtX.push(new Array(nD).fill(0));S.Xty.push(0);}}
+  games.forEach(function(x){x.A.concat(x.H).forEach(function(o){var a=lAct(o,md);if(!a||o.m<12)return;
+    LBASE.forEach(function(k,ki){var fx=o.fx[k];if(!fx)return;S.cnt=S.cnt||{};S.cnt[k]=(S.cnt[k]||0)+1;S.sA[k]=(S.sA[k]||0)+glv(a,k);S.sP[k]=(S.sP[k]||0)+fx.raw;var y=Math.log((glv(a,k)+1)/(fx.b+1)),v=LFAC.map(function(f){return fx.x[f]||0;});v.push.apply(v,LBASE.map(function(_,j){return j===ki?1:0;}));
+      for(var i2=0;i2<nD;i2++){if(!v[i2])continue;S.Xty[i2]+=v[i2]*y;for(var j2=0;j2<nD;j2++)S.XtX[i2][j2]+=v[i2]*v[j2];}});
+    LSTATS.forEach(function(k){if(o['sd_'+k])(S.z[k]=S.z[k]||[]).push((glv(a,k)-o[k])/o['sd_'+k]);});});});
+  leans.forEach(function(c){var a=lAct(c.o,md);if(!a)return;var v=glv(a,c.k);c.a=v;c.hit=c.over?v>c.line:v<c.line;S.n++;if(c.hit)S.h++;
+    var u=c.pr-0.5;S.cx=(S.cx||0)+u*u;S.cy=(S.cy||0)+u*((c.hit?1:0)-0.5);
+    var cb=Math.min(3,Math.floor((c.p-0.5)/0.05));if(cb>=0){var cq=S.cal[cb]||(S.cal[cb]={n:0,h:0,p:0});cq.n++;cq.p+=c.p;if(c.hit)cq.h++;}});
+  lFit(S);
 }
 function learnRun(){
-  if(BET.L)return BET.L;var keep=BET.cut,S=lNew(),ds=[];(META.games||[]).forEach(function(g){if(ds.indexOf(g[0])<0)ds.push(g[0]);});
-  ds.sort(function(a,b){return mdOrd(a)-mdOrd(b);});
-  ds.forEach(function(md){var cut=mdOrd(md);BET.cut=cut;var day=[],games=0,wins=0;
+  if(BET.L)return BET.L;var keep=BET.cut,S=lNew(),ds=[];BET.beta={};BET.icpt={};
+  (META.games||[]).forEach(function(g){if(ds.indexOf(g[0])<0)ds.push(g[0]);});ds.sort(function(a,b){return mdOrd(a)-mdOrd(b);});
+  ds.forEach(function(md){var cut=mdOrd(md);BET.cut=cut;BET.beta=S.beta;BET.icpt=S.icpt;var games=[],day=[],wins=0;
     (META.games||[]).filter(function(g){return g[0]===md;}).forEach(function(g){var x=projGame(g[1],g[3],md,cut);if(!x.C.TG[g[1]]||x.C.TG[g[1]].length<3||!x.C.TG[g[3]]||x.C.TG[g[3]].length<3)return;
-      games++;if((x.mg>0)===(g[4]>g[2]))wins++;day=day.concat(lLeans(x,S));
-      x.A.concat(x.H).forEach(function(o){var a=(GL[String(o.p.nba_id)]||[]).filter(function(r){return r[0]===md&&r[3]>0;})[0];if(a&&o.m>=15){S.ae+=Math.abs(o.pts+lBias(S,'pts')-a[4]);S.be+=Math.abs(o.s_pts-a[4]);S.np++;}});});
-    if(!games)return;var picks=lPick(day,6,0.53);lGrade(S,day,md);S.wins+=wins;S.games+=games;
-    S.days.push({md:md,picks:picks.filter(function(c){return c.hit!=null;}),leans:day.filter(function(c){return c.hit!=null;}).length});});
-  var sl=betSlate(),tonight=[];BET.cut=sl.md?mdOrd(sl.md):keep;
+      games.push(x);if((x.mg>0)===(g[4]>g[2]))wins++;day=day.concat(lLeans(x,S));
+      x.A.concat(x.H).forEach(function(o){var a=lAct(o,md);if(a&&o.m>=15){S.ae+=Math.abs(o.pts-a[4]);S.be+=Math.abs(o.s_pts-a[4]);S.np++;}});});
+    if(!games.length)return;var picks=lPick(day,10,BETP.th);lLearn(S,games,day,md);S.wins+=wins;S.games+=games.length;
+    var lock=PLOG.filter(function(z){return z.d===md;});
+    S.days.push({md:md,live:mdOrd(md)>=mdOrd(LIVE),locked:!!lock.length,picks:picks.filter(function(c){return c.hit!=null;}),leans:day.length});});
+  var sl=betSlate(),tonight=[];BET.cut=sl.md?mdOrd(sl.md):keep;BET.beta=S.beta;BET.icpt=S.icpt;BET.slate=null;sl=betSlate();BET.cut=sl.md?mdOrd(sl.md):keep;
   sl.games.forEach(function(x){lLeans(x,S).forEach(function(c){c.g=bMatch(x);tonight.push(c);});});
-  BET.cut=keep;
-  var P=[];S.days.forEach(function(d){P=P.concat(d.picks);});
-  return BET.L={S:S,tonight:tonight,picks:lPick(tonight,6,0.53),P:P,hit:P.filter(function(c){return c.hit;}).length};
+  BET.cut=keep;var P=[];S.days.forEach(function(d){P=P.concat(d.picks);});
+  var rec=function(f){var Q=P.filter(f);return {w:Q.filter(function(c){return c.hit;}).length,n:Q.length};};
+  return BET.L={S:S,tonight:tonight,picks:lPick(tonight,10,BETP.th),P:P,hit:P.filter(function(c){return c.hit;}).length,rec:rec};
 }
-function pjOf(o,k){var L=BET.L;return o[k]+(L?lBias(L.S,k):0);}
-/* the kind of lean this pick is, and how that kind has done */
-function lTrack(c){var S=BET.L.S,key=c.f[0],g=S.g[key];return g&&g.n?{name:LNAME[key],h:g.h,n:g.n}:null;}
+function pjOf(o,k){return o[k];}
+function lStatRec(k){var r=BET.L.rec(function(c){return c.k===k;});return r.n?r:null;}
+function lTrack(c){var r=lStatRec(c.k);return r?{name:'Our '+BSTAT[c.k].toLowerCase()+' picks',h:r.w,n:r.n}:null;}
+function moe(w,n){return n?Math.round(196*Math.sqrt((w/n)*(1-w/n)/n)):0;}
 function learnBox(){
-  var L=learnRun(),S=L.S;if(!S.all.n)return '';var base=S.all.h/S.all.n;
-  var rows=Object.keys(S.g).filter(function(k){return S.g[k].n>=30&&LNAME[k];}).map(function(k){var g=S.g[k],r=lRate(S,k);return {k:k,g:g,r:r,e:r-base};});
-  var good=rows.filter(function(r){return r.e>=0.015;}).sort(function(a,b){return b.e-a.e;}).slice(0,6),bad=rows.filter(function(r){return r.e<=-0.015;}).sort(function(a,b){return a.e-b.e;}).slice(0,6);
-  var li=function(r,cls,word){return '<li class="lb-r"><b>'+esc(LNAME[r.k])+'</b><span class="'+cls+'">'+Math.round(r.g.h/r.g.n*100)+'% hit</span><em>'+r.g.h+' of '+r.g.n+' · '+word+'</em></li>';};
-  var h='<p class="ar-p">Every game day, the model grades every over/under lean it made, not just the picks it published, and re-weights. So far it has graded <b>'+S.all.n.toLocaleString()+' leans</b> over <b>'+S.days.length+' game days</b>; '+Math.round(base*100)+'% landed on the right side. The kinds of leans that keep hitting get more weight in tomorrow’s picks; the ones that keep missing get less.</p>';
-  h+='<div class="lb-g"><div class="lb"><div class="lb-h g">What’s working</div><ul>'+(good.length?good.map(function(r){return li(r,'g','now favored');}).join(''):'<li class="lb-r"><b>Nothing stands out yet</b></li>')+'</ul></div>'
-    +'<div class="lb"><div class="lb-h r">What’s not working</div><ul>'+(bad.length?bad.map(function(r){return li(r,'r','now avoided');}).join(''):'<li class="lb-r"><b>Nothing stands out yet</b></li>')+'</ul></div></div>';
-  var cal=[0,1,2,3].filter(function(b){return S.cal[b]&&S.cal[b].n>=20;}).map(function(b){var q=S.cal[b];return '<tr><td>'+(50+b*5)+(b===3?'%+':'–'+(55+b*5)+'%')+'</td><td>'+Math.round(q.p/q.n*100)+'%</td><td><b>'+Math.round(q.h/q.n*100)+'%</b></td><td>'+q.n+'</td></tr>';}).join('');
-  if(cal)h+='<h3 class="bt-h3">Is it honest about its chances?</h3><div class="bt-tw"><table class="bt-t"><thead><tr><th>When it said</th><th>Average chance given</th><th>Actually hit</th><th>Leans</th></tr></thead><tbody>'+cal+'</tbody></table></div><p class="bt-note">If the last two columns match, the model’s chances can be trusted. When it has been too confident at some level, it automatically lowers the chances it gives there.</p>';
-  var bias=LSTATS.filter(function(k){return S.bias[k]&&Math.abs(lBias(S,k))>=0.1;}).map(function(k){var v=lBias(S,k);return '<li>'+esc(BSTAT[k])+': actual results ran <b>'+f1(Math.abs(S.bias[k].s/S.bias[k].n))+' '+(v>0?'above':'below')+'</b> our raw projections, so it now '+(v>0?'adds':'subtracts')+' '+f1(Math.abs(v))+'</li>';}).join('');
+  var L=learnRun(),S=L.S;if(!S.n)return '';
+  var h='<p class="ar-p">The model picks the best calls of the day from each player’s own projection, never from which kind of bet has been winning. After every game day it grades itself and adjusts three things: how much it trusts each adjustment, how big its misses run for each stat, and whether its chances are honest. So far it has learned from <b>'+S.days.length+' game days</b> and <b>'+S.n.toLocaleString()+' graded calls</b>.</p>';
+  h+='<h3 class="bt-h3">How much it trusts each adjustment</h3><div class="bt-tw"><table class="bt-t"><thead><tr><th>Adjustment</th><th>Strength now</th><th>What that means</th></tr></thead><tbody>'
+    +LFAC.map(function(f){var b=S.beta[f]==null?1:S.beta[f],pc=Math.round(b*100);return '<tr><td><b>'+esc(LFNAME[f])+'</b></td><td class="'+(pc>=110?'g':pc<=90?'r':'')+'">'+pc+'%</td><td>'+(pc>=110?'Mattered more than we first assumed, so it counts more':pc<=90?'Mattered less than we first assumed, so it counts less':'About as much as we first assumed')+'</td></tr>';}).join('')+'</tbody></table></div><p class="bt-note">100% = the original model. Refit after every game day against actual results.</p>';
+  var bias=LBASE.filter(function(k){return Math.abs(S.icpt[k]||0)>=0.02;}).map(function(k){var v=S.icpt[k];return '<li>'+esc(BSTAT[k])+': projections ran about '+Math.round(Math.abs(1-Math.exp(v))*100)+'% '+(v<0?'high':'low')+', so it now '+(v<0?'trims':'raises')+' them</li>';}).join('');
   if(bias)h+='<h3 class="bt-h3">Corrections it has made to itself</h3><ul class="lb-c">'+bias+'</ul>';
-  var cum=0,cn=0;h+='<h3 class="bt-h3">Pick record by game day</h3><div class="lb-days">'+S.days.filter(function(d){return d.picks.length;}).map(function(d){var w=d.picks.filter(function(c){return c.hit;}).length;cum+=w;cn+=d.picks.length;return '<div class="lb-d"><b>'+esc(d.md)+'</b><span class="'+(w*2>d.picks.length?'g':w*2<d.picks.length?'r':'n')+'">'+w+'-'+(d.picks.length-w)+'</span><em>'+(cn?Math.round(cum/cn*100):0)+'% overall</em></div>';}).join('')+'</div>';
+  var cal=[0,1,2,3].filter(function(b){return S.cal[b]&&S.cal[b].n>=20;}).map(function(b){var q=S.cal[b];return '<tr><td>'+(50+b*5)+(b===3?'%+':'–'+(55+b*5)+'%')+'</td><td>'+Math.round(q.p/q.n*100)+'%</td><td><b>'+Math.round(q.h/q.n*100)+'%</b></td><td>'+q.n+'</td></tr>';}).join('');
+  if(cal)h+='<h3 class="bt-h3">Is it honest about its chances?</h3><div class="bt-tw"><table class="bt-t"><thead><tr><th>When it said</th><th>Average chance given</th><th>Actually hit</th><th>Calls</th></tr></thead><tbody>'+cal+'</tbody></table></div><p class="bt-note">If the last two columns match, its chances can be trusted. Where it runs hot, it lowers the chances it gives.</p>';
+  var sr=LSTATS.map(function(k){var r=lStatRec(k);return r?'<tr><td>'+esc(BSTAT[k])+'</td><td><b>'+r.w+'-'+(r.n-r.w)+'</b></td><td>'+Math.round(r.w/r.n*100)+'% ±'+moe(r.w,r.n)+'</td></tr>':'';}).join('');
+  if(sr)h+='<h3 class="bt-h3">Pick record by stat</h3><div class="bt-tw"><table class="bt-t"><thead><tr><th>Stat</th><th>Record</th><th>Hit rate (95% margin)</th></tr></thead><tbody>'+sr+'</tbody></table></div>';
+  var cum=0,cn=0;h+='<h3 class="bt-h3">Pick record by game day</h3><div class="lb-days">'+S.days.map(function(d){var w=d.picks.filter(function(c){return c.hit;}).length;cum+=w;cn+=d.picks.length;return '<div class="lb-d'+(d.live?' live':'')+'"><b>'+esc(d.md)+(d.live?' · live':'')+'</b><span class="'+(!d.picks.length?'n':w*2>d.picks.length?'g':w*2<d.picks.length?'r':'n')+'">'+(d.picks.length?w+'-'+(d.picks.length-w):'No picks')+'</span><em>'+(cn?Math.round(cum/cn*100)+'% overall':'')+'</em></div>';}).join('')+'</div>';
   return h;
 }
 
@@ -3705,7 +3731,7 @@ function pickCard(c,i){
   var o=c.o,k=c.k,ov=c.over,g=o.g.slice(-10),hits=g.filter(function(x){var v=glv(x,k);return ov?v>c.line:v<c.line;}).length,lo=Math.max(0,Math.floor(c.pj-1.54*o['sd_'+k])),hi=Math.ceil(c.pj+1.54*o['sd_'+k]);
   return '<div class="bp">'+'<div class="bp-n">'+(i+1)+'</div>'+pbx(o.p,'bp-hs')+'<div class="bp-b"><div class="bp-top"><a href="#p'+o.p.nba_id+'" class="bp-nm">'+esc(o.p.Player)+'</a><span class="bp-mu">'+img(logoT(o.t),'bp-lg')+(o.home?' vs ':' @ ')+img(logoT(o.opp),'bp-lg')+'<b>'+esc(o.opp)+'</b></span></div>'
     +'<div class="bp-num"><b class="bp-call '+(ov?'g':'r')+'">'+(ov?'Over':'Under')+' '+c.line+'</b><span>'+esc(BSTAT[k].toLowerCase())+'</span><em class="n">We give it a '+Math.round(c.p*100)+'% chance</em></div>'
-    +(lTrack(c)?'<div class="bp-tr">Model track record: <b>'+esc(lTrack(c).name.toLowerCase())+'</b> have hit '+Math.round(lTrack(c).h/lTrack(c).n*100)+'% ('+lTrack(c).h+' of '+lTrack(c).n+')</div>':'')+'<div class="bp-meta"><span>Our projection <b>'+f1(c.pj)+'</b></span><span>Season average <b>'+f1(o['s_'+k])+'</b></span><span>'+(ov?'Over':'Under')+' '+c.line+' in <b>'+hits+' of his last '+g.length+'</b></span><span>Likely range <b>'+lo+' to '+hi+'</b></span></div>'
+    +(lTrack(c)?'<div class="bp-tr">Track record: <b>'+esc(lTrack(c).name.toLowerCase())+'</b> have hit '+Math.round(lTrack(c).h/lTrack(c).n*100)+'% ('+lTrack(c).h+' of '+lTrack(c).n+')</div>':'')+'<div class="bp-meta"><span>Our projection <b>'+f1(c.pj)+'</b></span><span>Season average <b>'+f1(o['s_'+k])+'</b></span><span>'+(ov?'Over':'Under')+' '+c.line+' in <b>'+hits+' of his last '+g.length+'</b></span><span>Likely range <b>'+lo+' to '+hi+'</b></span></div>'
     +'<ul class="bp-why">'+why3(c).map(function(r){return '<li class="'+(r.s>0?'g':r.s<0?'r':'n')+'"><i>'+(r.s>0?'▲':r.s<0?'▼':'•')+'</i>'+esc(r.t)+'</li>';}).join('')+'</ul></div></div>';
 }
 function gameCard(x){
@@ -3723,7 +3749,7 @@ function projTable(games,filt){
   return '<div class="bt-chips"><button type="button" class="x-chip'+(!filt?' on':'')+'" data-bgf="">All games</button>'+games.map(function(x){return '<button type="button" class="x-chip'+(filt===bMatch(x)?' on':'')+'" data-bgf="'+bMatch(x)+'">'+x.aw+' @ '+x.hm+'</button>';}).join('')+'</div>'
     +'<div class="bt-tw"><table class="bt-t"><thead><tr><th>Player</th><th>Opp</th>'+col('m','Min')+col('pts','Pts')+col('reb','Reb')+col('ast','Ast')+col('tpm','3PM')+col('pra','PRA')+col('pr','P+R')+col('pa','P+A')+'</tr></thead><tbody>'
     +rows.map(function(o){var c=function(kk){var ln=bLine(o,kk),pj=pjOf(o,kk),ov=pj>ln,z=(pj-ln)/o['sd_'+kk],pb=0.5+(ncdf(Math.abs(z)/1.2)-0.5)*0.55,cl=pb>=0.58?(ov?'g':'r'):'';return '<td class="bt-ou '+cl+'" title="Our projection '+f1(pj)+', season average '+f1(o['s_'+kk])+'"><b>'+(ov?'O':'U')+' '+ln+'</b><small>'+Math.round(pb*100)+'%</small></td>';};
-      return '<tr><td><a class="bt-pl" href="#p'+o.p.nba_id+'">'+'<span class="ld-hs" style="background:'+teamOf(o.t).c+'">'+img(headSm(o.p.nba_id),'')+'</span><b>'+esc(o.p.Player)+'</b><span>'+o.t+'</span></a></td><td>'+(o.home?'vs ':'@ ')+o.opp+'</td><td>'+f1(o.m)+'</td>'+c('pts')+c('reb')+c('ast')+c('tpm')+c('pra')+c('pr')+c('pa')+'</tr>';}).join('')
+      return '<tr><td><a class="bt-pl" href="#p'+o.p.nba_id+'">'+'<span class="ld-hs" style="background:'+teamOf(o.t).c+'">'+img(headSm(o.p.nba_id),'')+'</span><b>'+esc(o.p.Player)+'</b><span>'+o.t+(o.q?' · Questionable':'')+'</span></a></td><td>'+(o.home?'vs ':'@ ')+o.opp+'</td><td>'+f1(o.m)+'</td>'+c('pts')+c('reb')+c('ast')+c('tpm')+c('pra')+c('pr')+c('pa')+'</tr>';}).join('')
     +'</tbody></table></div>'+(cap?'<button type="button" class="x-chip bt-more" data-ball="1">Show all '+nAll+' players</button>':'')+'<p class="bt-note">O = over, U = under. The number is the half-point line that splits his games most evenly; the % is our chance it hits. Green or red = 58%+ on the over or under. Hover for our exact projection. Tap a column to sort.</p>';
 }
 function teamTrend(t){
@@ -3746,15 +3772,16 @@ function slateScatter(sl){
     chScatter({pts:pts,xl:'Projected total points (more →)',yl:'Projected margin (bigger ↑)',avg:[avg(xs),avg(ys)],quad:['LOPSIDED, LOW-SCORING','LOPSIDED SHOOTOUT','CLOSE, LOW-SCORING','CLOSE SHOOTOUT'],qc:['n','n','n','n']}));
 }
 function scorecard(){
-  var L=learnRun(),S=L.S;if(!S.days.length)return '';var y=S.days[S.days.length-1],pr=function(n,d){return d?Math.round(n/d*100)+'%':'–';};
-  var r7=S.days.slice(-7),P7=[];r7.forEach(function(d){P7=P7.concat(d.picks);});var h7=P7.filter(function(c){return c.hit;}).length;
-  var h='<div class="bs-g"><div class="bs-k"><b>'+L.hit+'-'+(L.P.length-L.hit)+'</b><span>Our over/under picks this season ('+pr(L.hit,L.P.length)+')</span></div>'
-    +'<div class="bs-k"><b>'+h7+'-'+(P7.length-h7)+'</b><span>Last '+r7.length+' game days ('+pr(h7,P7.length)+')</span></div>'
+  var L=learnRun(),S=L.S;if(!S.days.length)return '';var pr=function(n,d){return d?Math.round(n/d*100)+'%':'–';};
+  var tally=function(lv){var w=0,n=0;S.days.forEach(function(d){if(d.live!==lv)return;d.picks.forEach(function(c){n++;if(c.hit)w++;});});return {w:w,n:n};},live=tally(true),test=tally(false);
+  var y=S.days.filter(function(d){return d.picks.length;}).slice(-1)[0];
+  var h='<div class="bs-g"><div class="bs-k"><b>'+(live.n?live.w+'-'+(live.n-live.w):'Starts tonight')+'</b><span>Live record since '+esc(LIVE)+(live.n?' ('+pr(live.w,live.n)+' ±'+moe(live.w,live.n)+')':'')+'</span></div>'
+    +'<div class="bs-k"><b>'+test.w+'-'+(test.n-test.w)+'</b><span>Test run on earlier games ('+pr(test.w,test.n)+' ±'+moe(test.w,test.n)+')</span></div>'
     +'<div class="bs-k"><b>'+(S.np?f1(S.ae/S.np):'–')+'</b><span>Average miss on points projections (season averages alone: '+(S.np?f1(S.be/S.np):'–')+')</span></div>'
     +'<div class="bs-k"><b>'+S.wins+'-'+(S.games-S.wins)+'</b><span>Projected winner correct ('+pr(S.wins,S.games)+')</span></div></div>';
-  if(y.picks.length){h+='<h3 class="bt-h3">Last game day ('+esc(y.md)+')</h3><div class="bt-tw"><table class="bt-t"><thead><tr><th>Player</th><th>Our call</th><th>Our projection</th><th>Chance we gave</th><th>Actual</th><th>Result</th></tr></thead><tbody>'
+  if(y){h+='<h3 class="bt-h3">Last game day with picks ('+esc(y.md)+(y.live?', live':', test run')+')</h3><div class="bt-tw"><table class="bt-t"><thead><tr><th>Player</th><th>Our call</th><th>Our projection</th><th>Chance we gave</th><th>Actual</th><th>Result</th></tr></thead><tbody>'
     +y.picks.map(function(c){var o=c.o;return '<tr><td><span class="bt-pl"><span class="ld-hs" style="background:'+teamOf(o.t).c+'">'+img(headSm(o.p.nba_id),'')+'</span><b>'+esc(o.p.Player)+'</b></span></td><td><b class="'+(c.over?'g':'r')+'">'+esc(bCall(c))+'</b></td><td>'+f1(c.pj)+'</td><td>'+Math.round(c.p*100)+'%</td><td><b>'+c.a+'</b></td><td class="'+(c.hit?'g':'r')+'">'+(c.hit?'✓ Hit':'✗ Miss')+'</td></tr>';}).join('')+'</tbody></table></div>';}
-  return h+'<p class="bt-note">Each day’s picks were made using only what the model knew before that day, then graded against the line. Because this is replayed from the data, changing the model’s code recomputes the record.</p>';
+  return h+'<p class="bt-note">Lines are our own: the half-point that splits each player’s games most evenly, the way a sportsbook aims for 50/50. They are not a sportsbook’s lines. The test run replays earlier games using only what the model knew before each day. ± = 95% margin of error.</p>';
 }
 function ladderBox(kind,title,blurb){
   var now=awardLadder(kind),cut=mdOrd(mdShift((META.games||[]).length?META.games[META.games.length-1][0]:'11/1',-6)),bef=awardLadder(kind,cut),bi={};bef.forEach(function(r,i){bi[r.p.nba_id]=i+1;});
@@ -3764,12 +3791,13 @@ function ladderBox(kind,title,blurb){
     return '<a class="bl-r" href="#p'+r.p.nba_id+'"><i>'+(i+1)+'</i><span class="ld-hs" style="background:'+teamOf(r.p.Team).c+'">'+img(headSm(r.p.nba_id),'')+'</span><div class="ld-n"><b>'+esc(r.p.Player)+'</b><span>'+esc(r.p.Team)+' · '+stat(r)+'</span></div><em class="'+(mv>0?'g':mv<0?'r':'n')+'">'+(mv==null?'NEW':mv>0?'▲'+mv:mv<0?'▼'+(-mv):'–')+'</em></a>';}).join('')+'</div>';
 }
 function buildBetting(){
-  var sl=betSlate(),h='<div class="xp bt">';
-  h+='<div class="x-sechd"><h2 class="x-h2">Betting</h2><div class="x-meta">Our projections · stats as of '+esc(META.updated||'')+(sl.md?' · games on '+esc(sl.md):'')+'</div></div>';
+  learnRun();var sl=betSlate(),h='<div class="xp bt">';
+  h+='<div class="x-sechd"><h2 class="x-h2">Betting</h2><div class="x-meta">Our projections · stats as of '+esc(META.updated||'')+(sl.md?' · games on '+esc(sl.md):'')+(META.inj&&META.inj.d===sl.md?' · injury report '+esc(META.inj.asof):' · no injury report yet: a player who missed his last game is treated as out')+'</div></div>';
   if(!sl.games.length){h+='<div class="tr-empty">No upcoming games are in the data yet. Run the update on a game day (1 to 2 hours before tip works best) and tonight’s projections will appear here.</div>';}
   else{
     var P=learnRun().picks;
-    if(P.length){h+='<article class="bt-lead"><div class="kick b">Tonight’s best projections · '+esc(sl.md)+'</div><h1 class="ar-h">'+esc(bHead(P[0]))+'</h1><p class="ar-dek">'+(P.length>1?'Our '+P.length+' most confident projections tonight.':'Our most confident projection tonight.')+' Each is an over or under on the half-point line that splits his games this season most evenly, the way a sportsbook sets a line. The model picks them using what it has learned from grading every lean it has made this season.</p><div class="bp-l">'+P.map(pickCard).join('')+'</div></article>';}
+    if(P.length){h+='<article class="bt-lead"><div class="kick b">Tonight’s best calls · '+esc(sl.md)+'</div><h1 class="ar-h">'+esc(bHead(P[0]))+'</h1><p class="ar-dek">'+(P.length>1?'The '+P.length+' calls that cleared our bar tonight, best first.':'The one call that cleared our bar tonight.')+' Any stat, over or under: each pick comes from that player’s own projection against the line, and only calls the model gives at least a '+Math.round(BETP.th*100)+'% chance make the list.</p><div class="bp-l">'+P.map(pickCard).join('')+'</div></article>';}
+    else h+='<article class="bt-lead"><div class="kick b">Tonight’s best calls · '+esc(sl.md)+'</div><h1 class="ar-h">No picks tonight</h1><p class="ar-dek">Nothing cleared our bar of a '+Math.round(BETP.th*100)+'% chance. On nights without a real edge, the model sits out. The full projections are below.</p></article>';
     h+='<section class="bt-s"><div class="x-sechd"><h2 class="x-h2">Tonight’s games</h2><div class="x-meta">Projected score · tap a game for the full preview</div></div><div class="bg-g">'+sl.games.map(gameCard).join('')+'</div></section>';
     h+='<section class="bt-s qc-i">'+slateScatter(sl)+'</section>';
     h+='<section class="bt-s"><div class="x-sechd"><h2 class="x-h2">Player projections</h2><div class="x-meta">Everyone projected for 12+ minutes tonight</div></div><div id="btTable">'+projTable(sl.games,BSORT.g)+'</div></section>';
@@ -3783,7 +3811,7 @@ function buildBetting(){
   $('vBet').innerHTML=h;
 }
 function showMatchup(code){
-  var sl=betSlate(),x=sl.games.filter(function(g){return bMatch(g)===code;})[0],h='<div class="xp"><div class="ar"><a class="link" href="#/betting">← Betting</a>';
+  learnRun();var sl=betSlate(),x=sl.games.filter(function(g){return bMatch(g)===code;})[0],h='<div class="xp"><div class="ar"><a class="link" href="#/betting">← Betting</a>';
   if(!x){$('vBet').innerHTML=h+'<div class="tr-empty">That game isn’t on tonight’s slate.</div></div></div>';return;}
   var fav=x.mg>=0?x.hm:x.aw,dog=fav===x.hm?x.aw:x.hm,fs=Math.round(Math.max(x.ph,x.pa)),ds=Math.round(Math.min(x.ph,x.pa)),C=x.C,A=allTeamAgg();
   var rk=function(t,k,lo){var v=C.bl(t,k),all=Object.keys(C.TR).map(function(z){return C.bl(z,k);});return ordn(all.filter(function(z){return lo?z<v-1e-9:z>v+1e-9;}).length+1);};
@@ -3797,9 +3825,9 @@ function showMatchup(code){
     +row('Defense (allowed per 100)',f1(C.bl(x.aw,'drtg'))+' · '+rk(x.aw,'drtg',1),f1(C.bl(x.hm,'drtg'))+' · '+rk(x.hm,'drtg',1))
     +row('Pace (possessions per game)',f1(C.bl(x.aw,'pace'))+' · '+rk(x.aw,'pace'),f1(C.bl(x.hm,'pace'))+' · '+rk(x.hm,'pace'))
     +row('Rest',b2A?'Back-to-back':'Rested',b2H?'Back-to-back':'Rested')
-    +row('Out (missed last game)',oA.length?oA.map(function(r){return esc(lastName(r.p.Player));}).join(', '):'Nobody',oH.length?oH.map(function(r){return esc(lastName(r.p.Player));}).join(', '):'Nobody')
+    +row(META.inj&&META.inj.d===sl.md?'Out (official injury report)':'Out (missed last game)',oA.length?oA.map(function(r){return esc(lastName(r.p.Player));}).join(', '):'Nobody',oH.length?oH.map(function(r){return esc(lastName(r.p.Player));}).join(', '):'Nobody')
     +'</tbody></table></div><p class="bt-note">Ratings blend season (60%) and last 10 games (40%). NBA rank after each number, 1st = best (for pace, 1st = fastest). Absences come from box scores: a rotation player who missed the last game is treated as out.</p>';
-  var P=lPick(learnRun().tonight.filter(function(c){return c.g===code;}),4,0.53);if(P.length)h+='<h2 class="ar-h2">Our most confident projections</h2><div class="bp-l">'+P.slice(0,4).map(pickCard).join('')+'</div>';
+  var P=lPick(learnRun().tonight.filter(function(c){return c.g===code;}),4,BETP.th);if(P.length)h+='<h2 class="ar-h2">Our most confident projections</h2><div class="bp-l">'+P.slice(0,4).map(pickCard).join('')+'</div>';
   h+='<h2 class="ar-h2">Player projections</h2>'+projTable([x],'').replace(/<div class="bt-chips">[\s\S]*?<\/div>/,'');
   h+='<h2 class="ar-h2">Team trends</h2>'+trendTable([x.aw,x.hm]);
   h+='<p class="bt-rg">Projections are for entertainment and information, not betting advice. 21+. If gambling stops being fun, call 1-800-GAMBLER.</p></div></div>';

@@ -276,6 +276,120 @@ def fetch_team_logs(season):
     return with_retries(call, 'team game logs', attempts=3, base_wait=10, timeout=60)
 
 
+def prev_season(season):
+    start = int(season[:4]) - 1
+    return '%d-%s' % (start, str(start + 1)[2:])
+
+
+def fetch_prior(season):
+    """Last season's totals per player: [games, minutes, pts, reb, ast, made threes, three attempts]. Gives every player a starting point."""
+    from nba_api.stats.endpoints import leaguegamelog
+    last = prev_season(season)
+
+    def call(t):
+        return leaguegamelog.LeagueGameLog(
+            season=last, season_type_all_star='Regular Season',
+            player_or_team_abbreviation='P', timeout=t).get_data_frames()[0]
+
+    df = with_retries(call, 'last season game logs', attempts=3, base_wait=10, timeout=90)
+    out = {}
+    for r in df.to_dict('records'):
+        mins = num(r.get('MIN'), 0)
+        if not mins:
+            continue
+        a = out.setdefault(str(int(r['PLAYER_ID'])), [0, 0, 0, 0, 0, 0, 0])
+        a[0] += 1
+        for i, k in enumerate(('MIN', 'PTS', 'REB', 'AST', 'FG3M', 'FG3A')):
+            a[i + 1] += num(r.get(k), 0)
+    return {k: [v[0]] + [round(x, 1) for x in v[1:]] for k, v in out.items()}
+
+
+def ensure_prior(meta, season):
+    """Last season never changes, so it is downloaded once and kept in prior_<season>.json next to this script."""
+    last = prev_season(season)
+    cache = os.path.join(HERE, 'prior_%s.json' % last)
+    try:
+        if os.path.exists(cache):
+            with open(cache, 'r', encoding='utf-8') as f:
+                meta['prior'] = json.load(f)
+        else:
+            meta['prior'] = fetch_prior(season)
+            with open(cache, 'w', encoding='utf-8') as f:
+                json.dump(meta['prior'], f, separators=(',', ':'))
+        meta['priorSeason'] = last
+        print('       Last season starting points: %d players' % len(meta['prior']))
+    except Exception as e:  # noqa: BLE001
+        print('       (Skipped last season data: %s)' % e)
+
+
+def _pdf_text(data):
+    try:
+        from pypdf import PdfReader
+    except ImportError:
+        import subprocess
+        subprocess.run([sys.executable, '-m', 'pip', 'install', '--quiet', 'pypdf'], check=False)
+        from pypdf import PdfReader
+    import io
+    return '\n'.join((pg.extract_text() or '') for pg in PdfReader(io.BytesIO(data)).pages)
+
+
+def fetch_injuries(players):
+    """Tonight's official NBA injury report (free PDF, posted every 15 minutes on game days).
+    Returns {'d': 'M/D', 'asof': 'report time', 'p': {nba_id: status}} for players listed Out, Doubtful, Questionable, Probable or Available."""
+    import datetime as dt
+    import urllib.request
+    try:
+        from zoneinfo import ZoneInfo
+        now = dt.datetime.now(ZoneInfo('America/New_York')).replace(tzinfo=None)
+    except Exception:  # noqa: BLE001
+        now = dt.datetime.utcnow() - dt.timedelta(hours=5)
+    t = now.replace(minute=now.minute - now.minute % 15, second=0, microsecond=0)
+    data, stamp = None, None
+    for _ in range(96):  # look back up to 24 hours for the newest report
+        for fmt in ('%Y-%m-%d_%I_%M%p', '%Y-%m-%d_%I%p'):
+            if fmt.endswith('%I%p') and t.minute:
+                continue
+            url = 'https://ak-static.cms.nba.com/referee/injury/Injury-Report_%s.pdf' % t.strftime(fmt)
+            try:
+                req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (NBA Savant updater)'})
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    if resp.status == 200:
+                        data, stamp = resp.read(), t
+                        break
+            except Exception:  # noqa: BLE001
+                pass
+        if data:
+            break
+        t -= dt.timedelta(minutes=15)
+    if not data:
+        raise RuntimeError('no injury report found in the last 24 hours')
+    text = to_ascii(_pdf_text(data))
+    text = re.sub(r'[ \t]+', ' ', text)
+    out = {}
+    sfx = ('Jr.', 'Sr.', 'II', 'III', 'IV', 'V')
+    for p in players:
+        name = to_ascii(p.get('Player', '')).strip()
+        parts = name.split(' ')
+        if len(parts) < 2:
+            continue
+        first, last = parts[0], ' '.join(parts[1:])
+        m = re.search(re.escape(last) + r',\s*' + re.escape(first) + r'\s+(Out|Doubtful|Questionable|Probable|Available)\b', text)
+        if not m and parts[-1] in sfx and len(parts) > 2:
+            m = re.search(re.escape(' '.join(parts[1:])) + r',\s*' + re.escape(first) + r'\s+(Out|Doubtful|Questionable|Probable|Available)\b', text)
+        if m:
+            out[str(p['nba_id'])] = m.group(1)
+    day = stamp if stamp.hour >= 6 else stamp - dt.timedelta(hours=6)
+    return {'d': '%d/%d' % (day.month, day.day), 'asof': stamp.strftime('%b %d, %I:%M %p ET').replace(' 0', ' '), 'p': out}
+
+
+def add_injuries(meta, players):
+    try:
+        meta['inj'] = fetch_injuries(players)
+        print('       Injury report (%s): %d players listed' % (meta['inj']['asof'], len(meta['inj']['p'])))
+    except Exception as e:  # noqa: BLE001
+        print('       (Skipped injury report: %s; using box scores to guess who is out)' % e)
+
+
 def fetch_schedule(season):
     """Upcoming games (today and the next 2 days, US Eastern) as [date 'M/D', away, home, tip time]."""
     import datetime
@@ -1048,6 +1162,8 @@ def restyle(rescore=False, clutch_season=None, scores_season=None):
             print('Final scores: %d games' % len(meta['games']))
             meta['sched'] = fetch_schedule(scores_season)
             print('Upcoming games: %d' % len(meta['sched']))
+            add_injuries(meta, players)
+            ensure_prior(meta, scores_season)
         except Exception as e:  # noqa: BLE001
             print('Could not get final scores (%s). Your site was NOT changed.' % e)
             return 1
@@ -1237,6 +1353,8 @@ def main(argv):
         print('       (Skipped final scores: %s)' % e)
     meta['sched'] = fetch_schedule(season)
     print('       Upcoming games: %d' % len(meta['sched']))
+    add_injuries(meta, eligible)
+    ensure_prior(meta, season)
 
     with open(os.path.join(HERE, 'template.html'), 'r', encoding='utf-8') as f:
         template = f.read()
