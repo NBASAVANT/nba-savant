@@ -3287,11 +3287,13 @@ function hidList(){
   hidPool().forEach(function(p){var m=hidMin(p);if(m<60||(p.G||0)<4||p.NET_RTG==null)return;
     var sw=hidSwing(p),pp=hidPct(p,function(x){return x.PTS_PG;}),up=hidPct(p,function(x){return x['USG%'];});
     if(pp==null||up==null||(pp+up)/2>55||pp>60)return;
-    var sh=m/(m+250),score=sh*(p.NET_RTG+(sw!=null?sw:p.NET_RTG))/2;
-    if(p.NET_RTG<=0||(sw!=null&&sw<5)||score<6)return;
-    out.push({p:p,m:m,sw:sw,score:score,pp:pp,up:up});});
-  return HID=out.sort(function(a,b){return b.score-a.score;}).slice(0,10);
+    var A=hidAdv(p);if(!A)return;
+    out.push({p:p,m:m,sw:sw,score:A.avg,adv:A,pp:pp,up:up});});
+  return HID=out.filter(function(o){return o.score>=75;}).sort(function(a,b){return b.score-a.score||b.m-a.m;}).slice(0,10);
 }
+/* the whole advanced profile: average of his card percentiles for net, offensive and defensive rating, true shooting and effective FG% */
+var HADV=[['NET_RTG','Net rating'],['ORTG','Off. rating'],['DRTG','Def. rating'],['TS%','True shooting %'],['eFG%','Effective FG %']];
+function hidAdv(p){var r=HADV.map(function(x){return pct(p,S[x[0]]);});if(r.some(function(v){return v==null||v==='na';}))return null;return {r:r,avg:r.reduce(function(a,b){return a+b;},0)/r.length,min:Math.min.apply(null,r)};}
 function hidOf(p){var L=hidList();for(var i=0;i<L.length;i++)if(L[i].p===p)return L[i];return null;}
 function hidHead(o){var p=o.p;return lastName(p.Player)+' scores '+f1(p.PTS_PG)+' a night. The '+nick(p.Team)+' are '+sg1(p.NET_RTG)+' with him on the floor';}
 function hidDek(o){var p=o.p;return 'That’s points per 100 possessions'+(o.sw!=null?'. Without him they’re '+sg1(p.OFF_NET)+', a '+f1(o.sw)+'-point swing':'')+', in '+o.m+' minutes this season.';}
@@ -3317,7 +3319,7 @@ function hidWhy(p){
 function hidBars(p,compact){
   var row=function(k,lab){var s=S[k],r=pct(p,s);if(r===null||r==='na')return '';var w=Math.max(r,3);
     return '<div class="sr"><div class="sr-lbl">'+lab+(s.inv?'<span class="sub">Lower is better</span>':'')+'</div><div class="sr-bar"><div class="sr-trk"></div><div class="sr-fill" style="width:'+w+'%;background:'+pc(r)+'"></div>'+bub(r,'sr-circ','left:'+w+'%')+'</div><div class="sr-val">'+fmt(p[k],s)+'</div></div>';};
-  var A=compact?[['NET_RTG','Net rating'],['ORTG','Off. rating']]:[['NET_RTG','Net rating'],['ORTG','Off. rating'],['DRTG','Def. rating'],['TS%','True shooting %'],['eFG%','Effective FG %']];
+  var A=HADV;
   var B=compact?[['PTS_PG','Points'],['USG%','Usage rate']]:[['PTS_PG','Points'],['USG%','Usage rate'],['AST_PG','Assists'],['TRB_PG','Rebounds']];
   return '<div class="cat hi-cat"><div class="cat-h">Impact on the court</div>'+A.map(function(x){return row(x[0],x[1]);}).join('')+'</div><div class="cat hi-cat"><div class="cat-h">Box score</div>'+B.map(function(x){return row(x[0],x[1]);}).join('')+'</div>';
 }
@@ -3348,7 +3350,7 @@ function showHidden(id){
   var N=lastName(p.Player),why=hidWhy(p),rk=hidList().indexOf(o)+1;
   h+='<div class="kick g">Hidden impact · '+esc(nick(p.Team))+'</div><h1 class="ar-h">'+esc(hidHead(o))+'</h1><p class="ar-dek">'+esc(hidDek(o))+'</p>'+byline('Season to date',p);
   h+='<p class="ar-p"><b>The box score says '+esc(p.Player)+' is a role player: '+f1(p.PTS_PG)+' points, '+f1(p.TRB_PG)+' rebounds and '+f1(p.AST_PG)+' assists in '+f1(p.MP_PG)+' minutes a game.</b> The scoreboard says something else. When he’s on the floor, the '+esc(nick(p.Team))+' outscore opponents by '+f1(Math.abs(p.NET_RTG))+' points per 100 possessions'+(o.sw!=null?', and when he sits they’re '+sg1(p.OFF_NET):'')+'.</p>';
-  h+='<p class="ar-p">He ranks No. '+rk+' on our hidden impact list: rotation players whose teams win their minutes by a wide margin while their scoring sits at or below the league’s middle.</p>';
+  h+='<p class="ar-p">He ranks No. '+rk+' on our hidden impact list, which ranks role players by their whole advanced profile: net rating, offensive and defensive rating, true shooting and effective FG%. His average across those five is the '+ordn(Math.round(o.score))+' percentile.</p>';
   h+='<h2 class="ar-h2">His card tells the story</h2><div class="hi-card">'+hidBars(p)+'</div><p class="bt-note">Percentiles match his player card. Green = good, red = bad.</p>';
   if(o.sw!=null){var mx=Math.max(Math.abs(p.ON_NET),Math.abs(p.OFF_NET),1),bar=function(lab,v,min){var w=Math.abs(v)/mx*46;return '<div class="hi-oo"><span>'+lab+'<i>'+min+' min</i></span><div class="hi-ot"><div class="hi-o0"></div><div class="hi-of" style="'+(v>=0?'left:50%':'right:50%')+';width:'+w.toFixed(1)+'%;background:'+(v>=0?'var(--rise)':'var(--fall)')+'"></div></div><b style="color:'+(v>=0?'var(--rise)':'var(--fall)')+'">'+sg1(v)+'</b></div>';};
     h+='<h2 class="ar-h2">With him vs without him</h2><div class="hi-oob">'+bar('With '+N,p.ON_NET,o.m)+bar('Without '+N,p.OFF_NET,p.OFF_MIN||0)+'</div><p class="bt-note">Team points scored minus points allowed, per 100 possessions.</p>';}
@@ -3356,25 +3358,25 @@ function showHidden(id){
   h+='<div class="fg-a ar-fig">'+hidGames(p)+'</div>';
   h+='<div class="ar-watch"><b>What to watch</b>'+(o.m<200?'He’s played '+o.m+' minutes, so these numbers can still swing a lot. If the '+nick(p.Team)+' keep winning his minutes as his playing time grows, it’s real.':'Over '+o.m+' minutes, this is more than a hot week. Watch whether his role grows to match his impact.')+'</div>';
   h+='<div class="fg-a ar-fig">'+hidScatter(p)+'</div>';
-  h+='<p class="ar-how" style="margin-top:22px">How we measured: rotation players (8+ minutes, 3+ games, 60+ minutes total) who score and use plays at or below the league’s middle, ranked by team net rating with them on the floor and the swing when they sit, weighted by minutes played so tiny samples don’t dominate. <a class="link" href="#p'+p.nba_id+'">See his full card →</a> · <a class="link" href="#s/f/hidden">The full list →</a></p>'+relStories('')+'</div></div>';
+  h+='<p class="ar-how" style="margin-top:22px">How we measured: role players (8+ minutes, 4+ games, 60+ minutes total, scoring and usage at or below the league’s middle), ranked by the average of their card percentiles in net rating, offensive rating, defensive rating, true shooting and effective FG%. Points and other box score numbers don’t count toward the ranking. <a class="link" href="#p'+p.nba_id+'">See his full card →</a> · <a class="link" href="#s/f/hidden">The full list →</a></p>'+relStories('')+'</div></div>';
   $('vStory').innerHTML=h;document.title=hidHead(o)+' | NBA Savant';
 }
 FEAT.hidden=function(){
   var L=hidList();if(L.length<3)return null;var r=L[0];
-  return {key:'hidden',kick:'The List · Hidden impact',h:'Role players winning their minutes: '+lastName(r.p.Player)+' leads the way',
-    k:'The '+nick(r.p.Team)+' are '+sg1(r.p.NET_RTG)+' per 100 possessions with him on the floor, and he scores '+f1(r.p.PTS_PG)+' a night.',
-    lede:'<b>Points per game is the first number everyone looks at. It misses a lot.</b> These players don’t score much or call many plays, but their teams beat opponents by a wide margin whenever they’re on the floor.',
+  return {key:'hidden',kick:'The List · Hidden impact',h:'The best advanced numbers among role players: '+lastName(r.p.Player)+' leads the way',
+    k:'He averages the '+ordn(Math.round(r.score))+' percentile across net, offensive and defensive rating, true shooting and effective FG%, while scoring '+f1(r.p.PTS_PG)+' points a game.',
+    lede:'<b>Points per game is the first number everyone looks at. It misses a lot.</b> These players don’t score much or call many plays, but their advanced numbers are among the best in the league across the board.',
     nut:'Each one has a story behind it, from defense and rebounding to taking care of the ball and making open shots. Tap a name to read it.',
-    rows:L,mini:L.slice(0,5).map(function(x){return {n:x.p.Player,t:x.p.Team,v:Math.max(0.1,x.p.NET_RTG),lab:sg1(x.p.NET_RTG)};}),
+    rows:L,mini:L.slice(0,5).map(function(x){return {n:x.p.Player,t:x.p.Team,v:x.score,lab:String(Math.round(x.score))};}),
     chart:function(){return hidScatter(null);},
-    table:{h:['Player','Minutes per game','Points','Usage','Net rating with him','Swing when he sits','Story'],r:L.map(function(x){return [x.p,f1(x.p.MP_PG),f1(x.p.PTS_PG),f1(x.p['USG%']*100)+'%',sg1(x.p.NET_RTG),x.sw!=null?sg1(x.sw):'N/A','<a class="link" href="#s/h/'+x.p.nba_id+'">Read →</a>'];})},
-    how:'Rotation players (8+ minutes, 3+ games, 60+ minutes total) whose scoring and usage are at or below the league’s middle. Ranked by team net rating with them on the floor and the on/off swing, weighted by minutes played. Net rating = points scored minus points allowed per 100 possessions.'};
+    table:{h:['Player','Advanced score','Net','Off.','Def.','TS%','eFG%','Points','Minutes','Story'],r:L.map(function(x){return [x.p,'<b>'+Math.round(x.score)+'</b>'].concat(x.adv.r).concat([f1(x.p.PTS_PG),x.m,'<a class="link" href="#s/h/'+x.p.nba_id+'">Read →</a>']);})},
+    how:'Role players (8+ minutes, 4+ games, 60+ minutes total, scoring and usage at or below the league’s middle). Ranked by the average of their card percentiles in net rating, offensive rating, defensive rating, true shooting and effective FG%; they need 75 or better to make the list. Box score numbers don’t count toward the ranking.'};
 };
 function hidHome(){
   var L=hidList();if(!L.length)return '';var o=L[0],p=o.p,sm=window.innerWidth<700;
-  var h='<section class="hm-sec"><div class="x-sechd"><h2 class="x-h2">Hidden impact</h2><div class="x-meta">Role players winning minutes the box score misses</div></div><div class="hi-g">';
+  var h='<section class="hm-sec"><div class="x-sechd"><h2 class="x-h2">Hidden impact</h2><div class="x-meta">Role players with the best advanced numbers</div></div><div class="hi-g">';
   h+='<a class="hi-lead" href="#s/h/'+p.nba_id+'"><div class="hi-lh">'+pbx(p,'lg')+'<div><div class="kick g">Hidden impact · '+esc(nick(p.Team))+'</div><h3>'+esc(hidHead(o))+'</h3><p class="dek">'+esc(hidDek(o))+'</p></div></div><div class="hi-mini">'+hidBars(p,1)+'</div><div class="tc-more">Read the story →</div></a>';
-  h+='<div class="hi-side">'+L.slice(1,6).map(function(x){var q=x.p;return '<a class="hi-row" href="#s/h/'+q.nba_id+'">'+pbx(q,'sm')+'<div class="hi-rn"><b>'+esc(q.Player)+'</b><span>'+esc(q.Team)+' · '+f1(q.PTS_PG)+' pts in '+f1(q.MP_PG)+' min</span></div><div class="hi-rv"><b>'+sg1(q.NET_RTG)+'</b><span>net with him</span></div></a>';}).join('')
+  h+='<div class="hi-side">'+L.slice(1,6).map(function(x){var q=x.p;return '<a class="hi-row" href="#s/h/'+q.nba_id+'">'+pbx(q,'sm')+'<div class="hi-rn"><b>'+esc(q.Player)+'</b><span>'+esc(q.Team)+' · '+f1(q.PTS_PG)+' pts in '+f1(q.MP_PG)+' min</span></div><div class="hi-rv"><b>'+Math.round(x.score)+'</b><span>advanced score</span></div></a>';}).join('')
     +'<a class="link hm-all" href="#s/f/hidden">The full list →</a></div></div></section>';
   return h;
 }
