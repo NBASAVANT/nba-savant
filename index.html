@@ -3340,8 +3340,12 @@ function hidGames(p){
 function hidScatter(hl){
   var pool=hidPool().filter(function(p){return hidMin(p)>=60&&p.NET_RTG!=null;}),H={};hidList().forEach(function(o){H[o.p.nba_id]=1;});if(hl)H[hl.nba_id]=1;
   var mp=pool.reduce(function(s,p){return s+p.PTS_PG;},0)/pool.length,cl=function(v){return Math.max(-30,Math.min(40,v));};
-  return chFig('Scoring vs impact','Every rotation player with 60+ minutes. Up = his team outscores opponents with him on the floor. Logos mark the hidden impact players.',
-    chScatter({pts:pool.map(function(p){var h=!!H[p.nba_id];return {x:p.PTS_PG,y:cl(p.NET_RTG),c:p.NET_RTG>=0?'#1f8a4c':'#c2341f',faint:!h,logo:h?logoUrl(p):null,pl:1,hl:hl===p,pri:h?100:0,lab:h?lastName(p.Player):'',tip:p.Player+': '+f1(p.PTS_PG)+' points per game, team '+sg1(p.NET_RTG)+' per 100 possessions with him on the floor'};}),
+  /* also name the standouts in every corner: the players farthest from the middle in each quadrant */
+  var sdx=Math.sqrt(pool.reduce(function(s,p){return s+Math.pow(p.PTS_PG-mp,2);},0)/pool.length)||1,sdy=Math.sqrt(pool.reduce(function(s,p){return s+p.NET_RTG*p.NET_RTG;},0)/pool.length)||1,O={},per=window.innerWidth<700?2:4;
+  [[1,1],[1,-1],[-1,-1]].forEach(function(q){pool.filter(function(p){return !H[p.nba_id]&&(p.PTS_PG-mp)*q[0]>0&&p.NET_RTG*q[1]>0;})
+    .sort(function(a,b){var d=function(p){return Math.pow((p.PTS_PG-mp)/sdx,2)+Math.pow(p.NET_RTG/sdy,2);};return d(b)-d(a);}).slice(0,q[0]>0&&q[1]>0?per+1:per).forEach(function(p){O[p.nba_id]=1;});});
+  return chFig('Scoring vs impact','Every rotation player with 60+ minutes. Up = his team outscores opponents with him on the floor. Logos mark the hidden impact players and the standouts in every corner.',
+    chScatter({pts:pool.map(function(p){var h=!!H[p.nba_id],o=!!O[p.nba_id];return {x:p.PTS_PG,y:cl(p.NET_RTG),c:p.NET_RTG>=0?'#1f8a4c':'#c2341f',faint:!h&&!o,logo:h||o?logoUrl(p):null,pl:1,hl:hl===p,pri:h?100:o?50:0,lab:h||o?lastName(p.Player):'',tip:p.Player+': '+f1(p.PTS_PG)+' points per game, team '+sg1(p.NET_RTG)+' per 100 possessions with him on the floor'};}),
       xl:'Points per game',yl:'Team net rating with him on the floor',avg:[mp,0],quad:['HIDDEN IMPACT','STARS WHO WIN','QUIET NIGHTS','SCORING, NOT WINNING'],qc:['g','g','n','r'],fy:function(v){return (v>0?'+':'')+Math.round(v);}}),1);
 }
 function showHidden(id){
