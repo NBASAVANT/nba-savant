@@ -953,6 +953,36 @@ h2.st-sh.gg{margin-top:38px}
 .ar-court .tch{max-width:600px;margin:0 auto;display:block}
 .ar-watch{background:var(--tint);border-left:5px solid var(--blue);border-radius:0 12px 12px 0;padding:16px 20px;font-size:16px;line-height:1.55;margin:6px 0 26px}
 .ar-watch b{display:block;font-weight:800;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);margin-bottom:4px}
+.hi-g{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:28px;align-items:start}
+.hi-lead{display:flex;flex-direction:column;gap:14px;border:1px solid var(--rule2);border-radius:16px;padding:20px;color:inherit;background:#fff}
+.hi-lead:hover h3{color:var(--blue)}
+.hi-lh{display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px;align-items:center}
+.hi-lh .pbx.lg{width:150px;height:140px}
+.hi-lead h3{font-weight:900;font-size:24px;line-height:1.15;margin:6px 0;color:var(--navy)}
+.hi-lead .dek{font-size:14px;line-height:1.45;color:var(--t3)}
+.hi-mini .cat{margin-bottom:10px}.hi-mini .sr{grid-template-columns:120px minmax(0,1fr) 60px;gap:14px;padding:6px 0}
+.hi-cat .sr-lbl{cursor:default}
+.hi-side{display:flex;flex-direction:column}
+.hi-row{display:grid;grid-template-columns:58px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--rule);color:inherit}
+.hi-row:hover b{color:var(--blue)}
+.hi-rn b{display:block;font-weight:800;font-size:15px;color:var(--navy)}.hi-rn span{font-size:12px;color:var(--t3)}
+.hi-rv{text-align:right}.hi-rv b{display:block;font-weight:900;font-size:18px;color:var(--rise)}.hi-rv span{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
+.hi-card{border:1px solid var(--rule2);border-radius:14px;padding:18px 20px 6px;margin:6px 0 8px}
+.hi-oob{display:flex;flex-direction:column;gap:10px;margin:6px 0 8px}
+.hi-oo{display:grid;grid-template-columns:150px minmax(0,1fr) 70px;gap:14px;align-items:center}
+.hi-oo span{font-weight:700;font-size:14px;color:var(--navy)}.hi-oo i{display:block;font-style:normal;font-weight:500;font-size:11px;color:var(--t3)}
+.hi-ot{position:relative;height:26px;background:var(--tint);border-radius:6px}
+.hi-o0{position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;background:var(--navy)}
+.hi-of{position:absolute;top:3px;bottom:3px;border-radius:4px}
+.hi-oo b{font-weight:900;font-size:18px;text-align:right}
+.hi-why{list-style:none;padding:0;margin:6px 0 24px;display:grid;gap:10px}
+.hi-why li{border-left:4px solid var(--rise);background:var(--tint);border-radius:0 10px 10px 0;padding:11px 14px;font-weight:700;font-size:15px;color:var(--navy)}
+.hi-why li span{display:block;font-weight:500;font-size:12px;color:var(--t3);margin-top:2px}
+.hi-call{display:block;border:1px solid var(--rule2);border-left:5px solid var(--rise);border-radius:0 14px 14px 0;padding:14px 18px;margin:0 0 22px;color:inherit;background:#fff}
+.hi-call b{display:block;font-weight:900;font-size:18px;line-height:1.25;color:var(--navy);margin:4px 0}
+.hi-call:hover b{color:var(--blue)}.hi-cm{font-size:13px;color:var(--t3)}
+@media(max-width:760px){.hi-g{grid-template-columns:1fr;gap:16px}.hi-lh{grid-template-columns:96px minmax(0,1fr);gap:12px}.hi-lh .pbx.lg{width:96px;height:96px}.hi-lead{padding:14px}.hi-lead h3{font-size:19px}
+.hi-mini .sr{grid-template-columns:90px minmax(0,1fr) 52px;gap:10px}.hi-oo{grid-template-columns:96px minmax(0,1fr) 56px;gap:10px}.hi-card{padding:12px 12px 2px}}
 .ar-how{font-size:13.5px;line-height:1.6;color:var(--t3);border-top:1px solid var(--rule2);padding-top:14px}
 .ar-more{margin-top:40px}
 .ar-rel{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
@@ -1920,6 +1950,7 @@ function showPlayer(p){
   ['eFG%','TS%','ORTG','DRTG','NET_RTG','USG%','AST%','PM'].forEach(function(k){h+=tdCell(p,k,g(k));});
   h+='</tr></table></div></div>';
   h+=recentForm(p);
+  var ho=hidOf(p);if(ho)h+='<a class="hi-call" href="#s/h/'+p.nba_id+'"><span class="kick g">Hidden impact</span><b>'+esc(hidHead(ho))+'</b><span class="hi-cm">'+esc(hidDek(ho))+' Read the story →</span></a>';
   h+='<div class="p-sec"><div class="p-sec-hd"><div class="sec-t">Percentile Rankings</div><div class="scale"><span>1ST</span><span class="lgnd-bar"></span><span>99TH</span></div></div>';
   cats.forEach(function(cat){
     var rows='';
@@ -3243,7 +3274,111 @@ FEAT.clutch=function(){
     table:{h:['Player','Clutch games','Points','FG','FT','Team +/−'],r:rows.map(function(x){return [x,x.CL_GP,x.CL_PTS,x.CL_FGM+'-'+x.CL_FGA,x.CL_FTM+'-'+x.CL_FTA,(x.CL_PM>0?'+':'')+x.CL_PM];})},
     how:'Source: NBA.com clutch stats (last 5 minutes of the 4th quarter or overtime, score within 5). Season totals.'};
 };
-var FEAT_KEYS=['def','clutch','eff','min'];
+/* ================= HIDDEN IMPACT: role players winning minutes the box score misses ================= */
+var HID=null;
+function hidPool(){return D.filter(function(p){return (p.G||0)>=3&&(p.MP_PG||0)>=8;});}
+function hidMin(p){return p.ON_MIN||Math.round((p.MP_PG||0)*(p.G||0));}
+function hidSwing(p){return p.OFF_NET!=null&&p.ON_NET!=null?p.ON_NET-p.OFF_NET:null;}
+/* percentile among rotation players (8+ minutes, 3+ games) */
+function hidPct(p,f,inv,q){var R=hidPool().filter(function(x){return (!q||q(x))&&f(x)!=null&&!isNaN(f(x));}),v=f(p);if(v==null||isNaN(v)||(q&&!q(p))||!R.length)return null;
+  var b=0,s=0;R.forEach(function(x){var w=f(x);if(w===v)s++;else if(inv?w>v:w<v)b++;});return Math.max(1,Math.min(99,Math.round((b+s/2)/R.length*100)));}
+function hidList(){
+  if(HID)return HID;var out=[];
+  hidPool().forEach(function(p){var m=hidMin(p);if(m<60||(p.G||0)<4||p.NET_RTG==null)return;
+    var sw=hidSwing(p),pp=hidPct(p,function(x){return x.PTS_PG;}),up=hidPct(p,function(x){return x['USG%'];});
+    if(pp==null||up==null||(pp+up)/2>55||pp>60)return;
+    var sh=m/(m+250),score=sh*(p.NET_RTG+(sw!=null?sw:p.NET_RTG))/2;
+    if(p.NET_RTG<=0||(sw!=null&&sw<5)||score<6)return;
+    out.push({p:p,m:m,sw:sw,score:score,pp:pp,up:up});});
+  return HID=out.sort(function(a,b){return b.score-a.score;}).slice(0,10);
+}
+function hidOf(p){var L=hidList();for(var i=0;i<L.length;i++)if(L[i].p===p)return L[i];return null;}
+function hidHead(o){var p=o.p;return lastName(p.Player)+' scores '+f1(p.PTS_PG)+' a night. The '+nick(p.Team)+' are '+sg1(p.NET_RTG)+' with him on the floor';}
+function hidDek(o){var p=o.p;return 'That’s points per 100 possessions'+(o.sw!=null?'. Without him they’re '+sg1(p.OFF_NET)+', a '+f1(o.sw)+'-point swing':'')+', in '+o.m+' minutes this season.';}
+/* the reasons it doesn't show up in his scoring line */
+function hidWhy(p){
+  var per=function(k){return function(x){return x.MP_PG?(x[k]||0)/x.MP_PG*36:null;};},S36=function(x){return x.MP_PG?((x.STL_PG||0)+(x.BLK_PG||0))/x.MP_PG*36:null;};
+  var C=[
+    {n:hidPct(p,function(x){return x['TS%'];},0,Q.shoot),t:'Doesn’t waste shots: '+pct1(p['TS%']*100)+' true shooting'},
+    {n:hidPct(p,function(x){return x.ORTG;}),tm:1,t:'The offense hums: '+f1(p.ORTG)+' points per 100 possessions with him on the floor'},
+    {n:hidPct(p,function(x){return x.DRTG;},1),tm:1,t:'The defense locks in: '+f1(p.DRTG)+' points allowed per 100 possessions with him on the floor'},
+    {n:hidPct(p,per('ORB_PG')),t:'Extra possessions: '+f1(per('ORB_PG')(p))+' offensive rebounds per 36 minutes'},
+    {n:hidPct(p,per('TRB_PG')),t:'Cleans the glass: '+f1(per('TRB_PG')(p))+' rebounds per 36 minutes'},
+    {n:hidPct(p,S36),t:'Disrupts plays: '+f1(S36(p))+' steals + blocks per 36 minutes'},
+    {n:p.DEFL36!=null?hidPct(p,function(x){return x.DEFL36;}):null,t:'Active hands: '+f1(p.DEFL36||0)+' deflections per 36 minutes'},
+    {n:p.CONT36!=null?hidPct(p,function(x){return x.CONT36;}):null,t:'Contests everything: '+f1(p.CONT36||0)+' contested shots per 36 minutes'},
+    {n:hidPct(p,per('TOV_PG'),1),t:'Takes care of the ball: '+f1(per('TOV_PG')(p))+' turnovers per 36 minutes'},
+    {n:hidPct(p,function(x){return x['3P%'];},0,function(x){return (x['3PA_PG']||0)*(x.G||0)>=20;}),t:'Makes defenses pay: '+pct1(p['3P%']*100)+' from three'}
+  ].filter(function(c){return c.n!=null&&c.n>=70;}).sort(function(a,b){return b.n-a.n;});
+  var team=C.filter(function(c){return c.tm;}),own=C.filter(function(c){return !c.tm;});
+  return own.slice(0,4).concat(team).slice(0,Math.max(3,Math.min(4,own.length)));
+}
+/* savant-style bars: impact vs box score, same percentiles as his player card */
+function hidBars(p,compact){
+  var row=function(k,lab){var s=S[k],r=pct(p,s);if(r===null||r==='na')return '';var w=Math.max(r,3);
+    return '<div class="sr"><div class="sr-lbl">'+lab+(s.inv?'<span class="sub">Lower is better</span>':'')+'</div><div class="sr-bar"><div class="sr-trk"></div><div class="sr-fill" style="width:'+w+'%;background:'+pc(r)+'"></div>'+bub(r,'sr-circ','left:'+w+'%')+'</div><div class="sr-val">'+fmt(p[k],s)+'</div></div>';};
+  var A=compact?[['NET_RTG','Net rating'],['ORTG','Off. rating']]:[['NET_RTG','Net rating'],['ORTG','Off. rating'],['DRTG','Def. rating'],['TS%','True shooting %'],['eFG%','Effective FG %']];
+  var B=compact?[['PTS_PG','Points'],['USG%','Usage rate']]:[['PTS_PG','Points'],['USG%','Usage rate'],['AST_PG','Assists'],['TRB_PG','Rebounds']];
+  return '<div class="cat hi-cat"><div class="cat-h">Impact on the court</div>'+A.map(function(x){return row(x[0],x[1]);}).join('')+'</div><div class="cat hi-cat"><div class="cat-h">Box score</div>'+B.map(function(x){return row(x[0],x[1]);}).join('')+'</div>';
+}
+/* team +/- in his minutes, every game, with his points underneath */
+function hidGames(p){
+  var g=(GL[String(p.nba_id)]||[]).filter(function(x){return x[3]>0;}).slice(-15);if(!g.length)return '';
+  var sm=window.innerWidth<700,W=sm?360:860,H=sm?230:270,top=22,bot=62,n=g.length,bw=(W-20)/n,pM=Math.max.apply(null,g.map(function(x){return x[19];}).concat([3])),nM=Math.max.apply(null,g.map(function(x){return -x[19];}).concat([0])),ah=H-top-bot,sc=ah/(pM+Math.max(nM,(pM+nM)*0.08)),mid=top+pM*sc;
+  var s='<svg viewBox="0 0 '+W+' '+H+'" class="tch big" role="img" aria-label="Team plus minus each game">';
+  s+='<line x1="10" x2="'+(W-10)+'" y1="'+mid+'" y2="'+mid+'" stroke="#0b1530" stroke-width="1"/>';
+  g.forEach(function(x,i){var v=x[19],hh=Math.abs(v)*sc,cx=10+i*bw+bw/2,c=v>=0?'#1f8a4c':'#c2341f',ab=x[1].split(' ').pop();
+    s+='<g class="ci" data-tip="'+esc(x[0]+' '+x[1]+': team '+(v>0?'+':'')+v+' in his '+x[3]+' minutes, '+x[4]+' points')+'"><rect x="'+(cx-bw*0.32).toFixed(1)+'" y="'+(v>=0?mid-hh:mid).toFixed(1)+'" width="'+(bw*0.64).toFixed(1)+'" height="'+Math.max(1.5,hh).toFixed(1)+'" rx="2" fill="'+c+'"/>'
+      +'<text x="'+cx.toFixed(1)+'" y="'+(v>=0?mid-hh-5:mid+hh+13).toFixed(1)+'" text-anchor="middle" style="font-size:'+(sm?9:11)+'px;font-weight:900;fill:'+c+'">'+(v>0?'+':'')+v+'</text>'
+      +'<text x="'+cx.toFixed(1)+'" y="'+(H-bot+(sm?24:26))+'" text-anchor="middle" class="cax" style="font-size:'+(sm?8:10)+'px">'+esc(ab)+'</text>'
+      +'<text x="'+cx.toFixed(1)+'" y="'+(H-bot+(sm?37:41))+'" text-anchor="middle" style="font-size:'+(sm?9:11)+'px;font-weight:700;fill:#0b1530">'+x[4]+'</text></g>';});
+  s+='<text x="10" y="'+(H-4)+'" class="cax" style="font-size:'+(sm?8:9.5)+'px">BOTTOM ROW = HIS POINTS</text>';
+  return chFig('Team plus-minus in his minutes, game by game','Green = his team outscored the opponent while he played. Bottom row = his points that night.',s+'</svg>',1);
+}
+function hidScatter(hl){
+  var pool=hidPool().filter(function(p){return hidMin(p)>=60&&p.NET_RTG!=null;}),H={};hidList().forEach(function(o){H[o.p.nba_id]=1;});if(hl)H[hl.nba_id]=1;
+  var mp=pool.reduce(function(s,p){return s+p.PTS_PG;},0)/pool.length,cl=function(v){return Math.max(-30,Math.min(40,v));};
+  return chFig('Scoring vs impact','Every rotation player with 60+ minutes. Up = his team outscores opponents with him on the floor. Logos mark the hidden impact players.',
+    chScatter({pts:pool.map(function(p){var h=!!H[p.nba_id];return {x:p.PTS_PG,y:cl(p.NET_RTG),c:p.NET_RTG>=0?'#1f8a4c':'#c2341f',faint:!h,logo:h?logoUrl(p):null,pl:1,hl:hl===p,pri:h?100:0,lab:h?lastName(p.Player):'',tip:p.Player+': '+f1(p.PTS_PG)+' points per game, team '+sg1(p.NET_RTG)+' per 100 possessions with him on the floor'};}),
+      xl:'Points per game',yl:'Team net rating with him on the floor',avg:[mp,0],quad:['HIDDEN IMPACT','STARS WHO WIN','QUIET NIGHTS','SCORING, NOT WINNING'],qc:['g','g','n','r'],fy:function(v){return (v>0?'+':'')+Math.round(v);}}),1);
+}
+function showHidden(id){
+  var p=byId[id],o=p&&hidOf(p),h='<div class="xp"><div class="ar"><a class="link" href="#/">← Home</a>';
+  if(!o){$('vStory').innerHTML=h+'<div class="tr-empty">This player isn’t on the hidden impact list right now. <a class="link" href="#s/f/hidden">See who is →</a></div></div></div>';return;}
+  var N=lastName(p.Player),why=hidWhy(p),rk=hidList().indexOf(o)+1;
+  h+='<div class="kick g">Hidden impact · '+esc(nick(p.Team))+'</div><h1 class="ar-h">'+esc(hidHead(o))+'</h1><p class="ar-dek">'+esc(hidDek(o))+'</p>'+byline('Season to date',p);
+  h+='<p class="ar-p"><b>The box score says '+esc(p.Player)+' is a role player: '+f1(p.PTS_PG)+' points, '+f1(p.TRB_PG)+' rebounds and '+f1(p.AST_PG)+' assists in '+f1(p.MP_PG)+' minutes a game.</b> The scoreboard says something else. When he’s on the floor, the '+esc(nick(p.Team))+' outscore opponents by '+f1(Math.abs(p.NET_RTG))+' points per 100 possessions'+(o.sw!=null?', and when he sits they’re '+sg1(p.OFF_NET):'')+'.</p>';
+  h+='<p class="ar-p">He ranks No. '+rk+' on our hidden impact list: rotation players whose teams win their minutes by a wide margin while their scoring sits at or below the league’s middle.</p>';
+  h+='<h2 class="ar-h2">His card tells the story</h2><div class="hi-card">'+hidBars(p)+'</div><p class="bt-note">Percentiles match his player card. Green = good, red = bad.</p>';
+  if(o.sw!=null){var mx=Math.max(Math.abs(p.ON_NET),Math.abs(p.OFF_NET),1),bar=function(lab,v,min){var w=Math.abs(v)/mx*46;return '<div class="hi-oo"><span>'+lab+'<i>'+min+' min</i></span><div class="hi-ot"><div class="hi-o0"></div><div class="hi-of" style="'+(v>=0?'left:50%':'right:50%')+';width:'+w.toFixed(1)+'%;background:'+(v>=0?'var(--rise)':'var(--fall)')+'"></div></div><b style="color:'+(v>=0?'var(--rise)':'var(--fall)')+'">'+sg1(v)+'</b></div>';};
+    h+='<h2 class="ar-h2">With him vs without him</h2><div class="hi-oob">'+bar('With '+N,p.ON_NET,o.m)+bar('Without '+N,p.OFF_NET,p.OFF_MIN||0)+'</div><p class="bt-note">Team points scored minus points allowed, per 100 possessions.</p>';}
+  if(why.length)h+='<h2 class="ar-h2">Why it doesn’t show up in the box score</h2><ul class="hi-why">'+why.map(function(c){return '<li>'+esc(c.t)+'<span>Better than '+c.n+'% of rotation players</span></li>';}).join('')+'</ul>';
+  h+='<div class="fg-a ar-fig">'+hidGames(p)+'</div>';
+  h+='<div class="ar-watch"><b>What to watch</b>'+(o.m<200?'He’s played '+o.m+' minutes, so these numbers can still swing a lot. If the '+nick(p.Team)+' keep winning his minutes as his playing time grows, it’s real.':'Over '+o.m+' minutes, this is more than a hot week. Watch whether his role grows to match his impact.')+'</div>';
+  h+='<div class="fg-a ar-fig">'+hidScatter(p)+'</div>';
+  h+='<p class="ar-how" style="margin-top:22px">How we measured: rotation players (8+ minutes, 3+ games, 60+ minutes total) who score and use plays at or below the league’s middle, ranked by team net rating with them on the floor and the swing when they sit, weighted by minutes played so tiny samples don’t dominate. <a class="link" href="#p'+p.nba_id+'">See his full card →</a> · <a class="link" href="#s/f/hidden">The full list →</a></p>'+relStories('')+'</div></div>';
+  $('vStory').innerHTML=h;document.title=hidHead(o)+' | NBA Savant';
+}
+FEAT.hidden=function(){
+  var L=hidList();if(L.length<3)return null;var r=L[0];
+  return {key:'hidden',kick:'The List · Hidden impact',h:'Role players winning their minutes: '+lastName(r.p.Player)+' leads the way',
+    k:'The '+nick(r.p.Team)+' are '+sg1(r.p.NET_RTG)+' per 100 possessions with him on the floor, and he scores '+f1(r.p.PTS_PG)+' a night.',
+    lede:'<b>Points per game is the first number everyone looks at. It misses a lot.</b> These players don’t score much or call many plays, but their teams beat opponents by a wide margin whenever they’re on the floor.',
+    nut:'Each one has a story behind it, from defense and rebounding to taking care of the ball and making open shots. Tap a name to read it.',
+    rows:L,mini:L.slice(0,5).map(function(x){return {n:x.p.Player,t:x.p.Team,v:Math.max(0.1,x.p.NET_RTG),lab:sg1(x.p.NET_RTG)};}),
+    chart:function(){return hidScatter(null);},
+    table:{h:['Player','Minutes per game','Points','Usage','Net rating with him','Swing when he sits','Story'],r:L.map(function(x){return [x.p,f1(x.p.MP_PG),f1(x.p.PTS_PG),f1(x.p['USG%']*100)+'%',sg1(x.p.NET_RTG),x.sw!=null?sg1(x.sw):'N/A','<a class="link" href="#s/h/'+x.p.nba_id+'">Read →</a>'];})},
+    how:'Rotation players (8+ minutes, 3+ games, 60+ minutes total) whose scoring and usage are at or below the league’s middle. Ranked by team net rating with them on the floor and the on/off swing, weighted by minutes played. Net rating = points scored minus points allowed per 100 possessions.'};
+};
+function hidHome(){
+  var L=hidList();if(!L.length)return '';var o=L[0],p=o.p,sm=window.innerWidth<700;
+  var h='<section class="hm-sec"><div class="x-sechd"><h2 class="x-h2">Hidden impact</h2><div class="x-meta">Role players winning minutes the box score misses</div></div><div class="hi-g">';
+  h+='<a class="hi-lead" href="#s/h/'+p.nba_id+'"><div class="hi-lh">'+pbx(p,'lg')+'<div><div class="kick g">Hidden impact · '+esc(nick(p.Team))+'</div><h3>'+esc(hidHead(o))+'</h3><p class="dek">'+esc(hidDek(o))+'</p></div></div><div class="hi-mini">'+hidBars(p,1)+'</div><div class="tc-more">Read the story →</div></a>';
+  h+='<div class="hi-side">'+L.slice(1,6).map(function(x){var q=x.p;return '<a class="hi-row" href="#s/h/'+q.nba_id+'">'+pbx(q,'sm')+'<div class="hi-rn"><b>'+esc(q.Player)+'</b><span>'+esc(q.Team)+' · '+f1(q.PTS_PG)+' pts in '+f1(q.MP_PG)+' min</span></div><div class="hi-rv"><b>'+sg1(q.NET_RTG)+'</b><span>net with him</span></div></a>';}).join('')
+    +'<a class="link hm-all" href="#s/f/hidden">The full list →</a></div></div></section>';
+  return h;
+}
+var FEAT_KEYS=['hidden','def','clutch','eff','min'];
 function featAll(){var out=[];FEAT_KEYS.forEach(function(k){try{var f=FEAT[k]();if(f)out.push(f);}catch(e){}});return out;}
 
 /* horizontal ranked bars, names on the left, value at the end */
@@ -3353,6 +3488,7 @@ function buildHome(){
   h+='<div class="hm-pr"><h3 class="hm-h3">Power rankings</h3><div class="hm-prs">By net rating, points per 100 possessions</div><ol class="hm-pl">'+pr.map(function(t,i){var a=A[t];
     return '<li'+(i>=10?' class="more"':'')+'><a href="#t/'+t+'"><span class="rk">'+(i+1)+'</span>'+img(logoT(t),'')+'<span class="nm">'+esc(nick(t))+'</span><span class="rc">'+a.w+'-'+a.l+'</span><b style="color:'+(a.net>=0?'var(--rise)':'var(--fall)')+'">'+(a.net>0?'+':a.net<0?'−':'')+f1(Math.abs(a.net))+'</b></a></li>';}).join('')
     +'</ol><button type="button" class="hm-prb" data-prall>Show all 30 ▾</button></div></div></div></section>';
+  h+=hidHome();
   /* best recent games */
   if(bg.g.length){h+='<section class="hm-sec"><div class="x-sechd"><h2 class="x-h2">Best recent games</h2><div class="x-meta">'+bg.d.join(' & ')+'</div></div><div class="hm-bn">'+bg.g.map(function(o){var p=o.p,x=o.x,tm=teamOf(p.Team),td=[x[4],x[5],x[6]].filter(function(v){return v>=10;}).length>=3,g=GL[String(p.nba_id)],hi=g.length>=3&&x[4]>=Math.max.apply(null,g.map(function(y){return y[4];}));
     return '<a class="hm-bc" href="#s/n/'+p.nba_id+'/'+x[0].replace('/','-')+'"><div class="hd" style="background:'+tm.c+'">'+img(logoUrl(p),'lg')+img(headSm(p.nba_id),'hs')+'<div class="big">'+(td?x[4]+'·'+x[5]+'·'+x[6]:x[4])+'<small>'+(td?'TRIPLE-DOUBLE':'POINTS')+'</small></div></div>'
@@ -3855,6 +3991,7 @@ function route(){
   else if(tmm&&T[tmm[1]]){show('team');showTeam(tmm[1]);}
   else if((m=/^#s\/(p|t)\/(\w+)(?:\/(5|10|season))?$/.exec(h))){if(m[3])TRW=m[3];show('story');showStory(m[1],m[2]);trAnimate($('vStory'));}
   else if((m=/^#s\/n\/(\d+\/\d+-\d+)$/.exec(h))){show('story');showBigNight(m[1]);trAnimate($('vStory'));}
+  else if((m=/^#s\/h\/(\d+)$/.exec(h))){show('story');showHidden(m[1]);trAnimate($('vStory'));}
   else if((m=/^#s\/f\/(\w+)$/.exec(h))){if(m[1]==='min')TRW='5';show('story');showFeature(m[1]);trAnimate($('vStory'));}
   else if(h.indexOf('#/leaders')===0){
     var lm=/^#\/leaders\/([^\/]+)(?:\/(\d+))?$/.exec(h);
