@@ -579,9 +579,12 @@ html.intro .bn-col{animation:fadeIn .4s ease calc(4.6s + var(--i) * .14s - var(-
 html.intro .bn-s1,html.intro .bn-s2,html.intro .bn-name{animation:accIn .4s ease calc(4.6s + var(--i) * .14s - var(--late,0s)) both}
 
 /* ---------- responsive ---------- */
-@media (max-width:1250px){
+@media (max-width:1440px){
   .upd{display:none}
   .nav{gap:20px}
+}
+@media (max-width:1250px){
+  .nav{gap:16px}
   .banners{gap:10px;padding:0 16px}
   .hero-h{font-size:52px}
 }
@@ -953,6 +956,48 @@ h2.st-sh.gg{margin-top:38px}
 .ar-court .tch{max-width:600px;margin:0 auto;display:block}
 .ar-watch{background:var(--tint);border-left:5px solid var(--blue);border-radius:0 12px 12px 0;padding:16px 20px;font-size:16px;line-height:1.55;margin:6px 0 26px}
 .ar-watch b{display:block;font-weight:800;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);margin-bottom:4px}
+@media(max-width:760px){.x-top>div{min-width:0;max-width:100%}.x-eb{white-space:normal}.x-h1{font-size:min(50px,11vw)}}
+.rk-q{font-size:13px;font-weight:700;color:var(--t3)}
+.rk-lede{font-size:17px;line-height:1.55;max-width:900px;margin:22px 0 16px}
+.rk-w{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.rk-w>div{background:var(--tint);border-radius:12px;padding:12px 14px;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline}
+.rk-w b{width:100%;font-weight:900;font-size:14px;letter-spacing:.06em;text-transform:uppercase}
+.rk-w span{font-size:13px;color:var(--t2)}.rk-w i{font-style:normal;font-weight:800;color:var(--navy)}
+.rk-pos{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap}
+.rk-pb{min-height:40px;padding:0 16px;border-radius:999px;border:1.5px solid var(--rule2);background:#fff;font-weight:800;font-size:14px}
+.rk-pb.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.rk-t td{padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:middle}
+.rk-t tbody tr[data-id]{cursor:pointer}.rk-t tbody tr:hover{background:var(--tint)}
+.rk-n{font-weight:900;color:var(--t3)}
+.rk-pl{display:flex;align-items:center;gap:10px}.rk-pl .x-av{width:38px;height:38px}
+.rk-pl b{display:block;font-weight:800;color:var(--navy)}.rk-pl span{font-size:12px;color:var(--t3)}
+.rk-b{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;font-weight:900;font-size:15px;border:2px solid #fff;box-shadow:0 0 0 1.5px var(--navy)}
+.rk-b.s{width:28px;height:28px;font-size:12px;box-shadow:none;border:0}
+.rk-cf{display:inline-block;font-style:normal;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:4px 8px;border-radius:6px}
+.rk-cf.g{background:#e3f4ea;color:#1f8a4c}.rk-cf.n{background:#eef1f7;color:#5a6378}.rk-cf.r{background:#fbe9e5;color:#c2341f}
+.rk-jg{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.rk-j{display:block;border:1px solid var(--rule2);border-radius:14px;padding:14px 16px;margin-bottom:14px;color:inherit;background:#fff}
+.rk-j:hover b{color:var(--blue)}
+.rk-jh{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center}.rk-jh .x-av{width:44px;height:44px}
+.rk-jh b{display:block;font-weight:800;font-size:16px;color:var(--navy)}.rk-jh span{font-size:12px;color:var(--t3)}
+.rk-jv{font-weight:900;font-size:26px;text-align:right;line-height:1}.rk-jv i{display:block;font-style:normal;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);margin-top:3px}
+.rk-js{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:8px;margin:12px 0 6px;text-align:center}
+.rk-js>div{background:var(--tint);border-radius:10px;padding:8px 4px}.rk-js .mid{background:#fff;border:1.5px solid var(--rule2)}
+.rk-js span{display:block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--t3)}
+.rk-js b{display:block;font-weight:900;font-size:20px;color:var(--navy)}.rk-js i{font-style:normal;font-size:11px;color:var(--t3)}
+.rk-sp{width:100%;height:auto;display:block}.rk-jn{font-size:11px;color:var(--t3)}
+.rk-g{text-align:center!important}.rk-g i{font-style:normal;font-weight:600;text-transform:none;letter-spacing:0}
+.rk-tm{display:flex;align-items:center;gap:8px;color:inherit}.rk-tm img{width:26px;height:26px}
+.rk-tv{display:inline-block;min-width:46px;text-align:center;font-weight:800;border:2.5px solid;border-radius:8px;padding:3px 6px}
+.rk-d{font-style:normal;font-size:12px;font-weight:800;margin-left:4px}.rk-w2{display:block;font-size:10px;color:var(--t3);font-weight:600}
+.si-box{display:grid;grid-template-columns:260px minmax(0,1fr);gap:24px;align-items:center}
+.si-l{display:flex;gap:14px;align-items:center}.si-l .rk-b{width:64px;height:64px;font-size:24px;flex:none}.si-l div span{display:block;margin-top:2px}
+.si-l b{display:block;font-weight:900;font-size:18px}.si-l span{font-size:13px;color:var(--t3)}
+.si-r{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;align-items:center;padding:5px 0}
+.si-r span{font-weight:700;font-size:14px}.si-r i{font-style:normal;color:var(--t3);font-weight:600;font-size:12px}
+.si-tl{grid-column:1/-1}.si-tl b{font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--t3)}
+@media(max-width:760px){.x-chips a.x-chip{display:inline-flex;align-items:center}.rk-w{grid-template-columns:1fr}.rk-jg{grid-template-columns:1fr;gap:6px}.si-box{grid-template-columns:1fr}.si-r{grid-template-columns:110px minmax(0,1fr)}.rk-js b{font-size:17px}}
+.x-chips a.x-chip{display:inline-flex;align-items:center;color:var(--navy)}.x-chips a.x-chip.on{color:#fff}
 .hi-g{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:28px;align-items:start}
 .hi-lead{display:flex;flex-direction:column;gap:14px;border:1px solid var(--rule2);border-radius:16px;padding:20px;color:inherit;background:#fff}
 .hi-lead:hover h3{color:var(--blue)}
@@ -1442,7 +1487,7 @@ html.intro #hmMain::after{content:'';position:absolute;inset:0;background:var(--
 <header class="hdr">
   <div class="hdr-l">
     <a class="wm" href="#/">NBA <span>Savant</span></a>
-    <nav class="nav" id="nav"><a href="#/" data-nav="home">Home</a><a href="#/leaders" data-nav="leaders">Leaderboards</a><a href="#/trends" data-nav="trends">Trends</a><a href="#/betting" data-nav="betting">Betting</a><div class="nav-tm" id="navTm"><button type="button" class="nav-tmb" data-nav="teams" aria-expanded="false">Teams <span class="car">▾</span></button><div class="tm-pan" id="tmPan"></div></div><a href="#/players" data-nav="players">Players</a><a href="#/compare" data-nav="compare" id="navCmp">Compare</a><div class="nav-srch"><label class="srch"><span class="mag"></span><input id="navQ" placeholder="Search players or teams…" autocomplete="off" aria-label="Search players or teams"></label><div class="dd" id="navDD"></div></div></nav>
+    <nav class="nav" id="nav"><a href="#/" data-nav="home">Home</a><a href="#/leaders" data-nav="leaders">Leaderboards</a><a href="#/rankings" data-nav="rankings">Rankings</a><a href="#/trends" data-nav="trends">Trends</a><a href="#/betting" data-nav="betting">Betting</a><div class="nav-tm" id="navTm"><button type="button" class="nav-tmb" data-nav="teams" aria-expanded="false">Teams <span class="car">▾</span></button><div class="tm-pan" id="tmPan"></div></div><a href="#/players" data-nav="players">Players</a><a href="#/compare" data-nav="compare" id="navCmp">Compare</a><div class="nav-srch"><label class="srch"><span class="mag"></span><input id="navQ" placeholder="Search players or teams…" autocomplete="off" aria-label="Search players or teams"></label><div class="dd" id="navDD"></div></div></nav>
   </div>
   <div class="hdr-r"><span><span id="hdrSeason"></span><span class="upd" id="hdrUpd"></span></span><button class="menu-btn" id="menuBtn" type="button" aria-expanded="false">Menu</button></div>
 </header>
@@ -1485,6 +1530,7 @@ html.intro #hmMain::after{content:'';position:absolute;inset:0;background:var(--
 
 <main id="vLeaders" class="page" hidden></main>
 <main id="vTrends" class="page" hidden></main>
+<main id="vRank" class="page" hidden></main>
 <main id="vBet" class="page" hidden></main>
 <main id="vPlayers" class="page" hidden></main>
 <main id="vPlayer" class="page" hidden></main>
@@ -1655,7 +1701,7 @@ var HOME_CATS=['PTS_PG','TRB_PG','AST_PG','STL_PG','BLK_PG','3P%'].map(function(
 var lbCache={};
 /* full sorted pool for a board (best first) */
 function lbPool(lb){
-  if(!lbCache[lb.k])lbCache[lb.k]=D.filter(function(p){return (!lb.q||lb.q(p))&&!isNaN(parseFloat(p[lb.k]));})
+  if(!lbCache[lb.k])lbCache[lb.k]=D.filter(function(p){return qualG(p)&&(!lb.q||lb.q(p))&&!isNaN(parseFloat(p[lb.k]));})
     .sort(function(a,b){var d=parseFloat(b[lb.k])-parseFloat(a[lb.k]);return (lb.inv?-d:d)||a.Player.localeCompare(b.Player);});
   return lbCache[lb.k];
 }
@@ -1669,7 +1715,7 @@ function lbRank(lb,p){
 function lbVal(lb,p){return fmt(p[lb.k],S[lb.k]||{});}
 function qualLine(){
   var g=function(n){return n+(n===1?' game':' games');};
-  return 'Qualified = more than '+META.pct+'% of the '+g(META.gamesSoFar)+' played so far (at least '+g(META.minGP)+').';
+  return 'Leaderboards and rankings need 60% of his team’s games. Percentile cards include players with more than '+META.pct+'% of the '+g(META.gamesSoFar)+' played so far.';
 }
 
 /* ================= SEARCH (shared) ================= */
@@ -1780,7 +1826,7 @@ function lxCard(c,i,tag,on){
 }
 function buildLeaders(){
   var lb=LB[lbCat],top=leaders(lb,10),hp=lbHi&&byId[lbHi];
-  var h='<div class="xp"><div class="x-top"><div><div class="x-eb">'+esc(META.season)+' · THROUGH '+META.gamesSoFar+(META.gamesSoFar===1?' GAME':' GAMES')+' · '+D.length+' QUALIFIED PLAYERS</div><h1 class="x-h1">Leaderboards</h1></div><div class="lx-legend"><i></i>Bar length = share of the leader’s number</div></div>';
+  var h='<div class="xp"><div class="x-top"><div><div class="x-eb">'+esc(META.season)+' · THROUGH '+META.gamesSoFar+(META.gamesSoFar===1?' GAME':' GAMES')+' · '+D.filter(qualG).length+' QUALIFIED PLAYERS</div><h1 class="x-h1">Leaderboards</h1></div><div class="lx-legend"><i></i>Bar length = share of the leader’s number</div></div>';
   h+='<div class="x-chips lx-chips" role="tablist" aria-label="Category">'+LB_GROUPS.map(function(gn,gi){
     return '<div class="x-cg"><span class="x-cgl">'+gn+'</span>'+LB.map(function(c,i){return c.g!==gi?'':'<button type="button" role="tab" aria-selected="'+(i===lbCat)+'" class="x-chip'+(i===lbCat?' on':'')+'" data-lb="'+i+'">'+c.n+'</button>';}).join('')+'</div>';
   }).join('')+'</div>';
@@ -1951,6 +1997,7 @@ function showPlayer(p){
   h+='</tr></table></div></div>';
   h+=recentForm(p);
   var ho=hidOf(p);if(ho)h+='<a class="hi-call" href="#s/h/'+p.nba_id+'"><span class="kick g">Hidden impact</span><b>'+esc(hidHead(ho))+'</b><span class="hi-cm">'+esc(hidDek(ho))+' Read the story →</span></a>';
+  h+=siPlayerBox(p);
   h+='<div class="p-sec"><div class="p-sec-hd"><div class="sec-t">Percentile Rankings</div><div class="scale"><span>1ST</span><span class="lgnd-bar"></span><span>99TH</span></div></div>';
   cats.forEach(function(cat){
     var rows='';
@@ -3513,6 +3560,147 @@ function buildHome(){
 }
 document.addEventListener('click',function(e){var b=e.target.closest('[data-prall]');if(!b)return;var l=b.parentNode.querySelector('.hm-pl');var o=l.classList.toggle('all');b.textContent=o?'Show top 10 ▴':'Show all 30 ▾';});
 
+/* ================= RANKINGS: Savant Impact, risers and fallers, teams ================= */
+var QUAL=0.6,RK_MPG=15;
+/* weights by position (Joe, Nov 9): scoring + efficiency equal for all; defense 12% guards/forwards, 20% centers */
+var SIW={G:{imp:25,sc:30,pl:23,df:12,rb:5,bs:5},F:{imp:25,sc:30,pl:15,df:12,rb:13,bs:5},C:{imp:25,sc:30,pl:5,df:20,rb:15,bs:5}};
+var SIN={imp:'Team impact',sc:'Scoring',pl:'Playmaking',df:'Defense',rb:'Rebounding',bs:'Ball security'},SIK=['imp','sc','pl','df','rb','bs'],PGN={G:'Guards',F:'Forwards',C:'Centers'};
+function teamN(t){var g=teamGames()[t];return g?g.length:0;}
+function qualG(p){var n=teamN(p.Team);return n>0&&(p.G||0)>=QUAL*n;}
+function posG(p){var a=String(p.Pos||'F').split('-')[0].trim().charAt(0).toUpperCase();return a==='G'||a==='C'?a:'F';}
+function siConf(m){return m<200?{t:'Early read',c:'r'}:m<500?{t:'Building',c:'n'}:{t:'Proven',c:'g'};}
+function pctArr(vals,inv){var n=vals.length;return vals.map(function(v){var b=0,s=0;for(var i=0;i<n;i++){if(vals[i]===v)s++;else if(inv?vals[i]>v:vals[i]<v)b++;}return Math.max(1,Math.min(99,Math.round((b+s/2)/n*100)));});}
+/* a: aggregate {p,pos,m,pts,reb,ast,stl,blk,tov,fga,fta,pm, net?,sw?,defl?,cont?}. Ingredient parts get percentiles within the position group. */
+var SIPART={
+  imp:[[function(a){var k=a.m/(a.m+(a.net!=null?500:300)),v=a.net!=null?(a.net+(a.sw!=null?a.sw:a.net))/2:a.pm/a.m*36;return v*k;},1]],
+  sc:[[function(a){return a.pts/a.m*36;},0.5],[function(a){var t=a.fga+0.44*a.fta,lg=0.57;return t?((a.pts/(2*t))*t+lg*100)/(t+100):lg;},0.5]],
+  pl:[[function(a){return a.ast/a.m*36;},0.6],[function(a){return (a.ast+1)/(a.tov+1);},0.4]],
+  df:[[function(a){return (a.stl+a.blk)/a.m*36;},1],[function(a){return a.defl;},1,1],[function(a){return a.cont;},1,1]],
+  rb:[[function(a){return a.reb/a.m*36;},1]],
+  bs:[[function(a){var u=a.fga+0.44*a.fta+a.tov;return u?a.tov/u:0;},1,0,1]]
+};
+function siRate(list){
+  var out=list.map(function(a){return {a:a,part:{}};}),grp={G:[],F:[],C:[]};
+  out.forEach(function(o){grp[o.a.pos].push(o);});
+  Object.keys(grp).forEach(function(g){var L=grp[g].length>=8?grp[g]:out;
+    SIK.forEach(function(k){var acc=grp[g].map(function(){return {s:0,w:0};});
+      SIPART[k].forEach(function(pr){var f=pr[0],w=pr[1],opt=pr[2],inv=pr[3];
+        var src=L.filter(function(o){var v=f(o.a);return v!=null&&!isNaN(v);});if(opt&&src.length<L.length*0.5)return;
+        var vals=src.map(function(o){return f(o.a);});
+        grp[g].forEach(function(o,i){var v=f(o.a);if(v==null||isNaN(v))return;var b=0,s=0;vals.forEach(function(x){if(x===v)s++;else if(inv?x>v:x<v)b++;});acc[i].s+=w*Math.max(1,Math.min(99,Math.round((b+s/2)/vals.length*100)));acc[i].w+=w;});});
+      grp[g].forEach(function(o,i){o.part[k]=acc[i].w?acc[i].s/acc[i].w:50;});});
+    grp[g].forEach(function(o){var W=SIW[g],sc=0;SIK.forEach(function(k){sc+=W[k]*o.part[k];});o.score=Math.max(1,Math.min(99,Math.round(sc/100)));o.raw=sc/100;});});
+  return out;
+}
+function glAgg(p,g){var a={p:p,pos:posG(p),g:g.length,m:0,pts:0,reb:0,ast:0,stl:0,blk:0,tov:0,fga:0,fta:0,pm:0};g.forEach(function(x){a.m+=x[3];a.pts+=x[4];a.reb+=x[5];a.ast+=x[6];a.stl+=x[7];a.blk+=x[8];a.tov+=x[9];a.fga+=x[11];a.fta+=x[15];a.pm+=x[19];});return a;}
+var SICACHE=null;
+function siSeason(){
+  if(SICACHE)return SICACHE;
+  var L=D.filter(function(p){return qualG(p)&&(p.MP_PG||0)>=RK_MPG&&GL[String(p.nba_id)];}).map(function(p){var g=GL[String(p.nba_id)].filter(function(x){return x[3]>0;}),a=glAgg(p,g);if(!a.m)return null;
+    a.net=p.NET_RTG!=null?p.NET_RTG:null;a.sw=hidSwing(p);a.defl=p.DEFL36!=null?p.DEFL36:null;a.cont=p.CONT36!=null?p.CONT36:null;a.m=Math.max(a.m,1);return a;}).filter(Boolean);
+  var R=siRate(L).sort(function(x,y){return y.raw-x.raw;});R.forEach(function(o,i){o.rk=i+1;});
+  return SICACHE=R;
+}
+function siOf(p){var R=siSeason();for(var i=0;i<R.length;i++)if(R[i].a.p===p)return R[i];return null;}
+/* season-to-date percentile after every game date, from game logs, for the jump analysis */
+var SITL=null;
+function siTimeline(){
+  if(SITL)return SITL;
+  var ds=lastDates(),T={},P=D.filter(function(p){return GL[String(p.nba_id)];});
+  ds.forEach(function(d,di){var cut=anDate(d),L=[];
+    P.forEach(function(p){var g=GL[String(p.nba_id)].filter(function(x){return x[3]>0&&anDate(x[0])<=cut;});if(g.length<3)return;var a=glAgg(p,g);if(a.m/a.g<RK_MPG*0.8)return;L.push(a);});
+    if(L.length<40)return;
+    var R=siRate(L),vals=R.map(function(o){return o.raw;}),pc=pctArr(vals);
+    R.forEach(function(o,i){var id=o.a.p.nba_id;(T[id]=T[id]||[]).push({d:d,pc:pc[i],g:o.a.g});});});
+  return SITL=T;
+}
+function siJumps(){
+  var tl=siTimeline(),rows=[],S0=[],S1=[],S2=[];
+  D.forEach(function(p){if(!qualG(p))return;var g=(GL[String(p.nba_id)]||[]).filter(function(x){return x[3]>0;});if(g.length<6)return;
+    var w=g.length>=20?10:Math.max(3,Math.floor(g.length/2)),pre=g.slice(0,g.length-w),rec=g.slice(-w);
+    var A=glAgg(p,pre),B=glAgg(p,rec),C=glAgg(p,g);if(B.m/w<RK_MPG&&C.m/g.length<RK_MPG)return;
+    rows.push({p:p,w:w,pre:A,rec:B,all:C,lastPre:pre[pre.length-1][0]});});
+  if(rows.length<20)return [];
+  var rate=function(key){var R=siRate(rows.map(function(r){return r[key];})),pc=pctArr(R.map(function(o){return o.raw;}));R.forEach(function(o,i){rows[i][key+'P']=pc[i];});};
+  rate('pre');rate('rec');rate('all');
+  rows.forEach(function(r){var t=tl[r.p.nba_id]||[];r.tl=t;var at=t.filter(function(x){return anDate(x.d)<=anDate(r.lastPre);});r.ok=at.length>0&&t.length>at.length;if(!r.ok)return;r.from=at[at.length-1].pc;r.to=t[t.length-1].pc;r.jump=r.to-r.from;});
+  return rows.filter(function(r){return r.ok;});
+}
+function siSpark(t,lastPre,W,H){
+  if(!t||t.length<2)return '';W=W||260;H=H||74;var n=t.length,X=function(i){return 6+i*(W-42)/(n-1);},Y=function(v){return 6+(1-v/100)*(H-12);},cut=-1;
+  t.forEach(function(x,i){if(anDate(x.d)<=anDate(lastPre))cut=i;});
+  var s='<svg viewBox="0 0 '+W+' '+H+'" class="rk-sp" role="img" aria-label="Season percentile after every game">';
+  if(cut>=0&&cut<n-1)s+='<rect x="'+X(cut).toFixed(1)+'" y="0" width="'+(W-36-X(cut)).toFixed(1)+'" height="'+H+'" fill="#eef1f7"/>';
+  [25,50,75].forEach(function(v){s+='<line x1="6" x2="'+(W-30)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="#e1e5ee" stroke-width="1"/><text x="'+(W-2)+'" y="'+(Y(v)+3)+'" text-anchor="end" style="font-size:9px;fill:#9aa1b4;font-weight:700">'+v+'th</text>';});
+  var d=t.map(function(x,i){return (i?'L':'M')+X(i).toFixed(1)+' '+Y(x.pc).toFixed(1);}).join(''),up=t[n-1].pc>=(cut>=0?t[cut].pc:t[0].pc);
+  s+='<path d="'+d+'" fill="none" stroke="'+(up?'#1f8a4c':'#c2341f')+'" stroke-width="2.5" stroke-linejoin="round"/>';
+  if(cut>=0)s+='<circle cx="'+X(cut).toFixed(1)+'" cy="'+Y(t[cut].pc).toFixed(1)+'" r="3.5" fill="#fff" stroke="#0b1530" stroke-width="2"/>';
+  return s+'<circle cx="'+X(n-1).toFixed(1)+'" cy="'+Y(t[n-1].pc).toFixed(1)+'" r="4" fill="'+(up?'#1f8a4c':'#c2341f')+'"/></svg>';
+}
+function teamFactors(){
+  var G=teamGames(),A=allTeamAgg(),out={};
+  Object.keys(G).forEach(function(t){var s={fgm:0,fga:0,tpm:0,fta:0,ftm:0,tov:0,oreb:0,dreb:0},o={fgm:0,fga:0,tpm:0,fta:0,ftm:0,tov:0,oreb:0,dreb:0},n=0;
+    G[t].forEach(function(g){if(!g.box||!g.ob)return;n++;[[s,g.box],[o,g.ob]].forEach(function(z){var b=z[1];z[0].fgm+=b[0];z[0].fga+=b[1];z[0].tpm+=b[2];z[0].ftm+=b[4];z[0].fta+=b[5];z[0].tov+=b[6];z[0].oreb+=b[7];z[0].dreb+=b[8];});});
+    if(!n||!A[t])return;var f=function(x,y){return {efg:(x.fgm+0.5*x.tpm)/x.fga*100,tov:x.tov/(x.fga+0.44*x.fta+x.tov)*100,orb:x.oreb/(x.oreb+y.dreb)*100,ftr:x.ftm/x.fga*100};};
+    var gn=G[t].length,w=gn>=20?10:Math.max(2,Math.floor(gn/2)),l10=tAgg(G[t].slice(-w));out[t]={a:A[t],o:f(s,o),d:f(o,s),l10:l10,w:w};});
+  return out;
+}
+var RKTAB='players',RKPOS='all',RKALL=0;
+function rkBub(v,small){return '<span class="rk-b'+(small?' s':'')+'" style="background:'+pc(v)+';color:'+pf(v)+'">'+Math.round(v)+'</span>';}
+function buildRankings(tab){
+  RKTAB=tab||RKTAB;var tabs=[['players','Players'],['risers','Risers and fallers'],['teams','Teams']];
+  var h='<div class="xp"><div class="x-top"><div><div class="x-eb">'+esc(META.season)+' · through '+esc(META.updated||'')+'</div><h1 class="x-h1">Rankings</h1></div><div class="rk-q">Qualified = played 60% of his team’s games and '+RK_MPG+'+ minutes a game</div></div>';
+  h+='<div class="x-chips" role="tablist">'+tabs.map(function(x){return '<a class="x-chip'+(x[0]===RKTAB?' on':'')+'" href="#/rankings'+(x[0]==='players'?'':'/'+x[0])+'">'+x[1]+'</a>';}).join('')+'</div>';
+  if(RKTAB==='players')h+=rkPlayers();else if(RKTAB==='risers')h+=rkRisers();else h+=rkTeams();
+  $('vRank').innerHTML=h+'</div>';
+}
+function rkPlayers(){
+  var R=siSeason();if(!R.length)return '<div class="tr-empty">Not enough games yet.</div>';
+  var L=RKPOS==='all'?R:R.filter(function(o){return o.a.pos===RKPOS;}),show=RKALL?L:L.slice(0,50);
+  var h='<p class="rk-lede"><b>Savant Impact</b> rates every qualified player from 1 to 99 on six ingredients, each compared with players at his position. Guards, forwards and centers are weighted differently because their jobs are different.</p>';
+  h+='<div class="rk-w">'+['G','F','C'].map(function(g){return '<div><b>'+PGN[g]+'</b>'+SIK.map(function(k){return '<span>'+SIN[k]+' <i>'+SIW[g][k]+'%</i></span>';}).join('')+'</div>';}).join('')+'</div>';
+  h+='<div class="rk-pos">'+[['all','All'],['G','Guards'],['F','Forwards'],['C','Centers']].map(function(x){return '<button type="button" class="rk-pb'+(RKPOS===x[0]?' on':'')+'" data-rkpos="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';
+  h+='<div class="bt-tw"><table class="bt-t rk-t"><thead><tr><th>#</th><th>Player</th><th>Savant Impact</th>'+SIK.map(function(k){return '<th>'+SIN[k]+'</th>';}).join('')+'<th>Minutes</th><th>Confidence</th></tr></thead><tbody>'
+    +show.map(function(o){var p=o.a.p,cf=siConf(o.a.m);return '<tr data-id="'+p.nba_id+'"><td class="rk-n">'+o.rk+'</td><td><div class="rk-pl">'+xav(p)+'<div><b>'+esc(p.Player)+'</b><span>'+esc(p.Team)+' · '+PGN[o.a.pos].slice(0,-1)+'</span></div></div></td><td>'+rkBub(o.score)+'</td>'
+      +SIK.map(function(k){return '<td>'+rkBub(o.part[k],1)+'</td>';}).join('')+'<td>'+Math.round(o.a.m)+'</td><td><span class="rk-cf '+cf.c+'">'+cf.t+'</span></td></tr>';}).join('')+'</tbody></table></div>';
+  if(!RKALL&&L.length>50)h+='<button type="button" class="hm-prb" data-rkall>Show all '+L.length+' ▾</button>';
+  h+='<p class="bt-note">Ingredient numbers are percentiles within his position (99 = best). Team impact = net rating and on/off, trusted more as minutes grow. Scoring = points per 36 minutes and true shooting, trusted more as shot attempts grow. Playmaking = assists per 36 and assist-to-turnover ratio. Defense = steals + blocks per 36, deflections and contests. Rebounding = rebounds per 36. Ball security = turnovers per play used. Confidence: Early read under 200 minutes, Building 200 to 500, Proven 500+.</p>';
+  return h;
+}
+function rkRisers(){
+  var J=siJumps();if(!J.length)return '<div class="tr-empty">Not enough games yet.</div>';
+  var up=J.slice().sort(function(a,b){return b.jump-a.jump;}).slice(0,8),dn=J.slice().sort(function(a,b){return a.jump-b.jump;}).slice(0,8),w=J[0].w;
+  var card=function(r){var u=r.jump>=0,c=u?'var(--rise)':'var(--fall)';return '<a class="rk-j" href="#p'+r.p.nba_id+'"><div class="rk-jh">'+xav(r.p)+'<div><b>'+esc(r.p.Player)+'</b><span>'+esc(r.p.Team)+' · '+PGN[r.rec.pos].slice(0,-1)+'</span></div><div class="rk-jv" style="color:'+c+'">'+(u?'+':'−')+Math.abs(Math.round(r.jump))+'<i>percentile points</i></div></div>'
+    +'<div class="rk-js"><div><span>Before</span><b>'+ordn(Math.round(r.from))+'</b><i>after '+r.pre.g+' games</i></div><div class="mid"><span>Last '+r.w+' games</span><b style="color:'+c+'">'+ordn(Math.round(r.recP))+'</b><i>played like</i></div><div><span>Season now</span><b>'+ordn(Math.round(r.to))+'</b><i>all '+r.all.g+' games</i></div></div>'
+    +siSpark(r.tl,r.lastPre,300,70)+'<div class="rk-jn">Season percentile after every game. Shaded = last '+r.w+' games.</div></a>';};
+  var h='<p class="rk-lede"><b>A few great games can move a whole season.</b> If a player sits at the 25th percentile after 30 games and the 50th after 40, those last 10 games had to be far better than the 50th to drag his season up that much. These cards show that jump: where he was, how he’s played lately, and where it left him.</p>';
+  h+='<div class="rk-jg"><div><h3 class="hm-h3" style="color:var(--rise)">▲ Biggest risers</h3>'+up.map(card).join('')+'</div><div><h3 class="hm-h3" style="color:var(--fall)">▼ Biggest fallers</h3>'+dn.map(card).join('')+'</div></div>';
+  h+='<p class="bt-note">Percentiles use Savant Impact computed from game logs (plus-minus stands in for on/off, steals + blocks for defense), compared with every qualified player at the same point in the season. Recent window = last 10 games, or the last half of his games until he has played 20.</p>';
+  return h;
+}
+function rkTeams(){
+  var F=teamFactors(),T=Object.keys(F).sort(function(a,b){return F[b].a.net-F[a].a.net;});if(!T.length)return '<div class="tr-empty">Not enough games yet.</div>';
+  var rk=function(get,inv){var v=T.map(function(t){return get(F[t]);});var P=pctArr(v,inv),o={};T.forEach(function(t,i){o[t]=P[i];});return o;};
+  var C=[['Shooting','eFG%',function(x){return x.o.efg;},0,function(x){return x.d.efg;},1],['Turnovers','per 100 plays',function(x){return x.o.tov;},1,function(x){return x.d.tov;},0],['Rebounding','off. rebound %',function(x){return x.o.orb;},0,function(x){return x.d.orb;},1],['Free throws','made per 100 shots',function(x){return x.o.ftr;},0,function(x){return x.d.ftr;},1]];
+  var PR=C.map(function(c){return [rk(c[2],c[3]),rk(c[4],c[5])];}),NP=rk(function(x){return x.a.net;});
+  var cell=function(v,p){return '<td><span class="rk-tv" style="border-color:'+pc(p)+'">'+f1(v)+'</span></td>';};
+  var h='<p class="rk-lede"><b>Teams are ranked by net rating</b>, points scored minus points allowed per 100 possessions. The four factors next to it explain why: shooting, turnovers, rebounding and free throws, on both ends. Shooting matters most, then turnovers, then rebounding, then free throws.</p>';
+  h+='<div class="bt-tw"><table class="bt-t rk-t"><thead><tr><th rowspan="2">#</th><th rowspan="2">Team</th><th rowspan="2">Record</th><th rowspan="2">Net rating</th><th rowspan="2">Recent net</th>'+C.map(function(c){return '<th colspan="2" class="rk-g">'+c[0]+' <i>'+c[1]+'</i></th>';}).join('')+'</tr><tr>'+C.map(function(){return '<th>Offense</th><th>Defense</th>';}).join('')+'</tr></thead><tbody>'
+    +T.map(function(t,i){var x=F[t],dl=x.l10?x.l10.net-x.a.net:0;return '<tr><td class="rk-n">'+(i+1)+'</td><td><a class="rk-tm" href="#t/'+t+'">'+img(logoT(t),'')+'<b>'+esc(nick(t))+'</b></a></td><td>'+x.a.w+'-'+x.a.l+'</td><td>'+rkBub(NP[t])+' <b style="color:'+(x.a.net>=0?'var(--rise)':'var(--fall)')+'">'+sg1(x.a.net)+'</b></td><td><b style="color:'+(x.l10&&x.l10.net>=0?'var(--rise)':'var(--fall)')+'">'+(x.l10?sg1(x.l10.net):'N/A')+'</b> <i class="rk-d" style="color:'+(dl>=0?'var(--rise)':'var(--fall)')+'">'+(dl>=0?'▲':'▼')+f1(Math.abs(dl))+'</i><span class="rk-w2">last '+x.w+'</span></td>'
+      +C.map(function(c,ci){return cell(c[2](x),PR[ci][0][t])+cell(c[4](x),PR[ci][1][t]);}).join('')+'</tr>';}).join('')+'</tbody></table></div>';
+  h+='<p class="bt-note">Recent net = last 10 games, or the last half of a team’s games until it has played 20; the arrow compares it with the season. Bubble = net rating percentile among the 30 teams. Colored outline on each factor: green = good, red = bad (for defense, lower opponent shooting, rebounding and free throws is better, and more forced turnovers is better). Shooting = effective FG%. Turnovers = turnovers per 100 plays. Rebounding = share of available offensive rebounds grabbed. Free throws = free throws made per 100 shots.</p>';
+  return h;
+}
+document.addEventListener('click',function(e){var b=e.target.closest('[data-rkpos]');if(b){RKPOS=b.dataset.rkpos;RKALL=0;buildRankings();return;}if(e.target.closest('[data-rkall]')){RKALL=1;buildRankings();}});
+function siPlayerBox(p){
+  var o=siOf(p),tl=siTimeline()[p.nba_id];if(!o)return '';
+  var cf=siConf(o.a.m),pr=siSeason().filter(function(x){return x.a.pos===o.a.pos;}),prk=pr.indexOf(o)+1;
+  var h='<div class="p-sec"><div class="p-sec-hd"><div class="sec-t">Savant Impact</div><div class="note"><a class="link" href="#/rankings">Full rankings →</a></div></div><div class="si-box"><div class="si-l">'+rkBub(o.score)+'<div><b>'+ordn(o.rk)+' of '+siSeason().length+'</b><span>qualified players</span><span>'+ordn(prk)+' of '+pr.length+' '+PGN[o.a.pos].toLowerCase()+' · <em class="rk-cf '+cf.c+'">'+cf.t+'</em></span></div></div><div class="si-parts">'
+    +SIK.map(function(k){var v=o.part[k],w=Math.max(v,3);return '<div class="si-r"><span>'+SIN[k]+' <i>'+SIW[o.a.pos][k]+'%</i></span><div class="sr-bar"><div class="sr-trk"></div><div class="sr-fill" style="width:'+w+'%;background:'+pc(v)+'"></div>'+bub(Math.round(v),'sr-circ','left:'+w+'%')+'</div></div>';}).join('')+'</div>';
+  if(tl&&tl.length>=2)h+='<div class="si-tl"><b>Season percentile after every game</b>'+siSpark(tl,tl[Math.max(0,tl.length-1-Math.min(10,Math.floor(tl.length/2)))].d,window.innerWidth<700?360:900,window.innerWidth<700?130:120)+'</div>';
+  return h+'</div></div>';
+}
+
 /* ================= TEAM PAGES ================= */
 var TEAM_STATS=[
  {k:'net',n:'Net rating',sub:'Points per 100 possessions, scored minus allowed',fm:function(v){return sg1(v);}},
@@ -3982,7 +4170,7 @@ document.addEventListener('click',function(e){
   if(g){BSORT.g=g.dataset.bgf;var tb2=$('btTable');if(tb2)tb2.innerHTML=projTable(betSlate().games,BSORT.g);}
 });
 
-var VIEWS={home:'vHome',leaders:'vLeaders',trends:'vTrends',betting:'vBet',players:'vPlayers',player:'vPlayer',team:'vTeam',story:'vStory'};
+var VIEWS={home:'vHome',rankings:'vRank',leaders:'vLeaders',trends:'vTrends',betting:'vBet',players:'vPlayers',player:'vPlayer',team:'vTeam',story:'vStory'};
 var built={};
 function go(h){if(location.hash===h)route();else location.hash=h;}
 function show(view){
@@ -4003,6 +4191,7 @@ function route(){
     var lm=/^#\/leaders\/([^\/]+)(?:\/(\d+))?$/.exec(h);
     if(lm)openBoard(decodeURIComponent(lm[1]),lm[2]);else if(!built.leaders){buildLeaders();}
     built.leaders=1;show('leaders');document.title=(lm?LB[lbCat].n+' Leaders':'Leaderboards')+' | NBA Savant';}
+  else if((m=/^#\/rankings(?:\/(risers|teams))?$/.exec(h))){show('rankings');buildRankings(m[1]||'players');document.title='Rankings | NBA Savant';}
   else if(h==='#/trends'){buildTrends();show('trends');document.title='Trends | NBA Savant';}
   else if(h==='#/betting'){buildBetting();show('betting');document.title='Betting | NBA Savant';}
   else if((m=/^#b\/g\/([A-Z]{3}-[A-Z]{3})$/.exec(h))){show('betting');showMatchup(m[1]);document.title='Game preview | NBA Savant';}
