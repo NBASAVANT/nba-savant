@@ -968,7 +968,7 @@ h2.st-sh.gg{margin-top:38px}
 .rk-pb.on{background:var(--navy);color:#fff;border-color:var(--navy)}
 .rk-t td{padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:middle}
 .rk-t tbody tr[data-id]{cursor:pointer}.rk-t tbody tr:hover{background:var(--tint)}
-.rk-n{font-weight:900;color:var(--t3)}
+.rk-n{font-weight:900;color:var(--t3)}.rk-t th button{min-height:32px}.rk-t th.on.up button::after{content:' ▲'}.rk-t th button:hover{color:var(--blue)}
 .rk-pl{display:flex;align-items:center;gap:10px}.rk-pl .x-av{width:38px;height:38px}
 .rk-pl b{display:block;font-weight:800;color:var(--navy)}.rk-pl span{font-size:12px;color:var(--t3)}
 .rk-b{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;font-weight:900;font-size:15px;border:2px solid #fff;box-shadow:0 0 0 1.5px var(--navy)}
@@ -3560,7 +3560,7 @@ function buildHome(){
 }
 document.addEventListener('click',function(e){var b=e.target.closest('[data-prall]');if(!b)return;var l=b.parentNode.querySelector('.hm-pl');var o=l.classList.toggle('all');b.textContent=o?'Show top 10 ▴':'Show all 30 ▾';});
 
-/* ================= RANKINGS: Savant Impact, risers and fallers, teams ================= */
+/* ================= RANKINGS: Joe's Certified Good Players rating, risers and fallers, teams ================= */
 var QUAL=0.6,RK_MPG=15;
 /* weights by position (Joe, Nov 9): scoring + efficiency equal for all; defense 12% guards/forwards, 20% centers */
 var SIW={G:{imp:25,sc:30,pl:23,df:12,rb:5,bs:5},F:{imp:25,sc:30,pl:15,df:12,rb:13,bs:5},C:{imp:25,sc:30,pl:5,df:20,rb:15,bs:5}};
@@ -3645,7 +3645,7 @@ function teamFactors(){
     var gn=G[t].length,w=gn>=20?10:Math.max(2,Math.floor(gn/2)),l10=tAgg(G[t].slice(-w));out[t]={a:A[t],o:f(s,o),d:f(o,s),l10:l10,w:w};});
   return out;
 }
-var RKTAB='players',RKPOS='all',RKALL=0;
+var RKTAB='players',RKPOS='all',RKALL=0,RKSORT='score',RKDIR=1;
 function rkBub(v,small){return '<span class="rk-b'+(small?' s':'')+'" style="background:'+pc(v)+';color:'+pf(v)+'">'+Math.round(v)+'</span>';}
 function buildRankings(tab){
   RKTAB=tab||RKTAB;var tabs=[['players','Players'],['risers','Risers and fallers'],['teams','Teams']];
@@ -3656,15 +3656,19 @@ function buildRankings(tab){
 }
 function rkPlayers(){
   var R=siSeason();if(!R.length)return '<div class="tr-empty">Not enough games yet.</div>';
-  var L=RKPOS==='all'?R:R.filter(function(o){return o.a.pos===RKPOS;}),show=RKALL?L:L.slice(0,50);
-  var h='<p class="rk-lede"><b>Savant Impact</b> rates every qualified player from 1 to 99 on six ingredients, each compared with players at his position. Guards, forwards and centers are weighted differently because their jobs are different.</p>';
+  var L=RKPOS==='all'?R:R.filter(function(o){return o.a.pos===RKPOS;});
+  var sv=function(o){return RKSORT==='score'?o.raw:RKSORT==='m'||RKSORT==='cf'?o.a.m:RKSORT==='name'?0:o.part[RKSORT];};
+  L=L.slice().sort(function(a,b){if(RKSORT==='name')return (RKDIR>0?1:-1)*a.a.p.Player.localeCompare(b.a.p.Player);return RKDIR*(sv(b)-sv(a))||a.rk-b.rk;});
+  var show=RKALL?L:L.slice(0,50);
+  var th=function(k,lab){var on=RKSORT===k;return '<th class="'+(on?'on'+((k==='name'?RKDIR>0:RKDIR<0)?' up':''):'')+'"><button type="button" data-rksort="'+k+'">'+lab+'</button></th>';};
+  var h='<p class="rk-lede"><b>Joe’s Certified Good Players rating</b> rates every qualified player from 1 to 99 on six ingredients, each compared with players at his position. Guards, forwards and centers are weighted differently because their jobs are different.</p>';
   h+='<div class="rk-w">'+['G','F','C'].map(function(g){return '<div><b>'+PGN[g]+'</b>'+SIK.map(function(k){return '<span>'+SIN[k]+' <i>'+SIW[g][k]+'%</i></span>';}).join('')+'</div>';}).join('')+'</div>';
   h+='<div class="rk-pos">'+[['all','All'],['G','Guards'],['F','Forwards'],['C','Centers']].map(function(x){return '<button type="button" class="rk-pb'+(RKPOS===x[0]?' on':'')+'" data-rkpos="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';
-  h+='<div class="bt-tw"><table class="bt-t rk-t"><thead><tr><th>#</th><th>Player</th><th>Savant Impact</th>'+SIK.map(function(k){return '<th>'+SIN[k]+'</th>';}).join('')+'<th>Minutes</th><th>Confidence</th></tr></thead><tbody>'
-    +show.map(function(o){var p=o.a.p,cf=siConf(o.a.m);return '<tr data-id="'+p.nba_id+'"><td class="rk-n">'+o.rk+'</td><td><div class="rk-pl">'+xav(p)+'<div><b>'+esc(p.Player)+'</b><span>'+esc(p.Team)+' · '+PGN[o.a.pos].slice(0,-1)+'</span></div></div></td><td>'+rkBub(o.score)+'</td>'
+  h+='<div class="bt-tw"><table class="bt-t rk-t"><thead><tr><th>#</th>'+th('name','Player')+th('score','Joe’s rating')+SIK.map(function(k){return th(k,SIN[k]);}).join('')+th('m','Minutes')+th('cf','Confidence')+'</tr></thead><tbody>'
+    +show.map(function(o,i){var p=o.a.p,cf=siConf(o.a.m);return '<tr data-id="'+p.nba_id+'"><td class="rk-n">'+(i+1)+'</td><td><div class="rk-pl">'+xav(p)+'<div><b>'+esc(p.Player)+'</b><span>'+esc(p.Team)+' · '+PGN[o.a.pos].slice(0,-1)+'</span></div></div></td><td>'+rkBub(o.score)+'</td>'
       +SIK.map(function(k){return '<td>'+rkBub(o.part[k],1)+'</td>';}).join('')+'<td>'+Math.round(o.a.m)+'</td><td><span class="rk-cf '+cf.c+'">'+cf.t+'</span></td></tr>';}).join('')+'</tbody></table></div>';
   if(!RKALL&&L.length>50)h+='<button type="button" class="hm-prb" data-rkall>Show all '+L.length+' ▾</button>';
-  h+='<p class="bt-note">Ingredient numbers are percentiles within his position (99 = best). Team impact = net rating and on/off, trusted more as minutes grow. Scoring = points per 36 minutes and true shooting, trusted more as shot attempts grow. Playmaking = assists per 36 and assist-to-turnover ratio. Defense = steals + blocks per 36, deflections and contests. Rebounding = rebounds per 36. Ball security = turnovers per play used. Confidence: Early read under 200 minutes, Building 200 to 500, Proven 500+.</p>';
+  h+='<p class="bt-note">Tap any column to sort by it; tap again to flip the order. # = rank in the current sort. Ingredient numbers are percentiles within his position (99 = best). Team impact = net rating and on/off, trusted more as minutes grow. Scoring = points per 36 minutes and true shooting, trusted more as shot attempts grow. Playmaking = assists per 36 and assist-to-turnover ratio. Defense = steals + blocks per 36, deflections and contests. Rebounding = rebounds per 36. Ball security = turnovers per play used. Confidence: Early read under 200 minutes, Building 200 to 500, Proven 500+.</p>';
   return h;
 }
 function rkRisers(){
@@ -3675,7 +3679,7 @@ function rkRisers(){
     +siSpark(r.tl,r.lastPre,300,70)+'<div class="rk-jn">Season percentile after every game. Shaded = last '+r.w+' games.</div></a>';};
   var h='<p class="rk-lede"><b>A few great games can move a whole season.</b> If a player sits at the 25th percentile after 30 games and the 50th after 40, those last 10 games had to be far better than the 50th to drag his season up that much. These cards show that jump: where he was, how he’s played lately, and where it left him.</p>';
   h+='<div class="rk-jg"><div><h3 class="hm-h3" style="color:var(--rise)">▲ Biggest risers</h3>'+up.map(card).join('')+'</div><div><h3 class="hm-h3" style="color:var(--fall)">▼ Biggest fallers</h3>'+dn.map(card).join('')+'</div></div>';
-  h+='<p class="bt-note">Percentiles use Savant Impact computed from game logs (plus-minus stands in for on/off, steals + blocks for defense), compared with every qualified player at the same point in the season. Recent window = last 10 games, or the last half of his games until he has played 20.</p>';
+  h+='<p class="bt-note">Percentiles use Joe’s Certified Good Players rating computed from game logs (plus-minus stands in for on/off, steals + blocks for defense), compared with every qualified player at the same point in the season. Recent window = last 10 games, or the last half of his games until he has played 20.</p>';
   return h;
 }
 function rkTeams(){
@@ -3691,11 +3695,11 @@ function rkTeams(){
   h+='<p class="bt-note">Recent net = last 10 games, or the last half of a team’s games until it has played 20; the arrow compares it with the season. Bubble = net rating percentile among the 30 teams. Colored outline on each factor: green = good, red = bad (for defense, lower opponent shooting, rebounding and free throws is better, and more forced turnovers is better). Shooting = effective FG%. Turnovers = turnovers per 100 plays. Rebounding = share of available offensive rebounds grabbed. Free throws = free throws made per 100 shots.</p>';
   return h;
 }
-document.addEventListener('click',function(e){var b=e.target.closest('[data-rkpos]');if(b){RKPOS=b.dataset.rkpos;RKALL=0;buildRankings();return;}if(e.target.closest('[data-rkall]')){RKALL=1;buildRankings();}});
+document.addEventListener('click',function(e){var sb=e.target.closest('[data-rksort]');if(sb){var k=sb.dataset.rksort;if(RKSORT===k)RKDIR=-RKDIR;else{RKSORT=k;RKDIR=1;}buildRankings();return;}var b=e.target.closest('[data-rkpos]');if(b){RKPOS=b.dataset.rkpos;RKALL=0;buildRankings();return;}if(e.target.closest('[data-rkall]')){RKALL=1;buildRankings();}});
 function siPlayerBox(p){
   var o=siOf(p),tl=siTimeline()[p.nba_id];if(!o)return '';
   var cf=siConf(o.a.m),pr=siSeason().filter(function(x){return x.a.pos===o.a.pos;}),prk=pr.indexOf(o)+1;
-  var h='<div class="p-sec"><div class="p-sec-hd"><div class="sec-t">Savant Impact</div><div class="note"><a class="link" href="#/rankings">Full rankings →</a></div></div><div class="si-box"><div class="si-l">'+rkBub(o.score)+'<div><b>'+ordn(o.rk)+' of '+siSeason().length+'</b><span>qualified players</span><span>'+ordn(prk)+' of '+pr.length+' '+PGN[o.a.pos].toLowerCase()+' · <em class="rk-cf '+cf.c+'">'+cf.t+'</em></span></div></div><div class="si-parts">'
+  var h='<div class="p-sec"><div class="p-sec-hd"><div class="sec-t">Joe’s Certified Good Players Rating</div><div class="note"><a class="link" href="#/rankings">Full rankings →</a></div></div><div class="si-box"><div class="si-l">'+rkBub(o.score)+'<div><b>'+ordn(o.rk)+' of '+siSeason().length+'</b><span>qualified players</span><span>'+ordn(prk)+' of '+pr.length+' '+PGN[o.a.pos].toLowerCase()+' · <em class="rk-cf '+cf.c+'">'+cf.t+'</em></span></div></div><div class="si-parts">'
     +SIK.map(function(k){var v=o.part[k],w=Math.max(v,3);return '<div class="si-r"><span>'+SIN[k]+' <i>'+SIW[o.a.pos][k]+'%</i></span><div class="sr-bar"><div class="sr-trk"></div><div class="sr-fill" style="width:'+w+'%;background:'+pc(v)+'"></div>'+bub(Math.round(v),'sr-circ','left:'+w+'%')+'</div></div>';}).join('')+'</div>';
   if(tl&&tl.length>=2)h+='<div class="si-tl"><b>Season percentile after every game</b>'+siSpark(tl,tl[Math.max(0,tl.length-1-Math.min(10,Math.floor(tl.length/2)))].d,window.innerWidth<700?360:900,window.innerWidth<700?130:120)+'</div>';
   return h+'</div></div>';
