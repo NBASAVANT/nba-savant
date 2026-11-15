@@ -914,6 +914,7 @@ def build_analytics(players, shot_data, lg, games_so_far, game_logs=None):
     pts_p = _pctl({i: by[i].get('PTS_PG') or 0 for i in ids})
     pra = {i: (by[i].get('PTS_PG') or 0) + (by[i].get('TRB_PG') or 0) + (by[i].get('AST_PG') or 0) for i in ids}
     pra_p = _pctl(pra)
+    ts_p = _pctl({i: T[i]['pts'] / (2.0 * (T[i]['fga'] + 0.44 * T[i]['fta'])) for i in ids if T[i]['fga'] >= 20})
     # hustle percentile within position
     groups = {}
     for i in ids:
@@ -1015,7 +1016,7 @@ def build_analytics(players, shot_data, lg, games_so_far, game_logs=None):
                 base = 'He has no real track record yet, so the starting point is the league rate (%s%%).' % _pc(lg_3)
             txt = ('%s %s%% of his threes (%d of %d). %s Threes take about 300 attempts to trust, '
                    'so the best guess going forward is about %s%%: roughly %.1f %s points a game.') % (
-                'Making' if hot else 'Making just', _pc(three['cur']), three['m'], three['a'], base, _pc(three['exp']),
+                'Making', _pc(three['cur']), three['m'], three['a'], base, _pc(three['exp']),
                 abs(three['ppg']), 'fewer' if hot else 'more')
             keys = ['3p', 'open3', 'open' if not hot else 'tight', 'sq', 'ts']
             profiles.append(('c' if hot else 'b', abs(three['ppg']) * 1.1, 'Hot from three' if hot else 'Cold from three', txt, keys,
@@ -1023,25 +1024,27 @@ def build_analytics(players, shot_data, lg, games_so_far, game_logs=None):
         # BREAK OUT 2: efficient in a small role
         if rts >= 0.04 and usg_p[i] <= 45 and t['fga'] >= 25:
             sc = (rts / 0.04) * (1 - usg_p[i] / 100.0) * (t['fga'] / (t['fga'] + 60.0)) * 2.0
-            txt = ('%s%% true shooting is %.1f points above the league average, but he only uses %s%% of his team\'s plays '
-                   '(%.1f shots a game). Few rotation players score this efficiently; if his role grows, the points have room to follow.') % (
-                _pc(ts), rts * 100, _pc(usg), p.get('FGA_PG') or 0)
+            txt = ('%s%% true shooting is %.1f points above the league average, better than %d%% of rotation players, '
+                   'while he uses %s%% of his team\'s plays (%.1f shots a game), less than %d%% of them. '
+                   'Efficiency usually drops when a role grows, so this is a case for more shots, not a promise.') % (
+                _pc(ts), rts * 100, int(ts_p[i]), _pc(usg), p.get('FGA_PG') or 0, 100 - int(usg_p[i]))
             profiles.append(('b', sc, 'Efficient, under-used', txt, ['ts', 'usg', 'sq', 'onoff'], _conf(t['fga'], 150, 400, 'shots')))
         # BREAK OUT 3: impact the box score misses
         if imp is not None and imp >= 3 and i in hus_p and hus_p[i] >= 70 and pra_p[i] <= 60 and rts >= -0.04:
             sc = imp / 4.0 + (hus_p[i] - 50) / 40.0
             txt = ('His team is %+.1f per 100 possessions with him on the floor and %+.1f with him off (%d minutes), and he is in the '
-                   'top %d%% of %s in hustle plays: %.1f deflections and %.1f contested shots per 36. His %.1f points, rebounds and assists miss most of that.') % (
+                   'top %d%% of %s in hustle plays: %.1f deflections and %.1f contested shots per 36. His %.1f points, rebounds and assists a game don\'t capture that. '
+                   'On/off numbers also depend on his teammates, so read this as a flag, not proof.') % (
                 p['ON_NET'], p['OFF_NET'], p.get('ON_MIN') or 0, max(1, 100 - int(hus_p[i])), hus_grp[i],
                 p.get('DEFL36') or 0, p.get('CONT36') or 0, pra[i])
             profiles.append(('b', sc, 'Impact beyond the box score', txt, ['onoff', 'hustle', 'ts'], _conf(p.get('ON_MIN') or 0, 300, 800, 'minutes')))
         # COOL OFF 3: big numbers, team gets outscored
         if imp is not None and imp <= -3 and pra_p[i] >= 75 and rts <= 0.01:
             sc = -imp / 4.0 + (pra_p[i] - 75) / 25.0
-            txt = ('Putting up %.1f points, rebounds and assists, but his team is %+.1f per 100 with him on the floor and %+.1f with him off, '
-                   'and his %s%% true shooting is %s the league average. Big counting stats on a losing floor tend to shrink once the minutes get tighter.') % (
-                pra[i], p['ON_NET'], p['OFF_NET'], _pc(ts), 'below' if rts < 0 else 'only at')
-            profiles.append(('c', sc, 'Big numbers, little impact', txt, ['onoff', 'ts', 'usg'], _conf(p.get('ON_MIN') or 0, 300, 800, 'minutes')))
+            txt = ('Putting up %.1f points, rebounds and assists a game, but his team is %+.1f per 100 possessions with him on the floor and %+.1f with him off, '
+                   'and his %s%% true shooting is %s the league average. On/off numbers also depend on his teammates, so read this as a flag, not proof.') % (
+                pra[i], p['ON_NET'], p['OFF_NET'], _pc(ts), 'below' if rts < -0.005 else 'right at')
+            profiles.append(('c', sc, 'Big numbers, team better without him', txt, ['onoff', 'ts', 'usg'], _conf(p.get('ON_MIN') or 0, 300, 800, 'minutes')))
 
         for side in ('b', 'c'):
             mine = sorted([x for x in profiles if x[0] == side], key=lambda x: -x[1])

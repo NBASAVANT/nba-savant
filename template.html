@@ -2091,7 +2091,7 @@ function anSection(){
   if(A.games<15)h+='<div class="an-note"><b>Early season:</b> only '+A.games+' games in. Hot and cold shooting is judged against each player\'s track record, and on/off is pulled toward average until there are enough minutes to trust it. Each pick shows how confident it is.</div>';
   var col=function(list,isB){
     var c=isB?HOT:COLD;
-    return '<div style="min-width:0"><div class="an-hd" style="color:'+c+'">'+(isB?'▲ Due to Break Out':'▼ Due to Cool Off')+'</div><div class="an-sub">'+(isB?'The analytics like him more than his box score does':'His box score looks better than the analytics')+'</div>'
+    return '<div style="min-width:0"><div class="an-hd" style="color:'+c+'">'+(isB?'▲ Better than his box score':'▼ Worse than his box score')+'</div><div class="an-sub">'+(isB?'The analytics like him more than his box score does':'His box score looks better than the analytics')+'</div>'
       +(list.length?list.map(function(x,i){
         var p=byId[x.id]||{Player:x.n,Team:x.t,nba_id:x.id};
         var body;
@@ -2109,7 +2109,7 @@ function anSection(){
   var R=anRecord(),fmtD=function(d){return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});};
   if(R&&(R.b[1]||R.c[1])){
     var pc2=function(o){return o[1]?Math.round(o[0]/o[1]*100)+'%':'N/A';};
-    h+='<div class="an-rec"><b>Track record</b><span><em style="color:'+HOT+'">'+R.b[0]+' of '+R.b[1]+'</em> Break Out picks went up ('+pc2(R.b)+')</span><span><em style="color:'+COLD+'">'+R.c[0]+' of '+R.c[1]+'</em> Cool Off picks went down ('+pc2(R.c)+')</span><small>PTS+REB+AST in games after each player was first picked, picks at least a week old</small></div>';
+    h+='<div class="an-rec"><b>Track record</b><span><em style="color:'+HOT+'">'+R.b[0]+' of '+R.b[1]+'</em> “better than his box score” picks then raised their production ('+pc2(R.b)+')</span><span><em style="color:'+COLD+'">'+R.c[0]+' of '+R.c[1]+'</em> “worse than his box score” picks then saw it fall ('+pc2(R.c)+')</span><small>PTS+REB+AST in games after each player was first picked, picks at least a week old</small></div>';
   }else if(R){
     h+='<div class="an-rec"><b>Track record</b><span>Picks are saved every night starting '+fmtD(R.since)+'. Results show up once picks are a week old and the players have played 3 more games.</span></div>';
   }
@@ -2373,13 +2373,16 @@ function poss_(n){return /s$/.test(n)?n+'’':n+'’s';}
 var TGM=null,TGI=null;
 function teamGames(){
   if(TGM)return TGM;TGM={};TGI={};
+  var REAL={};(META.games||[]).forEach(function(g){REAL[g[1]+'|'+g[0]]=g[3];REAL[g[3]+'|'+g[0]]=g[1];});var hasReal=(META.games||[]).length>0;
   D.forEach(function(p){var g=GL[String(p.nba_id)];if(!g)return;
     g.forEach(function(x){var k=p.Team+'|'+x[0],o=TGI[k];
+      /* a traded player's earlier games belong to his old team: skip rows that don't match this team's real game that day */
+      if(hasReal&&REAL[k]!==x[1].split(' ').pop())return;
       if(!o){o=TGI[k]={t:p.Team,d:x[0],dt:anDate(x[0]),o:x[1],wl:x[2],min:0,pts:0,fgm:0,fga:0,tpm:0,tpa:0,ftm:0,fta:0,oreb:0,tov:0,ast:0,pm:0};}
       o.min+=x[3];o.pts+=x[4];o.ast+=x[6];o.tov+=x[9];o.fgm+=x[10];o.fga+=x[11];o.tpm+=x[12];o.tpa+=x[13];o.ftm+=x[14];o.fta+=x[15];o.oreb+=x[16];o.pm+=x[19];
     });});
   var FS={},FB={};(META.games||[]).forEach(function(g){FS[g[1]+'|'+g[0]]=[g[2],g[4]];FS[g[3]+'|'+g[0]]=[g[4],g[2]];if(g[5]&&g[6]){FB[g[1]+'|'+g[0]]=[g[5],g[6]];FB[g[3]+'|'+g[0]]=[g[6],g[5]];}});
-  Object.keys(TGI).forEach(function(k){var o=TGI[k];o.opp=Math.round(o.pts-o.pm/5);if(FS[k]){o.pts=FS[k][0];o.opp=FS[k][1];}if(FB[k]){o.box=FB[k][0];o.ob=FB[k][1];}o.poss=o.fga+0.44*o.fta-o.oreb+o.tov;(TGM[o.t]=TGM[o.t]||[]).push(o);});
+  Object.keys(TGI).forEach(function(k){var o=TGI[k];o.opp=Math.round(o.pts-o.pm/5);if(FS[k]){o.pts=FS[k][0];o.opp=FS[k][1];}if(FB[k]){o.box=FB[k][0];o.ob=FB[k][1];var bx=o.box;if(bx&&bx.length>=8){o.fgm=bx[0];o.fga=bx[1];o.tpm=bx[2];o.tpa=bx[3];o.ftm=bx[4];o.fta=bx[5];o.tov=bx[6];o.oreb=bx[7];}}o.poss=o.fga+0.44*o.fta-o.oreb+o.tov;(TGM[o.t]=TGM[o.t]||[]).push(o);});
   Object.keys(TGM).forEach(function(t){TGM[t].sort(function(a,b){return a.dt-b.dt;});});
   return TGM;
 }
@@ -2405,14 +2408,17 @@ function trLab(){return TRW==='season'?'2nd half':'Last '+TRW;}
 function trLabB(){return TRW==='season'?'1st half':'Before';}
 function f1(v){return (Math.round(v*10)/10).toFixed(1);}
 function sg1(v){return (v>0?'+':v<0?'−':'')+f1(Math.abs(v));}
-function lastName(n){var a=String(n).split(' ').filter(function(w){return !/^(Jr\.?|Sr\.?|II|III|IV)$/.test(w);});return a[a.length-1]||n;}
+function baseLast(n){var a=String(n).split(' ').filter(function(w){return !/^(Jr\.?|Sr\.?|II|III|IV)$/.test(w);}),l=a[a.length-1]||n;if(a.length>2&&/^(da|de|del|van|von|di|la|le)$/.test(a[a.length-2]))l=a[a.length-2]+' '+l;return l;}
+var LNC=null;
+function lastName(n){if(!LNC){LNC={};D.forEach(function(p){var b=baseLast(p.Player);LNC[b]=(LNC[b]||0)+1;});}var b=baseLast(n);return LNC[b]>1&&String(n).indexOf(' ')>0?String(n):b;}
 function pAgg(p,gs){
   teamGames();
-  var s={min:0,pts:0,reb:0,ast:0,tov:0,fgm:0,fga:0,tpm:0,tpa:0,fta:0,tUse:0,tMin:0,tFgm:0},n=gs.length;
-  gs.forEach(function(x){s.min+=x[3];s.pts+=x[4];s.reb+=x[5];s.ast+=x[6];s.tov+=x[9];s.fgm+=x[10];s.fga+=x[11];s.tpm+=x[12];s.tpa+=x[13];s.fta+=x[15];
+  var s={min:0,pts:0,reb:0,ast:0,tov:0,fgm:0,fga:0,tpm:0,tpa:0,ftm:0,fta:0,tUse:0,tMin:0,tFgm:0},n=gs.length;
+  gs.forEach(function(x){s.min+=x[3];s.pts+=x[4];s.reb+=x[5];s.ast+=x[6];s.tov+=x[9];s.fgm+=x[10];s.fga+=x[11];s.tpm+=x[12];s.tpa+=x[13];s.ftm+=x[14];s.fta+=x[15];
     var o=TGI[p.Team+'|'+x[0]];if(o){s.tUse+=o.fga+0.44*o.fta+o.tov;s.tMin+=o.min;s.tFgm+=o.fgm;}});
   var r={n:n,min:s.min/n,pts:s.pts/n,reb:s.reb/n,ast:s.ast/n,tov:s.tov/n,fga:s.fga/n,fta:s.fta/n,tpa:s.tpa/n,tpm:s.tpm/n};
-  r.pra=r.pts+r.reb+r.ast;
+  r.pra=r.pts+r.reb+r.ast;r.fgm=s.fgm/n;r.ftm=s.ftm/n;r.fg2a=(s.fga-s.tpa)/n;r.fg2m=(s.fgm-s.tpm)/n;r.tsa=r.fga+0.44*r.fta;
+  r.n3=s.tpa;r.m3=s.tpm;r.n2=s.fga-s.tpa;r.m2=s.fgm-s.tpm;r.nft=s.fta;r.mft=s.ftm;r.p2=r.n2?r.m2/r.n2*100:null;r.ftp=r.nft?r.mft/r.nft*100:null;
   r.ts=s.fga+s.fta?s.pts/(2*(s.fga+0.44*s.fta))*100:0;
   r.p3=s.tpa?s.tpm/s.tpa*100:null;r.sh3=s.pts?3*s.tpm/s.pts*100:0;
   r.usg=s.min&&s.tUse?((s.fga+0.44*s.fta+s.tov)*(s.tMin/5))/(s.min*s.tUse)*100:0;
@@ -2420,21 +2426,23 @@ function pAgg(p,gs){
   return r;
 }
 /* rotation teammates (20+ MPG) who missed most of the recent games */
-function absentMates(p,rec){
-  var dates={};rec.forEach(function(x){dates[x[0]]=1;});
+function posOverlap(a,b){var x=String(a.Pos||'').replace(/[^GFC]/g,''),y=String(b.Pos||'').replace(/[^GFC]/g,'');for(var i=0;i<x.length;i++)if(y.indexOf(x.charAt(i))>=0)return true;return !x||!y;}
+function absentMates(p,rec,pri){
+  var dates={},pd={};rec.forEach(function(x){dates[x[0]]=1;});(pri||[]).forEach(function(x){pd[x[0]]=1;});
   var out=[];
   D.forEach(function(q){if(q===p||q.Team!==p.Team)return;var g=GL[String(q.nba_id)]||[];if(g.length<2)return;
-    var mpg=g.reduce(function(a,x){return a+x[3];},0)/g.length;if(mpg<20)return;
+    var mpg=g.reduce(function(a,x){return a+x[3];},0)/g.length;if(mpg<18)return;
     var inRec=g.filter(function(x){return dates[x[0]];}).length;
-    if(inRec<=rec.length/2&&g.length-inRec>=2)out.push({q:q,last:g[g.length-1][0],mpg:mpg});});
+    var fga=g.reduce(function(a,x){return a+x[11];},0)/g.length;
+    if(inRec<rec.length/2&&g.length-inRec>=2&&(!pri||g.filter(function(x){return pd[x[0]];}).length>=pri.length*0.7))out.push({q:q,last:g[g.length-1][0],mpg:mpg,fga:fga,miss:rec.length-inRec,pos:posOverlap(p,q)});});
   return out.sort(function(a,b){return b.mpg-a.mpg;});
 }
-function listNames(a){a=a.map(function(x){return lastName(x.q.Player);});return a.length<3?a.join(' and '):a.slice(0,-1).join(', ')+' and '+a[a.length-1];}
+function listNames(a){a=a.map(function(x){return lastName(x.q.Player);}).filter(function(v,i,s){return s.indexOf(v)===i;});return a.length<3?a.join(' and '):a.slice(0,-1).join(', ')+' and '+a[a.length-1];}
 
 function lgTS(){var p=0,a=0,G=teamGames();Object.keys(G).forEach(function(t){G[t].forEach(function(o){p+=o.pts;a+=o.fga+0.44*o.fta;});});return a?p/(2*a)*100:57;}
 /* ---- league ranks over the same games (1st = best) ---- */
 var RKC={},LOWB={drtg:1,tov:1};
-var PK={PTS:'pts',TS:'ts',USG:'usg',FTA:'fta',P3:'p3',AST:'ast',ASTP:'astp',MIN:'min',PRA:'pra',TPM:'tpm'};
+var PK={PTS:'pts',TS:'ts',USG:'usg',FTA:'fta',P3:'p3',AST:'ast',ASTP:'astp',MIN:'min',PRA:'pra',TPM:'tpm',REB:'reb',P2:'p2',FGA:'fga'};
 function rkSplit(g){if(TRW==='season')return trSplit(g);var w=+TRW;return g&&g.length>=w?{rec:g.slice(-w),pri:g.slice(0,-w)}:null;}
 function rkPool(kind){var key=kind+TRW;if(RKC[key])return RKC[key];var P={rec:[],pri:[]};
   if(kind==='t'){var G=teamGames();Object.keys(G).forEach(function(t){var sp=rkSplit(G[t]);if(!sp)return;var a=tAgg(sp.rec),b=sp.pri.length?tAgg(sp.pri):null;if(a){a.t=t;P.rec.push(a);}if(b){b.t=t;P.pri.push(b);}});}
@@ -2445,43 +2453,104 @@ function rkOne(arr,k,v){var ok=arr.filter(function(x){return x[k]!=null&&(k!=='p
 function addRanks(rows,kind){var P=rkPool(kind);rows.forEach(function(r){if(!r.k||r.txt)return;var a=rkOne(P.rec,r.k,r.a),b=rkOne(P.pri,r.k,r.b);if(a&&b)r.rk={a:a.r,b:b.r,n:a.n,nb:b.n};});return rows;}
 function rkWho(kind,n){return kind==='t'?'in the NBA':'among the '+n+' players averaging 20+ minutes';}
 function rkPhrase(k,r,n){if(!LOWB[k])return ordn(r);return r<=n/2?(r===1?'fewest':ordn(r)+'-fewest'):(n-r+1===1?'most':ordn(n-r+1)+'-most');}
-var RKN={drtg:'points allowed',tov:'turnovers',ortg:'scoring per 100 possessions',net:'net rating',p3:'3-point percentage',tpm:'made threes per game',pts:'scoring',ts:'true shooting',usg:'usage rate',pra:'points + rebounds + assists',min:'minutes',ast:'assists',astp:'assist rate',fta:'free throw attempts'};
+var RKN={reb:'rebounding',p2:'2-point percentage',fga:'shot attempts',drtg:'points allowed',tov:'turnovers',ortg:'scoring per 100 possessions',net:'net rating',p3:'3-point percentage',tpm:'made threes per game',pts:'scoring',ts:'true shooting',usg:'usage rate',pra:'points + rebounds + assists',min:'minutes',ast:'assists',astp:'assist rate',fta:'free throw attempts'};
 function rkSent(r,kind){if(!r||!r.rk)return '';var q=r.rk,w=TRW==='season'?' in the second half':' over the '+trLab().toLowerCase(),nm=RKN[r.k]||r.l.toLowerCase();
   if(LOWB[r.k])return 'That’s the '+rkPhrase(r.k,q.a,q.n)+' '+nm+' '+rkWho(kind,q.n)+w+'. Before, it was the '+rkPhrase(r.k,q.b,q.n)+'.';
-  return (kind==='t'?'Their ':'His ')+nm+' ranks '+ordn(q.a)+' '+rkWho(kind,q.n)+w+(q.a<q.b?', up from '+ordn(q.b)+' before.':q.a>q.b?', down from '+ordn(q.b)+' before.':', the same as before.');}
+  return (kind==='t'?'Their ':'His ')+nm+(/(assists|minutes|attempts|rebounds|turnovers|threes per game)$/.test(nm)?' rank ':' ranks ')+ordn(q.a)+' '+rkWho(kind,q.n)+w+(q.a<q.b?', up from '+ordn(q.b)+' of '+q.nb+' before.':q.a>q.b?', down from '+ordn(q.b)+' of '+q.nb+' before.':', the same as before.');}
+/* ================= CLAIM RULES =================
+   Every article conclusion goes through these rules, so the words always match the numbers.
+   - "hot" / "cold" from three = at least 5 percentage points above / below his own norm (last season's 3P% with 80+ attempts,
+     otherwise league average), on 10+ attempts. "Red-hot" = 10+ points above.
+   - A change is explained by splitting it into parts (minutes, shots per minute, 3-point accuracy, 2-point accuracy,
+     free throw accuracy, rebound rate, assist rate). The parts add up exactly to the change. The article leads with the biggest part.
+   - Role stats (minutes, shot volume, rebounds, assists) are steadier game to game than shooting percentages,
+     so role-driven changes are called role changes and shooting-driven changes are called shooting, never "real" or "luck" by default.
+   - Fewer than 10 games in the window = "early sign". The earlier stretch it is compared with must be at least 5 games.
+   - A shooting percentage can only be named as the cause with enough attempts in both stretches (25 threes, 30 twos, 15 free throws).
+   - If the second-biggest part is within 25% of the biggest, no single cause is named.
+   - No trend story for a player who missed his team's latest game or 2 of its last 5 (likely hurt).
+   - A cause is only named in a headline when it is at least 40% of everything pushing in that direction; otherwise the article says several things changed.
+   - "Only" / "just" are never attached to a number that is above average. */
+var CL={hot:5,red:10,minAtt:10,second:0.25,thot:4,base:5,share:0.4,att:{acc3:25,acc2:30,accft:15},tie:0.75};
+function norm3(p){var has=(p.ls3a||0)>=80;return {v:has?p.ls3m/p.ls3a*100:lg3(),has:has,lab:has?'last season':'league average'};}
+function temp3(pct,att,base){if(pct==null||att<15)return 'na';var d=pct-base;return d>=CL.red?'red':d>=CL.hot?'hot':d<=-CL.red?'ice':d<=-CL.hot?'cold':'norm';}
+function isHot(t){return t==='hot'||t==='red';}
+function isCold(t){return t==='cold'||t==='ice';}
+/* split the change in points + rebounds + assists per game into parts that add up exactly */
+function chgParts(R,B){
+  var am=(R.min+B.min)/2,dm=R.min-B.min,o={min:0,shots:0,acc3:0,acc2:0,accft:0,reb:0,ast:0};
+  [['3',3,'tpa','p3'],['2',2,'fg2a','p2'],['ft',1,'fta','ftp']].forEach(function(t){
+    var v=t[1],aR=R[t[2]],aB=B[t[2]],pR=R[t[3]],pB=B[t[3]];
+    if(pR==null&&pB==null)return;if(pR==null)pR=pB;if(pB==null)pB=pR;
+    var ap=(pR+pB)/200,aa=(aR+aB)/2,rR=R.min?aR/R.min:0,rB=B.min?aB/B.min:0;
+    o['acc'+t[0]]=v*aa*(pR-pB)/100;o.min+=v*dm*(rR+rB)/2*ap;o.shots+=v*am*(rR-rB)*ap;});
+  ['reb','ast'].forEach(function(k){var rR=R.min?R[k]/R.min:0,rB=B.min?B[k]/B.min:0;o.min+=dm*(rR+rB)/2;o[k]=am*(rR-rB);});
+  return o;
+}
+var PARTN={min:['more minutes','fewer minutes'],shots:['more shots per minute','fewer shots per minute'],acc3:['better three-point accuracy','worse three-point accuracy'],acc2:['better two-point accuracy','worse two-point accuracy'],accft:['better free throw accuracy','worse free throw accuracy'],reb:['more rebounds per minute','fewer rebounds per minute'],ast:['more assists per minute','fewer assists per minute']};
+/* rotation teammates (20+ MPG) who played most of the earlier games and are back for most of the recent ones */
+function returnedMates(p,sp){
+  var rd={},pd={};sp.rec.forEach(function(x){rd[x[0]]=1;});sp.pri.forEach(function(x){pd[x[0]]=1;});var out=[];
+  D.forEach(function(q){if(q===p||q.Team!==p.Team)return;var g=(GL[String(q.nba_id)]||[]).filter(function(x){return x[3]>0;});if(g.length<2)return;
+    var mpg=g.reduce(function(a,x){return a+x[3];},0)/g.length;if(mpg<18)return;
+    var inR=g.filter(function(x){return rd[x[0]];}).length,inP=g.filter(function(x){return pd[x[0]];}).length;
+    if(sp.pri.length>=3&&inP<sp.pri.length/2&&inR>=sp.rec.length*0.6)out.push({q:q,mpg:mpg,fga:g.reduce(function(a,x){return a+x[11];},0)/g.length,pos:posOverlap(p,q)});});
+  return out.sort(function(a,b){return b.mpg-a.mpg;});
+}
+/* played his team's latest game and at least 4 of its last 5 */
+function availNow(p){var tg=teamGames()[p.Team]||[],g=GL[String(p.nba_id)]||[];if(tg.length<5)return true;var pl={};g.forEach(function(x){if(x[3]>0)pl[x[0]]=1;});var l5=tg.slice(-5);return !!pl[l5[4].d]&&l5.filter(function(o){return pl[o.d];}).length>=4;}
+/* were the defenses he faced in this stretch unusually soft or tough? (season points allowed per 100 possessions) */
+function oppCtx(p,rec,up){var A=allTeamAgg(),ks=Object.keys(A).filter(function(k){return A[k];}),lg=ks.reduce(function(a,k){return a+A[k].drtg;},0)/ks.length,v=rec.map(function(x){var a=A[x[1].split(' ').pop()];return a?a.drtg:null;}).filter(function(z){return z!=null;});
+  if(v.length<rec.length||!v.length)return '';var m=v.reduce(function(a,z){return a+z;},0)/v.length;
+  if(up&&m>=lg+2.5)return 'The teams he faced in this stretch allow '+f1(m)+' points per 100 possessions on average (league average '+f1(lg)+'), so soft defenses are part of it.';
+  if(!up&&m<=lg-2.5)return 'The teams he faced in this stretch allow '+f1(m)+' points per 100 possessions on average (league average '+f1(lg)+'), so tough defenses are part of it.';
+  return '';}
 function playerStories(only){
   var LG=lg3(),LTS=lgTS(),out=[];
   (only?[only]:D).forEach(function(p){
-    var g=GL[String(p.nba_id)];if(!g)return;var sp=trSplit(g);if(!sp||sp.pri.length<3)return;
+    var g=GL[String(p.nba_id)];if(!g)return;var sp=trSplit(g);if(!sp||sp.pri.length<CL.base)return;
+    if(!availNow(p))return;
     var R=pAgg(p,sp.rec),B=pAgg(p,sp.pri);if(R.min<18)return;
-    var dPRA=R.pra-B.pra,dTS=R.ts-B.ts,dMIN=R.min-B.min,dPTS=R.pts-B.pts;
-    var vol=R.fga+0.44*R.fta>=8&&B.fga+0.44*B.fta>=6;
+    var dPRA=R.pra-B.pra,dTS=R.ts-B.ts,dMIN=R.min-B.min;
+    var vol=R.tsa>=8&&B.tsa>=6;
     var tp=Math.abs(dPRA)/6,tt=vol?Math.abs(dTS)/8:0,tm=Math.abs(dMIN)/6,trig=Math.max(tp,tt,tm);
     if(trig<1)return;
-    var up=dPRA/6+(vol?dTS/8:0)+dMIN/6>0;
-    var base=(p.ls3a||0)>=80?p.ls3m/p.ls3a*100:LG,hasTrack=(p.ls3a||0)>=80;
-    var luckR=R.p3!==null&&R.tpa>=3?(R.p3-base)/100*R.tpa*3:0;
-    var v,drv='',mates=[];
-    if(up){
-      mates=dMIN>=6?absentMates(p,sp.rec):[];
-      if(mates.length){v='OPPORTUNITY';}
-      else if(R.p3!==null&&R.tpa>=3&&R.p3-base>=10&&luckR>=Math.max(2.5,0.4*dPTS)){v='LUCK';}
-      else{v='REAL';
-        drv=(R.fta-B.fta>=1.5&&R.tpa-B.tpa<=-1&&dTS>=3)?'rim':(R.usg-B.usg>=3&&dTS>=3)?'involved':(vol&&dTS>=8)?'eff':(R.tov-B.tov<=-1.2)?'tov':(R.astp-B.astp>=6)?'pass':(dMIN>=5)?'min':'vol';}
-    }else{
-      if(dMIN<=-6)return;
-      if(B.p3!==null&&B.tpa>=3&&B.p3-base>=10&&R.p3!==null&&Math.abs(R.p3-base)<=6)v='NORMAL';
-      else if(R.p3!==null&&R.tpa>=3&&base-R.p3>=10&&-luckR>=Math.max(2.5,0.4*-dPTS))v='COLD';
-      else if(vol&&dTS<=-6&&R.ts>=LTS+2&&Math.abs(dPRA)<6){v='NORMAL';drv='ts';}
-      else{v='SLUMP';drv=(vol&&dTS<=-6&&R.ts<LTS)?'eff':(R.tov-B.tov>=1.2)?'tov':(R.usg-B.usg<=-3)?'touch':'vol';}
-    }
-    out.push({p:p,g:g,sp:sp,R:R,B:B,v:v,drv:drv,mates:mates,luck:luckR,base:base,hasTrack:hasTrack,LG:LG,LTS:LTS,up:up,s:trig*Math.sqrt(R.min/30)*Math.sqrt(Math.max(R.pra,B.pra)/20)});
+    /* what the story is about: production, minutes or efficiency, whichever moved most */
+    var metric=tp>=tt&&tp>=tm?'pra':tm>=tt?'min':'ts';
+    var up=metric==='pra'?dPRA>0:metric==='min'?dMIN>0:dTS>0,dir=up?1:-1;
+    var C=chgParts(R,B),nb=norm3(p),base=nb.v,tR=temp3(R.p3,R.n3,base),tB=temp3(B.p3,B.n3,base);
+    var den=2*((R.tsa+B.tsa)/2)/100,TSP={acc3:C.acc3/den,acc2:C.acc2/den,accft:C.accft/den};TSP.mix=dTS-TSP.acc3-TSP.acc2-TSP.accft;
+    var keys=metric==='ts'?['acc3','acc2','accft','mix']:['min','shots','acc3','acc2','accft','reb','ast'],V=metric==='ts'?TSP:C;
+    var push=keys.filter(function(k){return V[k]*dir>0.05;}).sort(function(a,b){return Math.abs(V[b])-Math.abs(V[a]);});
+    var tot=push.reduce(function(s,k){return s+Math.abs(V[k]);},0),cause=metric==='min'?'min':push[0],share=cause&&tot&&push.indexOf(cause)>=0?Math.abs(V[cause])/tot:1;
+    var second=push.filter(function(k){return k!==cause&&Math.abs(V[k])/tot>=CL.second;})[0]||null;
+    if(metric!=='min'&&push[1]&&Math.abs(V[push[1]])>=CL.tie*Math.abs(V[push[0]]))share=0;
+    if(!cause)return;
+    var NA={acc3:['n3'],acc2:['n2'],accft:['nft']}[cause];if(NA&&(R[NA[0]]<CL.att[cause]||B[NA[0]]<CL.att[cause])){share=0;}
+    var v,mates=[],fam=function(ks){return ks.reduce(function(a,k){return a+(C[k]*dir>0.05?Math.abs(C[k]):0);},0);},role=fam(['min','shots','reb','ast']),shoot=fam(['acc3','acc2','accft']);
+    if(metric!=='min'&&share<CL.share){cause='multi';second=null;
+      if(metric==='ts')v=up?'SHOOTUP':'SHOOTDN';
+      else if(role>=0.6*tot){var sp2=function(m){return m.pos;};if(up){mates=absentMates(p,sp.rec,sp.pri).filter(sp2);v=mates.length?'OPPORTUNITY':'ROLE';}else{mates=returnedMates(p,sp).filter(sp2);v='LESS';}}
+      else v=shoot>=0.6*tot?(up?'SHOOTUP':'SHOOTDN'):(up?'MIXUP':'MIXDN');}
+    else if(cause==='min'||cause==='shots'){
+      var samePos=function(m){return cause==='min'?m.pos:(m.fga==null||m.fga>=8);};
+      if(up){mates=absentMates(p,sp.rec,sp.pri).filter(samePos);v=mates.length?'OPPORTUNITY':'ROLE';}
+      else{mates=returnedMates(p,sp).filter(samePos);if(cause==='min'&&dMIN<=-6&&!mates.length)return;v='LESS';}
+    }else if(cause==='acc3'){
+      if(up)v=isHot(tR)?'LUCK':(isCold(tB)&&tR==='norm')?'NORMAL':'SHOOTUP';
+      else v=isCold(tR)?'COLD':(isHot(tB)&&tR==='norm')?'NORMAL':'SHOOTDN';
+    }else if(cause==='reb'||cause==='ast')v=up?'ROLE':'LESS';
+    else v=up?'SHOOTUP':'SHOOTDN';
+    var net=function(ks){return ks.reduce(function(a,k){return a+C[k];},0);};
+    out.push({p:p,g:g,sp:sp,R:R,B:B,v:v,cause:cause,second:second,share:share,role:net(['min','shots','reb','ast']),shoot:net(['acc3','acc2','accft']),TSP:TSP,C:C,metric:metric,tR:tR,tB:tB,nb:nb,mates:mates,base:base,hasTrack:nb.has,LG:LG,LTS:LTS,up:up,
+      s:trig*Math.sqrt(R.min/30)*Math.sqrt(Math.max(R.pra,B.pra)/20)});
   });
   return only?out:out.sort(function(a,b){return b.s-a.s;}).slice(0,4);
 }
 
-var VERD={REAL:['REAL','v-real','g'],SLUMP:['SLUMP','v-bad','r'],OPPORTUNITY:['OPPORTUNITY','v-opp','b'],LUCK:['PARTLY LUCK','v-luck','p'],COLD:['PARTLY LUCK','v-luck','p'],NORMAL:['BACK TO NORMAL','v-norm','n']};
-var KICK={REAL:'Breakout',SLUMP:'Slump',OPPORTUNITY:'Bigger role',LUCK:'Hot streak',COLD:'Cold streak',NORMAL:'Back to normal'};
+var VERD={ROLE:['BIGGER ROLE','v-real','g'],LESS:['SMALLER ROLE','v-bad','r'],OPPORTUNITY:['FILLING IN','v-opp','b'],LUCK:['HOT SHOOTING','v-luck','p'],COLD:['COLD SHOOTING','v-luck','p'],NORMAL:['BACK TO NORMAL','v-norm','n'],SHOOTUP:['SHOOTING UP','v-luck','p'],SHOOTDN:['SHOOTING DOWN','v-luck','p'],
+  MIXUP:['TRENDING UP','v-real','g'],MIXDN:['TRENDING DOWN','v-bad','r'],TUP:['IMPROVING','v-real','g'],TDN:['SLIPPING','v-bad','r'],OPPLUCK:['OPPONENT SHOOTING','v-luck','p']};
+var KICK={ROLE:'Bigger role',LESS:'Smaller role',OPPORTUNITY:'Filling in',LUCK:'Hot streak',COLD:'Cold streak',NORMAL:'Back to normal',SHOOTUP:'Shooting up',SHOOTDN:'Shooting down',MIXUP:'Trending up',MIXDN:'Trending down'};
 function ps(n){return n+'’s';}
 function f0(v){return String(Math.round(v));}
 function hn(v){return Math.abs(v)>=10?String(Math.round(v)):f1(v);}
@@ -2524,8 +2593,7 @@ function gTS(x){var a=x[11]+0.44*x[15];return a?x[4]/(2*a)*100:0;}
    23. Team stories get "What's behind it": test schedule strength (opponents' season net rating), absences (a rotation player who stops appearing is called out as likely injured), opponent three-point luck, rotation changes, plus-minus swings, home/road. Each gets a verdict (likely / small / not the reason) with the numbers. */
 function pWrite(s){
   var p=s.p,R=s.R,B=s.B,N=lastName(p.Player),F=p.Player,rec=s.sp.rec,pri=s.sp.pri,all=s.g,nr=rec.length;
-  var up=s.v==='REAL'||s.v==='OPPORTUNITY'||s.v==='LUCK';
-  var col=s.v==='NORMAL'?'#69718a':up?'var(--rise)':'var(--fall)';
+  var col=s.v==='NORMAL'?'#69718a':s.up?'var(--rise)':'var(--fall)';
   var o={},col_=function(i){return all.map(function(y){return y[i];});};
   var mk=function(m,unit,yl){return {v:m,unit:unit,yl:yl};};
   var ptsC=mk(col_(4),'points','Points'),tsC=mk(all.map(gTS),'% true shooting','True shooting %');
@@ -2533,119 +2601,139 @@ function pWrite(s){
     FTA:{l:'Free throw attempts per game',a:R.fta,b:B.fta,good:1},TPA:{l:'3-point attempts per game',a:R.tpa,b:B.tpa,good:null},P3:{l:'3-point percentage',a:R.p3||0,b:B.p3||0,good:1,pc:1},
     TOV:{l:'Turnovers per game',a:R.tov,b:B.tov,good:0},AST:{l:'Assists per game',a:R.ast,b:B.ast,good:1},ASTP:{l:'Assist rate %',a:R.astp,b:B.astp,good:1,pc:1},
     MIN:{l:'Minutes per game',a:R.min,b:B.min,good:1},FGA:{l:'Shot attempts per game',a:R.fga,b:B.fga,good:null},PRA:{l:'Points + rebounds + assists per game',a:R.pra,b:B.pra,good:1},
-    TPM:{l:'Made threes per game',a:R.tpm,b:B.tpm,good:1},SH3:{l:'Share of points from threes',a:R.sh3,b:B.sh3,good:null,pc:1}};
+    TPM:{l:'Made threes per game',a:R.tpm,b:B.tpm,good:1},SH3:{l:'Share of points from threes',a:R.sh3,b:B.sh3,good:null,pc:1},
+    P2:{l:'2-point percentage',a:R.p2||0,b:B.p2||0,good:1,pc:1},FTP:{l:'Free throw percentage',a:R.ftp||0,b:B.ftp||0,good:1,pc:1},REB:{l:'Rebounds per game',a:R.reb,b:B.reb,good:1}};
   var D_={TS:{l:'True shooting',u:'% of possible points',b:B.ts,a:R.ts,good:1,pc:1,ref:s.LTS,refl:'LEAGUE AVG'},USG:{l:'Usage rate',u:'% of team plays he finishes',b:B.usg,a:R.usg,good:1,pc:1},
     PTS:{l:'Points',u:'per game',b:B.pts,a:R.pts,good:1},TOV:{l:'Turnovers',u:'per game',b:B.tov,a:R.tov,good:0},FTA:{l:'Free throws',u:'attempts per game',b:B.fta,a:R.fta,good:1},
     TPA:{l:'Threes',u:'attempts per game',b:B.tpa,a:R.tpa,good:null},AST:{l:'Assists',u:'per game',b:B.ast,a:R.ast,good:1},ASTP:{l:'Assist rate',u:'% of teammate baskets he set up',b:B.astp,a:R.astp,good:1,pc:1},
     MIN:{l:'Minutes',u:'per game',b:B.min,a:R.min,good:1},P3:{l:'3-point %',u:'share of threes made',b:B.p3===null?s.base:B.p3,a:R.p3===null?0:R.p3,good:1,pc:1,ref:s.base,refl:s.hasTrack?'LAST SEASON':'LEAGUE AVG'},
     FGA:{l:'Shots',u:'attempts per game',b:B.fga,a:R.fga,good:null},PRA:{l:'Pts + reb + ast',u:'per game',b:B.pra,a:R.pra,good:1},
-    TPM:{l:'Made threes',u:'per game',b:B.tpm,a:R.tpm,good:1,k:'tpm'},SH3:{l:'Share of points from threes',u:'% of his points',b:B.sh3,a:R.sh3,good:null,pc:1}};
+    TPM:{l:'Made threes',u:'per game',b:B.tpm,a:R.tpm,good:1,k:'tpm'},SH3:{l:'Share of points from threes',u:'% of his points',b:B.sh3,a:R.sh3,good:null,pc:1},
+    P2:{l:'2-point %',u:'share of twos made',b:B.p2||0,a:R.p2||0,good:1,pc:1},FTP:{l:'Free throw %',u:'share of free throws made',b:B.ftp||0,a:R.ftp||0,good:1,pc:1},REB:{l:'Rebounds',u:'per game',b:B.reb,a:R.reb,good:1}};
   var best=rec.reduce(function(m,x){return x[4]>m[4]?x:m;},rec[0]),worst=rec.reduce(function(m,x){return x[4]<m[4]?x:m;},rec[0]);
-  var lede='<b>'+esc(F)+' has averaged '+f1(R.pts)+' points over his '+recW()+'</b>, '+(R.pts>=B.pts?'up':'down')+' from '+f1(B.pts)+' '+befW(pri.length)
-    +(up&&best[4]>=R.pts+5?', capped by '+best[4]+' points '+oppName(best[1])+' on '+best[0]:(!up&&worst[4]<=R.pts-5?', including just '+worst[4]+' '+oppName(worst[1])+' on '+worst[0]:''))+'.';
-  var th=function(dir){return 'He’s making '+f1(R.tpm)+' threes a game at '+pct1(R.p3||0)+', '+dir+' from '+f1(B.tpm)+' at '+pct1(B.p3||0)+'. Threes are '+f0(R.sh3)+'% of his points now, compared with '+f0(B.sh3)+'% before.';};
-  var tpmC=mk(col_(12),'made threes','Made threes');
-  if(s.v==='REAL'){
-    if(s.drv==='involved'){o.h=N+' climbs to '+f0(R.pts)+' points a night with better shooting';
-      o.k='His usage rate jumped from '+pct1(B.usg)+' to '+pct1(R.usg)+' while his true shooting rose from '+pct1(B.ts)+' to '+pct1(R.ts)+'. Usually one goes up and the other comes down.';
-      o.nut='What makes it stand out: when a player’s role grows, his efficiency usually drops. '+N+'’s went up.';
-      o.h2='It isn’t a hot shooting streak';o.b2=(R.p3!==null?'He’s making '+pct1(R.p3)+' of his threes in this stretch, so this isn’t threes suddenly falling. ':'')+'The gains are coming from a bigger role and better shots.';
-      o.watch='If his three-point shooting holds or improves while the role stays this big, the scoring can keep climbing.';
-      o.ks=['PTS','TS','USG'];o.dm=['TS','USG','PTS','TOV'];o.c=ptsC;}
-    else if(s.drv==='rim'){o.h=N+' climbs to '+f0(R.pts)+' points a night by attacking the rim';
-      o.k='His free throws are up from '+f1(B.fta)+' to '+f1(R.fta)+' a game while his threes dropped from '+f1(B.tpa)+' to '+f1(R.tpa)+'.';
-      o.nut='Getting to the line is one of the most reliable ways to score, and his true shooting rose from '+pct1(B.ts)+' to '+pct1(R.ts)+' along with it.';
-      o.h2='Shot choices last longer than hot streaks';o.b2='A player who keeps getting into the paint keeps getting free throws. That habit tends to stick more than a run of made jumpers.';
-      o.watch='Keep an eye on the free throw attempts. If they stay near '+f0(R.fta)+' a game, so does the scoring.';
-      o.ks=['PTS','FTA','TPA'];o.dm=['FTA','TPA','TS','PTS'];o.c=mk(col_(15),'free throw attempts','Free throw attempts');}
-    else if(s.drv==='eff'){o.h=N+' lifts his true shooting to '+f0(R.ts)+'% without hot threes';
-      o.k=(R.p3!==null?'He’s making only '+pct1(R.p3)+' of his threes in this stretch, so the jump isn’t coming from hot three-point shooting.':'The jump isn’t coming from three-point shooting.');
-      o.nut='His true shooting went from '+pct1(B.ts)+' to '+pct1(R.ts)+', and his scoring rose from '+f1(B.pts)+' to '+f1(R.pts)+' a game.';
-      o.h2='Why it should hold';o.b2='Efficiency built on twos and free throws is steadier than efficiency built on threes, which swing a lot over a handful of games.';
-      o.watch='If his threes start falling too, the scoring has room to grow.';
-      o.ks=['TS','PTS','P3'];o.dm=['TS','PTS','TOV','USG'];o.c=tsC;}
-    else if(s.drv==='tov'){o.h=N+' cuts his turnovers from '+hn(B.tov)+' to '+hn(R.tov)+' a game';
-      o.k='Cleaner decisions, and his scoring held up at '+f1(R.pts)+' a game with '+pct1(R.ts)+' true shooting.';
-      o.nut='Fewer giveaways means more shots for his team, which is why this kind of change tends to show up in the standings.';
-      o.h2='Why it should hold';o.b2='Ball security is more of a habit than a streak. Players who clean it up usually stay cleaner.';
-      o.watch='Watch whether the low turnovers survive a tougher stretch of opponents.';
-      o.ks=['TOV','PTS','TS'];o.dm=['TOV','TS','PTS','AST'];o.c=mk(col_(9),'turnovers','Turnovers');}
-    else if(s.drv==='pass'){o.h=N+(R.ast>=B.ast*1.8?' doubles his assists to '+hn(R.ast)+' a game':' raises his assists to '+hn(R.ast)+' a game');
-      o.k='His assist rate rose from '+pct1(B.astp)+' to '+pct1(R.astp)+'. He’s setting up more of his teammates’ baskets.';
-      o.nut='The jump is in how often he creates for others, not just in how much he has the ball.';
-      o.h2='Why it should hold';o.b2='Playmaking roles change slowly. When a player starts creating more, it usually means the offense is being run through him.';
-      o.watch='Next step: finding out which teammates are benefiting most.';
-      o.ks=['AST','ASTP','PTS'];o.dm=['AST','ASTP','PTS','TOV'];o.c=mk(col_(6),'assists','Assists');}
-    else if(s.drv==='min'){o.h=N+' earns '+f0(R.min-B.min)+' more minutes a night';
-      o.k='No rotation teammates are missing. His scoring rose from '+f1(B.pts)+' to '+f1(R.pts)+' a game.';
-      o.nut='Minutes are the clearest sign of how a coach feels about a player, and '+N+' is getting '+f1(R.min)+' a game now.';
-      o.h2='Why it should hold';o.b2='Since nobody in the rotation is out, these minutes look like a choice, not a fill-in.';
-      o.watch='If the minutes stay above 30, his counting stats will follow.';
-      o.ks=['MIN','PTS','TS'];o.dm=['MIN','PTS','TS','USG'];o.c=mk(col_(3),'minutes','Minutes');}
-    else{o.h=N+' climbs to '+f0(R.pts)+' points a night on more shots';
-      o.k='His shots are up from '+f1(B.fga)+' to '+f1(R.fga)+' a game, and his true shooting held at '+pct1(R.ts)+'.';
-      o.nut='Taking more shots usually costs efficiency. His held steady.';
-      o.h2='Why it should hold';o.b2='More volume at the same efficiency is what a bigger offensive role looks like.';
-      o.watch='Watch his true shooting. If it stays near '+f0(R.ts)+'%, the extra shots are worth it.';
-      o.ks=['PTS','FGA','TS'];o.dm=['FGA','TS','PTS','USG'];o.c=ptsC;}
-  }else if(s.v==='OPPORTUNITY'){
-    var nm=listNames(s.mates.slice(0,3));
-    o.h=N+' gets '+f0(R.min-B.min)+' more minutes a night with '+nm+' out';
-    o.k='He’s averaging '+f1(R.pts)+' points in '+f1(R.min)+' minutes. Expect that to shrink when they return.';
-    o.nut=s.mates.slice(0,3).map(function(m){return lastName(m.q.Player)+' hasn’t played since '+m.last;}).join('. ')+'.';
-    o.h2='A pickup, not a promotion (yet)';o.b2='The extra minutes are filling a hole in the rotation. What he does with them decides whether he keeps any of them.';
-    o.watch='When '+nm+(s.mates.length>1?' return':' returns')+', watch how many of these minutes he keeps.';
-    o.ks=['MIN','PTS','TS'];o.dm=['MIN','PTS','TS','USG'];o.c=mk(col_(3),'minutes','Minutes');o.note=s.mates.length+(s.mates.length>1?' teammates out':' teammate out');
-  }else if(s.v==='LUCK'){
-    o.h=N+' rides '+f0(R.p3)+'% three-point shooting to '+f0(R.pts)+' a night';
-    o.k=th('up')+' '+(s.hasTrack?'He shot '+pct1(s.base)+' from three last season.':'League average is '+pct1(s.base)+'.');
-    o.nut='Three-point percentage takes hundreds of attempts to settle. Over a handful of games it swings wildly.';
-    o.h2='How much is the threes?';o.b2='At his normal three-point rate he’d be scoring about '+f1(Math.max(0,s.luck))+' fewer points a game in this stretch.';
-    o.watch='The rest of his game is what to watch. If it holds when the threes cool, he’s still improved.';
+  var lede='<b>'+esc(F)+' has averaged '+f1(R.pts)+' points '+(TRW==='season'?'in the second half of his games':'over his '+recW())+'</b>, '+(Math.abs(R.pts-B.pts)<0.05?'the same as':(R.pts>B.pts?'up from ':'down from ')+f1(B.pts))+' '+befW(pri.length)
+    +(R.pts>B.pts&&best[4]>=R.pts+5?', capped by '+best[4]+' points '+oppName(best[1])+' on '+best[0]:(R.pts<B.pts&&worst[4]<=R.pts-5?', including '+worst[4]+' '+oppName(worst[1])+' on '+worst[0]:''))+'.';
+  var tpmC=mk(col_(12),'made threes','Made threes'),minC=mk(col_(3),'minutes','Minutes'),rebC=mk(col_(5),'rebounds','Rebounds'),astC=mk(col_(6),'assists','Assists');
+  var C=s.C,cz=s.cause,dMIN=R.min-B.min,dPTS=R.pts-B.pts,dTS=R.ts-B.ts,dPRA=R.pra-B.pra,W=recW(),Wp=TRW==='season'?'in the second half of his games':'over his '+recW(),nb=s.nb,nbT=nb.has?'He shot '+pct1(nb.v)+' from three last season.':'League average is '+pct1(nb.v)+'.';
+  var frac=function(m,n){return m+' of '+n;},sg=function(v){return (v>0?'+':'−')+f1(Math.abs(v));};
+  var early='';
+  var nm=s.mates.length?listNames(s.mates.slice(0,3)):'',mv=s.mates.length>1;
+  var three=function(){return 'He made '+pct1(R.p3)+' of his threes '+Wp+' ('+frac(R.m3,R.n3)+')'+(B.p3!==null?', '+(R.p3>=B.p3?'up':'down')+' from '+pct1(B.p3)+' '+befW(pri.length)+' ('+frac(B.m3,B.n3)+')':'')+'.';};
+  var two=function(){return 'He made '+pct1(R.p2)+' of his two-point shots '+Wp+' ('+frac(R.m2,R.n2)+')'+(B.p2!==null?', '+(R.p2>=B.p2?'up':'down')+' from '+pct1(B.p2)+' '+befW(pri.length)+' ('+frac(B.m2,B.n2)+')':'')+'.';};
+  var ft=function(){return 'He made '+pct1(R.ftp)+' of his free throws '+Wp+' ('+frac(R.mft,R.nft)+')'+(B.ftp!==null?', '+(R.ftp>=B.ftp?'up':'down')+' from '+pct1(B.ftp)+' '+befW(pri.length):'')+'.';};
+  /* where his threes stand against his own norm, said the same way everywhere */
+  var t3=function(){if(s.tR==='na')return '';var hot=isHot(s.tR),cold=isCold(s.tR);return 'His threes are '+(hot?(s.up?'running hot too':'running hot, which hides some of it'):cold?(s.up?'running cold, which hides some of it':'running cold too'):'near '+(nb.has?'his norm':'league average'))+': '+pct1(R.p3)+' in this stretch ('+frac(R.m3,R.n3)+') against '+pct1(nb.v)+' '+nb.lab+'.';};
+  var tsVs=R.ts>=s.LTS+1?'above':R.ts<=s.LTS-1?'below':'right at',tsLine='His true shooting is '+pct1(R.ts)+', '+tsVs+' the '+pct1(s.LTS)+' league average.';
+  /* the parts sentence: every piece of the change, biggest first */
+  var partsTxt=function(){
+    if(s.metric==='ts'){var den=2*((R.tsa+B.tsa)/2)/100,P=['acc3','acc2','accft'].map(function(k){return {k:k,v:C[k]/den};}).filter(function(x){return Math.abs(x.v)>=0.5;}).sort(function(a,b){return Math.abs(b.v)-Math.abs(a.v);});
+      var rest=dTS-(C.acc3+C.acc2+C.accft)/den;return 'His true shooting went from '+pct1(B.ts)+' to '+pct1(R.ts)+' ('+sg(dTS)+').'+(P.length?' In true shooting points: '+P.map(function(x){return sg(x.v)+' from '+PARTN[x.k][x.v>0?0:1];}).join(', ')+(Math.abs(rest)>=0.5?', '+sg(rest)+' from the mix of shots he takes':'')+'.':'');}
+    var P2=Object.keys(PARTN).map(function(k){return {k:k,v:C[k]};}).filter(function(x){return Math.abs(x.v)>=0.5;}).sort(function(a,b){return Math.abs(b.v)-Math.abs(a.v);}).slice(0,4);
+    return 'His points + rebounds + assists went from '+f1(B.pra)+' to '+f1(R.pra)+' a game ('+sg(dPRA)+'). Where it came from: '+P2.map(function(x){return sg(x.v)+' from '+PARTN[x.k][x.v>0?0:1];}).join(', ')+'.';};
+  var steady='is one of the steadier stats from game to game, so a change here usually reflects his role, not luck.';
+  var up=s.up;
+  if(cz==='min'){
+    var dm=Math.abs(dMIN),dmT=dm>=1.5?f0(dm)+(up?' more':' fewer')+' minutes a night':(up?'more':'fewer')+' minutes';
+    if(s.v==='OPPORTUNITY'){o.h=N+' gets '+dmT+' with '+nm+' out';
+      o.k='He’s averaging '+f1(R.min)+' minutes and '+f1(R.pts)+' points '+Wp+', compared with '+f1(B.min)+' and '+f1(B.pts)+' '+befW(pri.length)+'.';
+      o.h2='Filling in, for now';o.b2=s.mates.slice(0,3).map(function(m){return lastName(m.q.Player)+' ('+f1(m.mpg)+' minutes a game) missed '+m.miss+' of those '+nr+' games';}).join('. ')+'. The extra minutes line up with '+(mv?'those absences':'that absence')+', so expect them to shrink when the rotation is whole.';
+      o.watch='Watch how many of these minutes he keeps once '+nm+(mv?' are':' is')+' playing regularly.';o.note=s.mates.length+(mv?' teammates out':' teammate out');}
+    else if(up){o.h=N+' plays '+dmT;
+      o.k='He’s playing '+f1(R.min)+' minutes a game '+Wp+', up from '+f1(B.min)+'. No teammate at his position who plays 18+ minutes missed more than half of those games.';
+      o.h2='What it means';o.b2='No single absence at his position explains it, so it looks like a bigger role. Blowouts and matchups can move minutes for a few games too.'+early;
+      o.watch='Watch whether he stays near '+f0(R.min)+' minutes a game.';}
+    else{o.h=N+' plays '+dmT;
+      o.k='He’s playing '+f1(R.min)+' minutes a game '+Wp+', down from '+f1(B.min)+', and scoring '+f1(R.pts)+' compared with '+f1(B.pts)+'.';
+      o.h2='What it means';o.b2=(nm?nm+' returned to the rotation in this stretch, which may be part of it. ':'')+'Box scores don’t say why minutes fall. Foul trouble, blowouts, minor injuries and coaching choices can all do it.'+early;
+      o.watch='Watch whether his minutes settle near '+f0(R.min)+' or climb back toward '+f0(B.min)+'.';}
+    o.ks=['MIN','PTS','TS'];o.dm=['MIN','PTS','TS','USG'];o.c=minC;
+  }else if(cz==='shots'){
+    var tsP=dTS>=3?'rose from '+pct1(B.ts)+' to '+pct1(R.ts):dTS<=-3?'dipped from '+pct1(B.ts)+' to '+pct1(R.ts):'held near '+pct1(R.ts),more=R.tsa-B.tsa;
+    if(up){o.h=dPTS>=1&&more>=1?N+' climbs to '+f0(R.pts)+' points a night on more shots':N+' takes a bigger share of the shots'+(nm?' with '+nm+' out':'');
+      if(s.v==='OPPORTUNITY'&&dPTS>=1&&more>=1)o.h=N+' climbs to '+f0(R.pts)+' points a night with '+nm+' out';
+      o.k='His shot attempts went from '+f1(B.fga)+' to '+f1(R.fga)+' a game and his usage rate from '+pct1(B.usg)+' to '+pct1(R.usg)+'. His true shooting '+tsP+'.';
+      o.h2=s.v==='OPPORTUNITY'?'Filling in, for now':'What it means';
+      o.b2=s.v==='OPPORTUNITY'?'The extra shots line up with '+nm+' being out ('+s.mates.slice(0,3).map(function(m){return lastName(m.q.Player)+' missed '+m.miss+' of those '+nr+' games';}).join(', ')+'). Expect some of them to go back when the rotation is whole.':'Shot volume '+steady+early;
+      o.watch=dTS<=-3?'Watch his true shooting. It dipped as the shots went up, which is the usual cost of a bigger load.':'Watch his true shooting. If it stays near '+f0(R.ts)+'% on this volume, the extra shots are helping.';if(s.v==='OPPORTUNITY')o.note=s.mates.length+(mv?' teammates out':' teammate out');}
+    else{o.h=dPTS<=-1?N+' slides to '+f0(R.pts)+' points a night on fewer shots':N+' takes a smaller share of the shots';
+      o.k='His shot attempts went from '+f1(B.fga)+' to '+f1(R.fga)+' a game and his usage rate from '+pct1(B.usg)+' to '+pct1(R.usg)+'. His true shooting '+tsP+'.';
+      o.h2='What it means';o.b2=(nm?nm+' returned to the rotation in this stretch, which may be part of it. ':'')+'Shot volume '+steady+early;
+      o.watch='Watch his shot attempts. If they stay near '+f0(R.fga)+' a game, this is his new role.';}
+    o.ks=['PTS','FGA','TS'];o.dm=['FGA','USG','PTS','TS'];o.c=ptsC;
+  }else if(cz==='acc3'){
+    var worth='Making threes at this rate instead of his earlier rate is worth about '+f1(Math.abs(C.acc3))+' points a game.';
+    if(s.v==='LUCK'){o.h=s.metric==='ts'?N+' lifts his true shooting to '+f0(R.ts)+'% on hot three-point shooting':N+' rides '+f0(R.p3)+'% three-point shooting to '+f0(R.pts)+' a night';
+      o.k=three()+' '+nbT;o.h2='How much is the threes?';o.b2=worth+' Three-point percentage takes hundreds of attempts to settle, and he’s '+f0(R.p3-nb.v)+' points above '+(nb.has?'his norm':'league average')+' on '+R.n3+' attempts, so expect it to drift back toward '+f0(nb.v)+'%.';
+      o.watch='Watch the rest of his game. If the scoring holds when the threes cool, the improvement is more than shooting.';}
+    else if(s.v==='COLD'){o.h=s.metric==='ts'?ps(N)+' true shooting falls to '+f0(R.ts)+'% as his threes go cold':N+' slumps as his threes stop falling';
+      o.k=three()+' '+nbT;o.h2='How much is the threes?';o.b2='Missing threes at this rate instead of his earlier rate costs him about '+f1(Math.abs(C.acc3))+' points a game. He’s '+f0(nb.v-R.p3)+' points below '+(nb.has?'his norm':'league average')+' on '+R.n3+' attempts. Percentages that far off tend to move back toward the norm.';
+      o.watch='Watch whether his three-point percentage moves back toward '+f0(nb.v)+'%.';}
+    else if(s.v==='NORMAL'&&up){o.h=N+' finds his three-point shot again';
+      o.k=three()+' '+nbT;o.h2='Back to his usual level';o.b2='He was running well below his norm before, and now he’s close to it. That makes this a return to normal, not a hot streak. '+worth;
+      o.watch='His norm is '+f0(nb.v)+'%, so that’s the level to expect from here.';}
+    else if(s.v==='NORMAL'){o.h=N+' cools off after a hot shooting start';
+      o.k=three()+' '+nbT;o.h2='Back to his usual level';o.b2='The earlier stretch was the outlier: he was well above his norm, and now he’s close to it. This is closer to what to expect.';
+      o.watch='Don’t expect the early three-point shooting to return, but there’s no sign of a slump either.';}
+    else{o.h=up?N+' makes more of his threes, scoring '+f0(R.pts)+' a night':N+' makes fewer of his threes, slipping to '+f0(R.pts)+' a night';
+      o.k=three()+' '+nbT;o.h2='How much is the threes?';o.b2='The change in his three-point accuracy is worth about '+f1(Math.abs(C.acc3))+' points a game. '+(isHot(s.tR)?'Even now he’s '+f0(R.p3-nb.v)+' points above his norm, so more cooling is likely.':isCold(s.tR)?'He’s still '+f0(nb.v-R.p3)+' points below his norm, so there’s room to keep climbing.':s.tR==='na'?'He hasn’t taken enough threes in this stretch to judge it against his norm.':'He’s within 5 points of his norm now, so it isn’t clearly hot or cold.')+' '+R.n3+' attempts is a small sample either way.';
+      o.watch='Watch whether his three-point percentage stays near '+f0(R.p3)+'%.';}
     o.ks=['P3','TPM','SH3','PTS'];o.dm=['P3','TPM','SH3','PTS','TS'];o.c=ptsC;o.c3=tpmC;
-  }else if(s.v==='COLD'){
-    o.h=N+' slumps as his threes stop falling';
-    o.k=th('down')+' His '+(s.hasTrack?'track record':'league norm')+' is '+pct1(s.base)+'. Expect a bounce back.';
-    o.nut='Three-point percentage swings a lot over a few games. Shooters this far below their norm usually climb back.';
-    o.h2='The rest of his game';o.b2='Outside of the threes, his role and shot volume look similar, which is why this reads as bad luck.';
-    o.watch='When the threes start falling again, the scoring should return.';
-    o.ks=['P3','TPM','SH3','PTS'];o.dm=['P3','TPM','SH3','PTS','TS'];o.c=ptsC;o.c3=tpmC;
-  }else if(s.v==='NORMAL'&&s.drv==='ts'){
-    o.h=N+' cools off but still shoots above average';
-    o.k='His true shooting fell from '+pct1(B.ts)+' to '+pct1(R.ts)+', still above the '+pct1(s.LTS)+' league average.';
-    o.nut='The early shooting was unusually hot. This is closer to his real level, and it’s still good.';
-    o.h2='Nothing is broken';o.b2='His role is about the same. Only the shooting cooled, and it cooled to a level most players would like.';
-    o.watch='As long as he stays above league average, there’s no slump to worry about.';
-    o.ks=['TS','PTS','USG'];o.dm=['TS','PTS','USG','TOV'];o.c=tsC;
-  }else if(s.v==='NORMAL'){
-    o.h=N+' cools off after a red-hot shooting start';
-    o.k=th('down')+' That’s right around his '+pct1(s.base)+(s.hasTrack?' track record':' league norm')+'.';
-    o.nut='His early scoring was built on threes falling at a rate almost nobody keeps up.';
-    o.h2='This is his real level';o.b2='The current numbers line up with his track record, so this is what to expect going forward.';
-    o.watch='Don’t expect the early-season scoring to come back, but don’t expect it to fall further either.';
-    o.ks=['P3','TPM','SH3','PTS'];o.dm=['P3','TPM','SH3','PTS','TS'];o.c=ptsC;o.c3=tpmC;
-  }else{
-    if(s.drv==='eff'){o.h=N+' slumps as his true shooting falls to '+f0(R.ts)+'%';o.k='He’s at '+pct1(R.ts)+', below the '+pct1(s.LTS)+' league average, and it isn’t explained by cold threes.';o.ks=['TS','PTS','USG'];o.dm=['TS','PTS','TOV','USG'];o.c=tsC;}
-    else if(s.drv==='tov'){o.h=N+' struggles as his turnovers climb to '+hn(R.tov)+' a game';o.k='And his scoring fell from '+f1(B.pts)+' to '+f1(R.pts)+'.';o.ks=['TOV','PTS','TS'];o.dm=['TOV','PTS','TS','AST'];o.c=mk(col_(9),'turnovers','Turnovers');}
-    else if(s.drv==='touch'){o.h=N+' slides as his touches dry up';o.k='His usage rate fell from '+pct1(B.usg)+' to '+pct1(R.usg)+' and his scoring from '+f1(B.pts)+' to '+f1(R.pts)+'.';o.ks=['PTS','USG','FGA'];o.dm=['USG','PTS','FGA','TS'];o.c=ptsC;}
-    else{o.h=N+' slumps, down '+f0(B.pra-R.pra)+' points, rebounds and assists a game';o.k='Points, rebounds and assists fell from '+f1(B.pra)+' to '+f1(R.pra)+' combined, and it isn’t cold threes or fewer minutes.';o.ks=['PRA','PTS','TS'];o.dm=['PRA','PTS','TS','USG'];o.c=mk(all.map(function(y){return y[4]+y[5]+y[6];}),'pts + reb + ast','Pts + reb + ast');}
-    o.nut='We checked the usual excuses first: his minutes are steady and his three-point shooting isn’t unusually cold.';
-    o.h2='Why it’s not just luck';o.b2='When the drop isn’t coming from threes or playing time, it usually reflects something real: a tougher role, a nagging issue, or a defense that has figured him out.';
-    o.watch='Watch his '+(s.drv==='tov'?'turnovers':s.drv==='touch'?'usage rate':'true shooting')+' over the next few games to see if it turns.';
+  }else if(cz==='acc2'){
+    o.h=up?(s.metric==='ts'?N+' lifts his true shooting to '+f0(R.ts)+'% as more of his twos fall':N+' makes '+f0(R.p2)+'% of his twos, scoring '+f0(R.pts)+' a night'):(s.metric==='ts'?ps(N)+' true shooting falls to '+f0(R.ts)+'% as his two-point percentage drops':N+' slips to '+f0(R.pts)+' a night as his two-point percentage drops to '+f0(R.p2)+'%');
+    o.k=two()+' '+t3();o.h2='Will it last?';o.b2='Two-point percentage is steadier than three-point percentage, but '+R.n2+' attempts is still a small sample. '+tsLine;
+    o.watch='Watch whether he stays near '+f0(R.p2)+'% on twos over the next few games.';
+    o.ks=['P2','PTS','TS'];o.dm=['P2','P3','TS','PTS'];o.c=tsC;
+  }else if(cz==='accft'){
+    o.h=up?N+' cashes in at the line, scoring '+f0(R.pts)+' a night':N+' leaves points at the line';
+    o.k=ft()+' He takes '+f1(R.fta)+' free throws a game.';o.h2='Will it last?';o.b2='Free throw percentage over '+R.nft+' attempts swings a lot. His season mark is the better guide. '+tsLine;
+    o.watch='Watch whether his free throw percentage drifts back toward his season mark.';
+    o.ks=['FTP','FTA','PTS'];o.dm=['FTP','FTA','TS','PTS'];o.c=ptsC;
+  }else if(cz==='reb'){
+    var r36=function(a){return f1(a.reb/a.min*36);};
+    o.h=up?N+' grabs '+hn(R.reb)+' rebounds a night, up from '+hn(B.reb):ps(N)+' rebounds fall to '+hn(R.reb)+' a night';
+    o.k='Per 36 minutes, his rebounds went from '+r36(B)+' to '+r36(R)+', so it isn’t just a change in playing time.';
+    o.h2='What it means';o.b2='Rebounding '+steady+early;o.watch='Watch whether he stays near '+hn(R.reb)+' rebounds a game.';
+    o.ks=['REB','MIN','PTS'];o.dm=['REB','MIN','PTS','TS'];o.c=rebC;
+  }else if(cz==='ast'){
+    var a36=function(a){return f1(a.ast/a.min*36);};
+    o.h=up?N+' raises his assists from '+hn(B.ast)+' to '+hn(R.ast)+' a game':ps(N)+' assists fall from '+hn(B.ast)+' to '+hn(R.ast)+' a game';
+    o.k='Per 36 minutes, his assists went from '+a36(B)+' to '+a36(R)+', and his assist rate from '+pct1(B.astp)+' to '+pct1(R.astp)+'.';
+    o.h2='What it means';o.b2='Assists '+steady.replace('is one','are one').replace('reflects his role','reflects how much the offense runs through him')+early;o.watch='Watch his turnovers alongside the assists: '+f1(R.tov)+' a game now, '+f1(B.tov)+' before.';
+    o.ks=['AST','ASTP','PTS'];o.dm=['AST','ASTP','PTS','TOV'];o.c=astC;
+  }else if(cz==='multi'){
+    var dr=up?1:-1,top=Object.keys(PARTN).map(function(k){return {k:k,v:C[k]};}).filter(function(x){return x.v*dr>=0.5;}).sort(function(a,b){return Math.abs(b.v)-Math.abs(a.v);}).slice(0,3);
+    if(s.metric==='ts'){o.h=up?N+' lifts his true shooting to '+f0(R.ts)+'%':ps(N)+' true shooting falls to '+f0(R.ts)+'%';
+      o.k='It’s spread across his shooting. '+(R.n2&&B.n2?two()+' ':'')+(R.n3>=CL.minAtt&&B.p3!==null?three():'');o.c=tsC;o.ks=['TS','PTS','P3'];o.dm=['TS','P2','P3','PTS'];}
+    else{var ptsLed=Math.abs(dPTS)>=0.6*Math.abs(dPRA);
+      o.h=ptsLed?(up?N+' climbs to '+f0(R.pts)+' points a night':N+' slips to '+f0(R.pts)+' points a night'):(up?N+' is up to '+f0(R.pra)+' points + rebounds + assists a night':N+' is down to '+f0(R.pra)+' points + rebounds + assists a night');
+      o.k='No single change explains most of it. The biggest pieces, in points + rebounds + assists per game: '+top.map(function(x){return sg(x.v)+' from '+PARTN[x.k][x.v>0?0:1];}).join(', ')+'.';o.c=ptsC;o.ks=['PTS','MIN','TS'];o.dm=['PTS','MIN','FGA','TS'];}
+    o.h2='Role or shooting?';
+    o.b2=s.metric==='ts'?'Shooting percentages swing a lot over a few games, on twos as well as threes. '+tsLine+early:(s.role*dr>=s.shoot*dr?'More of the change comes from his role (minutes, shots, rebounds and assists: '+sg(s.role)+' a game) than from shooting accuracy ('+sg(s.shoot)+'). Role changes tend to be steadier than shooting.':'More of the change comes from shooting accuracy ('+sg(s.shoot)+' a game) than from his role (minutes, shots, rebounds and assists: '+sg(s.role)+'). Shooting percentages swing more over a few games.')+(s.v==='OPPORTUNITY'?' '+nm+(mv?' have':' has')+' been out, which opens up minutes and shots.':'')+early;
+    o.watch='Watch his minutes and shot attempts: '+f1(R.min)+' and '+f1(R.fga)+' a game now, '+f1(B.min)+' and '+f1(B.fga)+' before.';if(s.v==='OPPORTUNITY')o.note=s.mates.length+(mv?' teammates out':' teammate out');
+  }else{ /* mix: the shots he takes changed more than how often they go in */
+    var ftrR=R.fga?R.fta/R.fga:0,ftrB=B.fga?B.fta/B.fga:0,r3R=R.fga?R.tpa/R.fga:0,r3B=B.fga?B.tpa/B.fga:0,line=(ftrR-ftrB)*(up?1:-1)>=0.06;
+    o.h=up?N+' lifts his true shooting to '+f0(R.ts)+'%'+(line?' by getting to the line':''):ps(N)+' true shooting falls to '+f0(R.ts)+'%'+(line?' as the free throws dry up':'');
+    o.k='His free throw attempts went from '+f1(B.fta)+' to '+f1(R.fta)+' a game, and threes went from '+f0(r3B*100)+'% to '+f0(r3R*100)+'% of his shots.';
+    o.h2='What changed';o.b2='His accuracy on each kind of shot explains less than half of the change. The bigger piece is which shots he takes. '+tsLine;
+    o.watch='Watch his free throw attempts: '+f1(R.fta)+' a game now, '+f1(B.fta)+' before.';
+    o.ks=['TS','FTA','PTS'];o.dm=['TS','FTA','TPA','PTS'];o.c=tsC;
   }
+  o.nut=partsTxt();o.k=o.k.replace(/\s+/g,' ').trim();
+  if(nr<10)o.b2+=' It’s '+numWord(nr)+' games, so treat it as an early sign.';
+  var oc=oppCtx(p,rec,s.up);if(oc)o.b2+=' '+oc;
   /* good direction for the main chart color */
-  var cgood=o.c.yl==='Turnovers'?R.tov<B.tov:up;
+  var cgood=s.up;
   o.col=s.v==='NORMAL'?'#69718a':cgood?'var(--rise)':'var(--fall)';
   o.lede=lede;
   Object.keys(KS).forEach(function(k){if(PK[k])KS[k].k=PK[k];});Object.keys(D_).forEach(function(k){if(PK[k])D_[k].k=PK[k];});
   o.ksx=o.ks.filter(function(k){return k!=='P3'||(R.p3!==null&&B.p3!==null);}).map(function(k){return KS[k];});o.dmx=o.dm.map(function(k){return D_[k];}).filter(function(r){return r&&!(r.l==='3-point %'&&!R.tpa);});
   addRanks(o.ksx,'p');addRanks(o.dmx,'p');var rs=rkSent(o.ksx[0],'p');if(rs)o.k+=' '+rs;
   var gm=gmOf(all);
-  o.chartT={'Points':'Points each game','True shooting %':'True shooting each game','Free throw attempts':'Free throw attempts each game','Turnovers':'Turnovers each game','Assists':'Assists each game','Minutes':'Minutes each game','Pts + reb + ast':'Pts + reb + ast each game'}[o.c.yl];
+  o.chartT={'Points':'Points each game','True shooting %':'True shooting each game','Free throw attempts':'Free throw attempts each game','Turnovers':'Turnovers each game','Assists':'Assists each game','Minutes':'Minutes each game','Rebounds':'Rebounds each game','Pts + reb + ast':'Pts + reb + ast each game'}[o.c.yl];
   o.card=function(){return chFig(o.chartT,null,chBars({v:o.c.v,g:gm,nr:nr,col:o.col,unit:o.c.unit,yl:o.c.yl,note:o.note}),0);};
   o.big=function(){var sm=window.innerWidth<700;return chFig(bigTitle(s,o),o.chartT+' this season. Dashed lines show the average '+trLabB().toLowerCase()+' and during the '+trLab().toLowerCase()+'.',
     chBars({v:o.c.v,g:gm,nr:nr,col:o.col,unit:o.c.unit,yl:o.c.yl,big:1,W:sm?360:860,H:sm?260:360,note:o.note,max:1,all:1}),1);};
-  var AVK={'Points':'pts','True shooting %':'ts','Free throw attempts':'fta','Turnovers':'tov','Assists':'ast','Minutes':'min','Pts + reb + ast':'pra'}[o.c.yl];
+  var AVK={'Points':'pts','True shooting %':'ts','Free throw attempts':'fta','Turnovers':'tov','Assists':'ast','Minutes':'min','Rebounds':'reb','Pts + reb + ast':'pra'}[o.c.yl];
   o.hc=o.c3?{v:o.c3.v,g:gm,nr:nr,unit:'made threes',t:'Made threes per game',av:[B.tpm,R.tpm]}:{v:o.c.v,g:gm,nr:nr,unit:o.c.unit,t:o.chartT.replace(' each game',' per game'),av:AVK?[B[AVK],R[AVK]]:null};o.hc.nb=pri.length;o.hc.kind='p';
   if(o.c3)o.big3=function(){var sm=window.innerWidth<700,a=all.slice(-12);return chFig(N+' made '+f1(R.tpm)+' threes a game in the '+trLab().toLowerCase()+', '+(R.tpm>=B.tpm?'up':'down')+' from '+f1(B.tpm),'Made threes in each game, with the share of his points that came from threes: '+f0(B.sh3)+'% '+trLabB().toLowerCase()+', '+f0(R.sh3)+'% in the '+trLab().toLowerCase()+'.',
     chBars({v:o.c3.v,g:gm,nr:nr,col:o.col,unit:'made threes',yl:'Made threes',big:1,W:sm?360:860,H:sm?240:300,all:1}),1);};
@@ -2659,42 +2747,84 @@ function bigTitle(s,o){var R=s.R,B=s.B,N=lastName(s.p.Player),m=o.c.yl.toLowerCa
   if(o.c.yl==='Free throw attempts')return N+' went from '+f1(B.fta)+' to '+f1(R.fta)+' free throws a game';
   if(o.c.yl==='Turnovers')return ps(N)+' turnovers went from '+f1(B.tov)+' to '+f1(R.tov)+' a game';
   if(o.c.yl==='Assists')return ps(N)+' assists went from '+f1(B.ast)+' to '+f1(R.ast)+' a game';
+  if(o.c.yl==='Rebounds')return ps(N)+' rebounds went from '+f1(B.reb)+' to '+f1(R.reb)+' a game';
   return ps(N)+' '+m+' went from '+f1(B.pra)+' to '+f1(R.pra)+' a game';}
 
 /* ============ TEAM STORIES ============ */
+/* one side of the ball (a team's offense, or its opponents' offense) in per-100-possession terms */
+function tSide(gs,opp){
+  var s={pts:0,poss:0,fgm:0,fga:0,tpm:0,tpa:0,ftm:0,fta:0,tov:0,oreb:0},ok=1;
+  gs.forEach(function(o){s.poss+=o.poss;
+    if(opp){var b=o.ob;if(!b){ok=0;return;}s.pts+=o.opp;s.fgm+=b[0];s.fga+=b[1];s.tpm+=b[2];s.tpa+=b[3];s.ftm+=b[4];s.fta+=b[5];s.tov+=b[6];s.oreb+=b[7];}
+    else{s.pts+=o.pts;s.fgm+=o.fgm;s.fga+=o.fga;s.tpm+=o.tpm;s.tpa+=o.tpa;s.ftm+=o.ftm;s.fta+=o.fta;s.tov+=o.tov;s.oreb+=o.oreb;}});
+  if(!ok||!s.poss)return null;var k=100/s.poss,a2=s.fga-s.tpa;
+  return {pts:s.pts*k,a3:s.tpa*k,p3:s.tpa?s.tpm/s.tpa*100:0,a2:a2*k,p2:a2?(s.fgm-s.tpm)/a2*100:0,aft:s.fta*k,ftp:s.fta?s.ftm/s.fta*100:0,tov:s.tov*k,oreb:s.oreb*k,ftr:s.fga?s.fta/s.fga*100:0,
+    n3:s.tpa,m3:s.tpm,n2:a2,m2:s.fgm-s.tpm,nft:s.fta,mft:s.ftm};
+}
+/* split the change in points per 100 possessions into parts that add up exactly:
+   accuracy on threes, twos and free throws; turnovers; offensive rebounds; and the leftover shot mix (mostly free throw rate) */
+function sideParts(R,B){
+  var acc3=3*(R.a3+B.a3)/2*(R.p3-B.p3)/100,acc2=2*(R.a2+B.a2)/2*(R.p2-B.p2)/100,accft=(R.aft+B.aft)/2*(R.ftp-B.ftp)/100,vol=(R.pts-B.pts)-acc3-acc2-accft;
+  var ch=function(x){return x.a3+x.a2+0.44*x.aft;},ppc=((R.pts+B.pts)/2)/((ch(R)+ch(B))/2),tov=-(R.tov-B.tov)*ppc,oreb=(R.oreb-B.oreb)*ppc;
+  return {acc3:acc3,acc2:acc2,accft:accft,tov:tov,oreb:oreb,mix:vol-tov-oreb};
+}
+var TPARTN={off:{acc3:['better three-point shooting','worse three-point shooting'],acc2:['better two-point shooting','worse two-point shooting'],accft:['better free throw shooting','worse free throw shooting'],tov:['fewer turnovers','more turnovers'],oreb:['more offensive rebounds','fewer offensive rebounds'],mix:['shot selection and trips to the line','shot selection and trips to the line']},
+  def:{acc3:['opponents missing more threes','opponents making more threes'],acc2:['opponents missing more twos','opponents making more twos'],accft:['opponents missing more free throws','opponents making more free throws'],tov:['more forced turnovers','fewer forced turnovers'],oreb:['fewer opponent offensive rebounds','more opponent offensive rebounds'],mix:['opponent shot selection and free throw trips','opponent shot selection and free throw trips']}};
 function teamStories(only){
-  var G=teamGames(),out=[];
+  var G=teamGames(),out=[],LG=lg3();
   (only?[only]:Object.keys(G)).forEach(function(t){
-    var sp=trSplit(G[t]||[]);if(!sp||sp.pri.length<3)return;var R=tAgg(sp.rec),B=tAgg(sp.pri);if(!R||!B)return;
+    var sp=trSplit(G[t]||[]);if(!sp||sp.pri.length<CL.base)return;var R=tAgg(sp.rec),B=tAgg(sp.pri);if(!R||!B)return;
     var dNet=R.net-B.net;if(Math.abs(dNet)<8)return;
-    var dO=R.ortg-B.ortg,dD=B.drtg-R.drtg,up=dNet>0,off=Math.abs(dO)>=Math.abs(dD);
-    var shoot=(R.p3-B.p3)/100*R.tpa*3/R.pace*100,v,kind;
-    if(off&&shoot*dO>0&&Math.abs(shoot)>=0.4*Math.abs(dO)){v=up?'LUCK':'COLD';kind='shoot';}
-    else{v=up?'REAL':'SLUMP';kind=off?'off':'def';}
-    out.push({t:t,g:G[t],sp:sp,R:R,B:B,dNet:dNet,dO:dO,dD:dD,shoot:shoot,v:v,kind:kind,up:up,s:Math.abs(dNet)});
+    var dO=R.ortg-B.ortg,dD=B.drtg-R.drtg,up=dNet>0,dir=up?1:-1,side=Math.abs(dO)>=Math.abs(dD)?'off':'def';
+    var SR=tSide(sp.rec,side==='def'),SB=tSide(sp.pri,side==='def'),P=null,cause='unk',share=1,second=null;
+    if(SR&&SB){P=sideParts(SR,SB);if(side==='def')Object.keys(P).forEach(function(k){P[k]=-P[k];});   /* positive = good for this team */
+      var push=Object.keys(P).filter(function(k){return P[k]*dir>0.3;}).sort(function(a,b){return Math.abs(P[b])-Math.abs(P[a]);}),tot=push.reduce(function(s,k){return s+Math.abs(P[k]);},0);
+      if(push.length){cause=push[0];share=Math.abs(P[cause])/tot;if(share<CL.share||(push[1]&&Math.abs(P[push[1]])>=CL.tie*Math.abs(P[push[0]])))cause='multi';second=cause==='multi'?null:push.filter(function(k){return k!==cause&&Math.abs(P[k])/tot>=CL.second;})[0]||null;}}
+    var v=up?'TUP':'TDN',hot=function(x){return x.p3>=LG+CL.thot;},cold=function(x){return x.p3<=LG-CL.thot;};
+    if(cause==='acc3'&&side==='off')v=up?(hot(SR)?'LUCK':cold(SB)?'NORMAL':'TUP'):(cold(SR)?'COLD':hot(SB)?'NORMAL':'TDN');
+    if((cause==='acc3'||cause==='accft')&&side==='def')v=cause==='accft'?'OPPLUCK':up?(cold(SR)?'OPPLUCK':hot(SB)?'NORMAL':'OPPLUCK'):(hot(SR)?'OPPLUCK':cold(SB)?'NORMAL':'OPPLUCK');
+    var kind=side==='def'?'def':cause==='acc3'?'shoot':'off';
+    out.push({t:t,g:G[t],sp:sp,R:R,B:B,dNet:dNet,dO:dO,dD:dD,v:v,kind:kind,side:side,cause:cause,second:second,share:share,P:P,SR:SR,SB:SB,LG:LG,up:up,s:Math.abs(dNet)});
   });
   return only?out:out.sort(function(a,b){return b.s-a.s;}).slice(0,4);
 }
 function tWrite(s){
   var N=nick(s.t),TN='The '+N,R=s.R,B=s.B,o={},n=s.sp.rec.length,rec=TRW==='season'?'in the second half of their games':'in their last '+numWord(n),pl=/s$/.test(N);
-  var are=' are ',tp=pl?TN+'’':TN+'’s',nk=N,rg=s.sp.rec,ng=rg.length;
+  var nk=N,rg=s.sp.rec,ng=rg.length,SR=s.SR,SB=s.SB,P=s.P,cz=s.cause,up=s.up,off=s.side==='off',LG=s.LG;
   var stk=0,lastWL=s.g.length?s.g[s.g.length-1].wl:'';for(var si=s.g.length-1;si>=0&&s.g[si].wl===lastWL;si--)stk++;
-  var wins=R.w===ng?'win '+Math.max(ng,stk)+' straight':R.w>ng/2?'win '+R.w+' of '+ng:'improve',loss=R.l===ng?'lose '+Math.max(ng,stk)+' straight':R.l>ng/2?'lose '+R.l+' of '+ng:'slip';
-  if(s.v==='REAL'&&s.kind==='def'){o.h=nk+' '+wins+' behind a tougher defense';o.k='They’re allowing '+f1(R.drtg)+' points per 100 possessions, down from '+f1(B.drtg)+'.';
-    o.h2='Defense travels';o.b2='Defensive improvement tends to hold up better than hot shooting, because it doesn’t depend on shots going in.';o.watch='If the defense stays near '+f0(R.drtg)+' per 100, this run is sustainable.';}
-  else if(s.v==='REAL'){var c=[{v:(B.tov-R.tov)/2,p:'fewer turnovers',l:'Turnovers per 100 possessions fell from '+f1(B.tov)+' to '+f1(R.tov)+'.'},{v:(R.ftr-B.ftr)/5,p:'more trips to the line',l:'Free throw rate rose from '+f1(B.ftr)+' to '+f1(R.ftr)+'.'},{v:(R.ast-B.ast)/5,p:'better ball movement',l:'Assisted baskets rose from '+f1(B.ast)+'% to '+f1(R.ast)+'%.'}].sort(function(a,b){return b.v-a.v;});
-    o.h=nk+' '+wins+' behind '+(c[0].v>0?c[0].p:'a better offense');o.k='They’re scoring '+f1(R.ortg)+' points per 100 possessions, up from '+f1(B.ortg)+'. '+(c[0].v>0?c[0].l:'');
-    o.h2='Habits, not hot shooting';o.b2='The offense improved without a big jump in three-point shooting, which makes it more likely to last.';o.watch='Keep watching the '+(c[0].v>0?c[0].p:'offense')+'. That’s where the improvement lives.';}
-  else if(s.v==='LUCK'){o.h=nk+' '+wins+' behind a three-point surge';o.k='They’re making '+f1(R.tpm)+' threes a game at '+pct1(R.p3)+', up from '+f1(B.tpm)+' at '+pct1(B.p3)+'. Threes are now '+f0(R.sh3)+'% of their points, up from '+f0(B.sh3)+'%. Shooting that hot tends to cool.';
-    o.h2='How much is the threes?';o.b2='About '+Math.round(Math.abs(s.shoot)/Math.max(0.1,Math.abs(s.dO))*100)+'% of the offensive jump came from three-point shooting alone.';o.watch='If the threes cool and they keep winning, the improvement is real.';}
-  else if(s.v==='COLD'){o.h=nk+' '+loss+' as their threes stop falling';o.k='They’re making '+f1(R.tpm)+' threes a game at '+pct1(R.p3)+', down from '+f1(B.tpm)+' at '+pct1(B.p3)+'. Threes are '+f0(R.sh3)+'% of their points now, compared with '+f0(B.sh3)+'%. Expect a bounce back.';
-    o.h2='How much is the threes?';o.b2='About '+Math.round(Math.abs(s.shoot)/Math.max(0.1,Math.abs(s.dO))*100)+'% of the offensive drop came from three-point shooting alone.';o.watch='When the threes return to normal, so should the offense.';}
-  else if(s.kind==='def'){o.h=nk+' '+loss+' as their defense collapses';o.k='They’re allowing '+f1(R.drtg)+' points per 100 possessions, up from '+f1(B.drtg)+'.';
-    o.h2='Not just bad luck';o.b2='The drop is on the defensive end, which isn’t explained by cold shooting.';o.watch='Watch the points allowed per 100 possessions. That number has to come down.';}
-  else{o.h=nk+' '+loss+' as their offense stalls';o.k='They’re scoring '+f1(R.ortg)+' points per 100 possessions, down from '+f1(B.ortg)+'.';
-    o.h2='Not just cold shooting';o.b2='Three-point shooting explains less than half of the drop, so something else in the offense changed.';o.watch='Watch the points per 100 possessions over the next week.';}
+  var wins=R.w===ng?'win '+ng+' straight':R.w>ng/2?'win '+R.w+' of '+ng:'go '+R.w+'-'+R.l,loss=R.l===ng?'lose '+ng+' straight':R.l>ng/2?'lose '+R.l+' of '+ng:'go '+R.w+'-'+R.l,act=up?wins:loss;
+  var sg=function(v){return (v>0?'+':'−')+f1(Math.abs(v));},who=off?'They':'Opponents',early=ng<10?' It’s '+numWord(ng)+' games, so treat it as an early sign.':'';
+  var sideTxt=off?'They’re scoring '+f1(R.ortg)+' points per 100 possessions, '+(R.ortg>=B.ortg?'up':'down')+' from '+f1(B.ortg)+'.':'They’re allowing '+f1(R.drtg)+' points per 100 possessions, '+(R.drtg<=B.drtg?'down':'up')+' from '+f1(B.drtg)+'.';
+  var p3T='';
+  if(SR)p3T=(off?'They':'Opponents')+' made '+pct1(SR.p3)+' of their threes over these '+ng+' games ('+SR.m3+' of '+SR.n3+'), compared with '+pct1(SB.p3)+' before. League average is '+pct1(LG)+'.';
+  var H={off:{up:{acc3:s.v==='LUCK'?'as their threes catch fire':s.v==='NORMAL'?'as their threes come back':'as their three-point shooting improves',acc2:'as more of their twos fall',accft:'as their free throw shooting improves',tov:'as their turnovers drop',oreb:'as their second chances grow',mix:SR&&SR.ftr-SB.ftr>=3?'as their trips to the line grow':'as their offense improves',unk:'as their offense improves',multi:'as their offense improves'},
+    dn:{acc3:s.v==='COLD'?'as their threes stop falling':s.v==='NORMAL'?'as their hot shooting cools':'as their three-point shooting dips',acc2:'as their twos stop falling',accft:'as their free throw shooting dips',tov:'as turnovers pile up',oreb:'as second chances dry up',mix:SR&&SB.ftr-SR.ftr>=3?'as trips to the line dry up':'as their offense stalls',unk:'as their offense stalls',multi:'as their offense stalls'}},
+    def:{up:{acc3:s.v==='NORMAL'?'as opponents’ hot shooting ends':SR&&SR.p3<=LG-CL.thot?'as opponents go cold from three':'as opponents miss more threes',acc2:'as opponents miss more twos',accft:'as opponents miss free throws',tov:'as they force more turnovers',oreb:'as opponents get fewer second chances',mix:SR&&SB.ftr-SR.ftr>=3?'as opponents get to the line less':'as their defense improves',unk:'as their defense improves',multi:'as their defense improves'},
+    dn:{acc3:s.v==='NORMAL'?'as opponents’ cold shooting ends':SR&&SR.p3>=LG+CL.thot?'as opponents heat up from three':'as opponents make more threes',acc2:'as opponents score inside the arc',accft:'as opponents make their free throws',tov:'as they force fewer turnovers',oreb:'as opponents grab second chances',mix:SR&&SR.ftr-SB.ftr>=3?'as opponents live at the line':'as their defense slips',unk:'as their defense slips',multi:'as their defense slips'}}};
+  o.h=nk+' '+act+' '+H[s.side][up?'up':'dn'][cz];
+  var D1={acc3:p3T,acc2:SR?who+' made '+pct1(SR.p2)+' of their two-point shots, compared with '+pct1(SB.p2)+' before.':'',accft:SR?who+' made '+pct1(SR.ftp)+' of their free throws ('+SR.mft+' of '+SR.nft+'), compared with '+pct1(SB.ftp)+' before.':'',
+    tov:SR?(off?'They’re committing ':'They’re forcing ')+f1(SR.tov)+' turnovers per 100 possessions, compared with '+f1(SB.tov)+' before.':'',oreb:SR?who+' are grabbing '+f1(SR.oreb)+' offensive rebounds per 100 possessions, compared with '+f1(SB.oreb)+' before.':'',
+    mix:SR?who+' are taking '+f1(SR.ftr)+' free throws per 100 shots and '+f0(SR.a3/(SR.a3+SR.a2)*100)+'% of their shots from three, compared with '+f1(SB.ftr)+' and '+f0(SB.a3/(SB.a3+SB.a2)*100)+'% before.':'',unk:'',multi:'No single part explains most of it.'};
+  o.k=sideTxt+' '+D1[cz];
+  if(off&&cz==='acc3'){o.k=sideTxt+' They’re making '+f1(R.tpm)+' threes a game at '+pct1(R.p3)+', '+(R.p3>=B.p3?'up':'down')+' from '+f1(B.tpm)+' at '+pct1(B.p3)+'. League average is '+pct1(LG)+'.';}
+  /* will it last: by the kind of cause */
+  var L={acc3:off?(s.v==='LUCK'?['How much is the threes?','Shooting this far above league average tends to cool.']:s.v==='COLD'?['How much is the threes?','Shooting this far below league average tends to recover.']:s.v==='NORMAL'?['Back to normal','Their three-point shooting was far from league average before and is close to it now, so this looks like a return to normal.']:['How much is the threes?','Their three-point percentage is within '+CL.thot+' points of league average, so it isn’t clearly hot or cold.'])
+      :(s.v==='NORMAL'?['Back to normal','Opponents’ three-point shooting was far from league average before and is close to it now. The earlier stretch was the outlier, so this is the level to expect.']:['Opponent shooting','Defenses have limited control over whether opponents’ threes go in, and opponents are '+(SR&&SR.p3>LG?'above':'below')+' league average right now, so this part of the swing tends to even out.']),
+    accft:off?['Will it last?','Free throw percentage over a few games swings a lot and usually drifts back to a team’s season mark.']:['Opponent shooting','A defense can’t control whether opponents make free throws, so this part is luck.'],
+    acc2:off?['Will it last?','Two-point shooting is steadier than three-point shooting, but a few games is still a small sample.']:['Will it last?','Two-point defense is more in a team’s control than opponent threes, but a few games is still a small sample.'],
+    tov:['Will it last?',off?'Taking care of the ball is more habit than luck, so this kind of change is more likely to hold.':'Forcing turnovers depends partly on the opponent, so check it against the schedule below.'],
+    oreb:['Will it last?','Rebounding is one of the steadier parts of the game, so this kind of change is more likely to hold.'],
+    mix:['Will it last?','This piece comes from which shots are taken and how often the '+(off?'team gets':'opponent gets')+' to the line, not from shots going in.'],
+    multi:['Several things at once','The change is spread across several parts of the '+(off?'offense':'defense')+' (listed above), so there’s no one thing to point to.'],
+    unk:['What we can’t see','We don’t have opponent box scores for every game in this stretch, so we can’t split the defensive change into parts.']}[cz];
+  o.h2=L[0];o.b2=(P&&cz!=='unk'&&cz!=='multi'?TPARTN[s.side][cz][up?0:1].charAt(0).toUpperCase()+TPARTN[s.side][cz][up?0:1].slice(1)+' is the biggest piece: about '+Math.round(s.share*100)+'% of everything pushing the '+(off?'offense':'defense')+' '+(up?'the right way':'the wrong way')+' ('+f1(Math.abs(P[cz]))+' points per 100 possessions). ':'')+L[1]+early;
+  o.watch={acc3:s.v==='NORMAL'||(SR&&Math.abs(SR.p3-LG)<CL.thot)?(off?'Their three-point shooting is near league average now, so watch the rest of the offense.':'Opponents’ three-point shooting is near league average now, so watch the points allowed per 100 possessions.'):off?'Watch what happens when their three-point shooting moves back toward '+f0(LG)+'%.':'Watch what happens when opponents’ three-point shooting moves back toward '+f0(LG)+'%.',acc2:'Watch the two-point percentage over the next week.',accft:'Watch whether the free throw percentage drifts back.',tov:'Watch the turnovers per 100 possessions.',oreb:'Watch the offensive rebounds per 100 possessions.',mix:'Watch the free throw rate.',unk:'Watch the points allowed per 100 possessions.',multi:off?'Watch the points scored per 100 possessions.':'Watch the points allowed per 100 possessions.'}[cz];
+  if(!s.flags)teamWhy(s);var fl=s.flags||{};
+  if(fl.sched)o.k+=' Their opponents were also '+(up?'weaker':'stronger')+' in this stretch.';if(fl.abs)o.k+=' '+fl.abs;
   o.lede='<b>The '+esc(teamOf(s.t).n)+' have gone '+R.w+'-'+R.l+' '+rec+'</b>, after starting '+B.w+'-'+B.l+'.'+(stk>ng&&(R.w===ng||R.l===ng)?' Counting earlier games, they’ve '+(lastWL==='W'?'won':'lost')+' '+stk+' straight.':'')+' Their net rating moved '+f1(Math.abs(s.dNet))+' points per 100 possessions '+(s.up?'in the right direction':'the wrong way')+'.';
-  o.nut='Offense went from '+f1(B.ortg)+' to '+f1(R.ortg)+' points per 100 possessions and defense from '+f1(B.drtg)+' to '+f1(R.drtg)+' allowed.';
+  var pl2=P?Object.keys(P).map(function(k){return {k:k,v:P[k]};}).filter(function(x){return Math.abs(x.v)>=0.8;}).sort(function(a,b){return Math.abs(b.v)-Math.abs(a.v);}).slice(0,4):[];
+  o.nut='Offense went from '+f1(B.ortg)+' to '+f1(R.ortg)+' points per 100 possessions and defense from '+f1(B.drtg)+' to '+f1(R.drtg)+' allowed. The bigger move was on '+(off?'offense':'defense')+'.'
+    +(pl2.length?' Where it came from, in points per 100 possessions: '+pl2.map(function(x){return sg(x.v)+' from '+TPARTN[s.side][x.k][x.v>0?0:1];}).join(', ')+'.':'');
   o.ksx=s.kind==='shoot'?[{l:'3-point percentage',a:R.p3,b:B.p3,good:1,pc:1,k:'p3'},{l:'Made threes per game',a:R.tpm,b:B.tpm,good:1,k:'tpm'},{l:'Share of points from threes',a:R.sh3,b:B.sh3,good:null,pc:1},{l:'Record',txt:R.w+'-'+R.l,sub:B.w+'-'+B.l+' before'}]
     :[s.kind==='def'?{l:'Points allowed per 100 possessions',a:R.drtg,b:B.drtg,good:0,k:'drtg'}:{l:'Points scored per 100 possessions',a:R.ortg,b:B.ortg,good:1,k:'ortg'},{l:'Net rating per 100 possessions',a:R.net,b:B.net,good:1,sg:1,k:'net'},{l:'Record',txt:R.w+'-'+R.l,sub:B.w+'-'+B.l+' before'}];
   o.dmx=s.kind==='shoot'?[{l:'3-point %',u:'share of threes made',b:B.p3,a:R.p3,good:1,pc:1,k:'p3'},{l:'Made threes',u:'per game',b:B.tpm,a:R.tpm,good:1,k:'tpm'},{l:'Share of points from threes',u:'% of their points',b:B.sh3,a:R.sh3,good:null,pc:1},{l:'Offense',u:'points per 100 possessions',b:B.ortg,a:R.ortg,good:1,k:'ortg'},{l:'Defense',u:'points allowed per 100',b:B.drtg,a:R.drtg,good:0,k:'drtg'}]:[{l:'Offense',u:'points per 100 possessions',b:B.ortg,a:R.ortg,good:1,k:'ortg'},{l:'Defense',u:'points allowed per 100',b:B.drtg,a:R.drtg,good:0,k:'drtg'},{l:'3-point %',u:'share of threes made',b:B.p3,a:R.p3,good:1,pc:1,k:'p3'},{l:'Turnovers',u:'per 100 possessions',b:B.tov,a:R.tov,good:0,k:'tov'}];
@@ -2890,16 +3020,16 @@ function quadCharts(){
   var pc=function(v){return Math.round(v)+'%';},n1=function(v){return f1(v);};
   var C=[
    {id:'tod',k:'t',tab:'Team offense vs defense',h:'Good at both ends',d:'Offense and defense, per 100 possessions.',gx:function(r){return r.a.ortg;},gy:function(r){return r.a.drtg;},invY:1,xl:'Offense: points scored per 100 possessions (more →)',yl:'Defense: points allowed per 100 (fewer ↑)',xs:'scores more',ys:'allows fewer',quad:['GOOD DEFENSE, WEAK OFFENSE','GOOD AT BOTH','WEAK AT BOTH','GOOD OFFENSE, WEAK DEFENSE'],qc:['n','g','r','n'],tx:function(v){return 'scores '+f1(v)+' per 100';},ty:function(v){return 'allows '+f1(v);}},
-   {id:'t3',k:'t',tab:'Team threes',h:'Shoot a lot and make a lot',d:'Three-point attempts per game against three-point percentage.',gx:function(r){return r.a.tpa;},gy:function(r){return r.a.p3;},fy:pc,xl:'Three-point attempts per game (more →)',yl:'Three-point % (higher ↑)',xs:'takes more threes',ys:'makes a bigger share',quad:['ACCURATE, FEW THREES','SHOOT A LOT + MAKE A LOT','COLD, FEW THREES','SHOOT A LOT, MISS A LOT'],qc:['n','g','r','n'],tx:function(v){return f1(v)+' attempts a game';},ty:function(v){return f1(v)+'% made';}},
+   {id:'t3',k:'t',tab:'Team threes',h:'Shoot a lot and make a lot',d:'Three-point attempts per game against three-point percentage.',gx:function(r){return r.a.tpa;},gy:function(r){return r.a.p3;},fy:pc,xl:'Three-point attempts per game (more →)',yl:'Three-point % (higher ↑)',xs:'takes more threes',ys:'makes a bigger share',quad:['ACCURATE, FEW THREES','SHOOT A LOT + MAKE A LOT','LOW %, FEW THREES','SHOOT A LOT, MISS A LOT'],qc:['n','g','r','n'],tx:function(v){return f1(v)+' attempts a game';},ty:function(v){return f1(v)+'% made';}},
    {id:'tpos',k:'t',tab:'Extra possessions',h:'Win the possession battle',d:'Teams that protect the ball and grab their own misses get more shots than their opponents.',gx:function(r){return r.a.oreb;},gy:function(r){return r.a.tov;},invY:1,xl:'Offensive rebounds per game (more →)',yl:'Turnovers per 100 possessions (fewer ↑)',xs:'grabs more of its own misses',ys:'turns it over less',quad:['CAREFUL, FEW SECOND CHANCES','CAREFUL + CRASH THE GLASS','LOOSE, FEW SECOND CHANCES','LOOSE, CRASH THE GLASS'],qc:['n','g','r','n'],tx:function(v){return f1(v)+' offensive rebounds a game';},ty:function(v){return f1(v)+' turnovers per 100';}},
    {id:'tpace',k:'t',tab:'Pace vs results',h:'Fast and winning',best:1,d:'How fast a team plays against how much it outscores opponents.',gx:function(r){return r.a.pace;},gy:function(r){return r.a.net;},xl:'Pace: possessions per game (faster →)',yl:'Net rating per 100 possessions (better ↑)',xs:'plays faster',ys:'outscores opponents by more',quad:['SLOW AND WINNING','FAST AND WINNING','SLOW AND LOSING','FAST AND LOSING'],qc:['n','n','n','n'],tx:function(v){return f1(v)+' possessions a game';},ty:function(v){return (v>0?'+':'')+f1(v)+' net per 100';}},
    {id:'pts',k:'p',tab:'Role vs efficiency',h:'Big role and efficient',d:'Usage rate is the share of his team’s plays a player finishes. True shooting counts threes and free throws.',gx:function(r){return r.p['USG%']*100;},gy:function(r){return r.p['TS%']*100;},fy:pc,xl:'Usage rate (% of team plays he finishes)',yl:'True shooting % (higher ↑)',xs:'finishes more of his team’s plays',ys:'scores more efficiently',quad:['EFFICIENT, SMALL ROLE','BIG ROLE + EFFICIENT','SMALL ROLE, INEFFICIENT','BIG ROLE, INEFFICIENT'],qc:['n','g','r','n'],tx:function(v){return f1(v)+'% usage';},ty:function(v){return f1(v)+'% true shooting';}},
-   {id:'p3',k:'p',tab:'Player threes',h:'Shoots a lot and makes a lot',f:'2+ three-point attempts a game',filt:function(r){return r.p['3PA_PG']>=2;},d:'Three-point attempts per game against three-point percentage.',gx:function(r){return r.p['3PA_PG'];},gy:function(r){return r.p['3P%']*100;},fy:pc,xl:'Three-point attempts per game (more →)',yl:'Three-point % (higher ↑)',xs:'takes more threes',ys:'makes a bigger share',quad:['ACCURATE, FEW THREES','SHOOTS A LOT + MAKES A LOT','COLD, FEW THREES','SHOOTS A LOT, MISSES A LOT'],qc:['n','g','r','n'],tx:function(v){return f1(v)+' attempts a game';},ty:function(v){return f1(v)+'% made';}},
-   {id:'onoff',k:'p',tab:'On/off impact',h:'Their teams win only when they play',best:0,zero:1,f:'enough minutes on and off the floor',filt:function(r){return r.p.ON_MIN>=150&&r.p.OFF_MIN>=60&&r.p.ON_NET!=null&&r.p.OFF_NET!=null;},d:'Net rating = points per 100 possessions his team outscores opponents by.',gx:function(r){return r.p.OFF_NET;},gy:function(r){return r.p.ON_NET;},xl:'Team net rating with him OFF the floor (better →)',yl:'Team net rating with him ON the floor (better ↑)',xs:'his team is good even when he sits',ys:'his team is better while he plays',quad:['BETTER ONLY WITH HIM','GOOD EITHER WAY','BAD EITHER WAY','BETTER WITHOUT HIM'],qc:['g','n','n','r'],tx:function(v){return (v>0?'+':'')+f1(v)+' with him off';},ty:function(v){return (v>0?'+':'')+f1(v)+' with him on';}},
+   {id:'p3',k:'p',tab:'Player threes',h:'Shoots a lot and makes a lot',f:'2+ three-point attempts a game',filt:function(r){return r.p['3PA_PG']>=2;},d:'Three-point attempts per game against three-point percentage.',gx:function(r){return r.p['3PA_PG'];},gy:function(r){return r.p['3P%']*100;},fy:pc,xl:'Three-point attempts per game (more →)',yl:'Three-point % (higher ↑)',xs:'takes more threes',ys:'makes a bigger share',quad:['ACCURATE, FEW THREES','SHOOTS A LOT + MAKES A LOT','LOW %, FEW THREES','SHOOTS A LOT, MISSES A LOT'],qc:['n','g','r','n'],tx:function(v){return f1(v)+' attempts a game';},ty:function(v){return f1(v)+'% made';}},
+   {id:'onoff',k:'p',tab:'On/off impact',h:'Their teams are better with them on the floor',best:0,zero:1,f:'enough minutes on and off the floor',filt:function(r){return r.p.ON_MIN>=150&&r.p.OFF_MIN>=60&&r.p.ON_NET!=null&&r.p.OFF_NET!=null;},d:'Net rating = points per 100 possessions his team outscores opponents by. On/off numbers also depend on teammates and are noisy this early.',gx:function(r){return r.p.OFF_NET;},gy:function(r){return r.p.ON_NET;},xl:'Team net rating with him OFF the floor (better →)',yl:'Team net rating with him ON the floor (better ↑)',xs:'his team is good even when he sits',ys:'his team is better while he plays',quad:['BETTER ONLY WITH HIM','GOOD EITHER WAY','BAD EITHER WAY','BETTER WITHOUT HIM'],qc:['g','n','n','r'],tx:function(v){return (v>0?'+':'')+f1(v)+' with him off';},ty:function(v){return (v>0?'+':'')+f1(v)+' with him on';}},
    {id:'pass',k:'p',tab:'Role vs playmaking',h:'Big-role playmakers',d:'Assist rate is the share of teammates’ baskets he set up while on the floor.',gx:function(r){return r.p['USG%']*100;},gy:function(r){return r.p['AST%']*100;},fy:pc,xl:'Usage rate (% of team plays he finishes)',yl:'Assist rate % (higher ↑)',xs:'finishes more of his team’s plays',ys:'sets up more teammate baskets',quad:['PASS-FIRST, SMALLER ROLE','BIG ROLE, PLAYMAKER','SMALL ROLE, FEW ASSISTS','BIG ROLE, SCORER FIRST'],qc:['n','g','n','n'],tx:function(v){return f1(v)+'% usage';},ty:function(v){return f1(v)+'% assist rate';}},
    {id:'tov',k:'p',tab:'Role vs turnovers',h:'Big role, still careful',d:'Turnovers usually rise with the ball in your hands. The best avoid that.',gx:function(r){return r.p['USG%']*100;},gy:function(r){return r.p.TOV_PG;},invY:1,xl:'Usage rate (% of team plays he finishes)',yl:'Turnovers per game (fewer ↑)',xs:'finishes more of his team’s plays',ys:'fewer turnovers',quad:['SMALL ROLE, CAREFUL','BIG ROLE, CAREFUL','SMALL ROLE, CARELESS','BIG ROLE, CARELESS'],qc:['n','g','r','n'],tx:function(v){return f1(v)+'% usage';},ty:function(v){return f1(v)+' turnovers a game';}},
-   {id:'reb',k:'p',tab:'Rebounds vs assists',h:'Do-it-all players',d:'Rebounds and assists per game. Top right fills the box score.',gx:function(r){return r.p.TRB_PG;},gy:function(r){return r.p.AST_PG;},xl:'Rebounds per game (more →)',yl:'Assists per game (more ↑)',xs:'more rebounds',ys:'more assists',quad:['PLAYMAKER','DOES IT ALL','LIGHT BOX SCORE','REBOUNDER'],qc:['n','g','n','n'],tx:function(v){return f1(v)+' rebounds';},ty:function(v){return f1(v)+' assists';}},
-   {id:'hus',k:'p',tab:'Defensive activity',h:'Active on defense',d:'Deflections (tipped passes and dribbles) and contested shots, both per 36 minutes.',filt:function(r){return r.p.DEFL36!=null&&r.p.CONT36!=null;},gx:function(r){return r.p.DEFL36;},gy:function(r){return r.p.CONT36;},xl:'Deflections per 36 minutes (more →)',yl:'Contested shots per 36 minutes (more ↑)',xs:'gets more hands on the ball',ys:'contests more shots',quad:['SHOT CONTESTER','ACTIVE EVERYWHERE','QUIET ON DEFENSE','PASSING-LANE HAWK'],qc:['n','g','r','n'],tx:function(v){return f1(v)+' deflections per 36';},ty:function(v){return f1(v)+' contests per 36';}},
+   {id:'reb',k:'p',tab:'Rebounds vs assists',h:'Rebounders who also pass',d:'Rebounds and assists per game. Top right does both.',gx:function(r){return r.p.TRB_PG;},gy:function(r){return r.p.AST_PG;},xl:'Rebounds per game (more →)',yl:'Assists per game (more ↑)',xs:'more rebounds',ys:'more assists',quad:['PLAYMAKER','REBOUNDS + PASSES','FEWER OF BOTH','REBOUNDER'],qc:['n','g','n','n'],tx:function(v){return f1(v)+' rebounds';},ty:function(v){return f1(v)+' assists';}},
+   {id:'hus',k:'p',tab:'Defensive activity',h:'Active on defense',d:'Deflections (tipped passes and dribbles) and contested shots, both per 36 minutes.',filt:function(r){return r.p.DEFL36!=null&&r.p.CONT36!=null;},gx:function(r){return r.p.DEFL36;},gy:function(r){return r.p.CONT36;},xl:'Deflections per 36 minutes (more →)',yl:'Contested shots per 36 minutes (more ↑)',xs:'gets more hands on the ball',ys:'contests more shots',quad:['SHOT CONTESTER','ACTIVE EVERYWHERE','FEWER HUSTLE PLAYS','PASSING-LANE HAWK'],qc:['n','g','n','n'],tx:function(v){return f1(v)+' deflections per 36';},ty:function(v){return f1(v)+' contests per 36';}},
    {id:'shot',k:'p',tab:'Open vs tight shots',h:'Makes them open and contested',f:'25+ open and 25+ tightly guarded shots',filt:function(r){return r.p.openFGA>=25&&r.p.tightFGA>=25;},d:'Effective field goal % (threes count extra) on open shots against shots with a defender close.',gx:function(r){return r.p.openEFG*100;},gy:function(r){return r.p.tightEFG*100;},fx:pc,fy:pc,xl:'Open shots: effective FG % (higher →)',yl:'Tightly guarded shots: effective FG % (higher ↑)',xs:'better on open looks',ys:'better with a defender close',quad:['TOUGH-SHOT MAKER','MAKES EVERYTHING','STRUGGLING EITHER WAY','NEEDS SPACE'],qc:['n','g','r','n'],tx:function(v){return f1(v)+'% open';},ty:function(v){return f1(v)+'% tightly guarded';}}
   ];
   var built=C.map(function(c){var rows=(c.k==='t'?T_:P_).filter(function(r){return !c.filt||c.filt(r);});if(rows.length<(c.k==='t'?20:30))return null;return {c:c,h:qBuild(c,rows,c.k)};}).filter(Boolean);
@@ -2909,7 +3039,7 @@ function quadCharts(){
 }
 document.addEventListener('click',function(e){var b=e.target.closest('[data-qc]');if(b){var el=document.getElementById('qc-'+b.dataset.qc);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});}});
 function buildTrends(){
-  var h='<div class="xp tr2">'+trHeader(),need=TRW==='season'?6:+TRW+3;
+  var h='<div class="xp tr2">'+trHeader(),need=TRW==='season'?10:+TRW+5;
   if(!Object.keys(GL).length){$('vTrends').innerHTML=h+'<div class="tr-empty">Trends need game logs, which arrive with the next stats update.</div></div>';return;}
   var ps_=playerStories().map(function(s){s.w=pWrite(s);return s;}),ts=teamStories().map(function(s){s.w=tWrite(s);return s;});
   var empty='<div class="tr-empty">Not enough games yet for this view. It starts once teams have played '+need+' games. Try Last 5.</div>';
@@ -2991,7 +3121,7 @@ function relStories(skip){
   return '<div class="ar-more"><h2 class="x-h2 st-sh">More stories</h2><div class="ar-rel">'+all.map(function(o){var vv=VERD[o.v];return '<a href="'+stHref(o)+'">'+(o.p?pbx(o.p,'rl'):tbx(o.t,'rl'))+'<div class="rl-t"><span class="kick '+vv[2]+'">'+vv[0]+'</span><b>'+esc(o.w.h)+'</b><span class="rl-n">'+esc(o.p?o.p.Player+' · '+nick(o.p.Team):teamOf(o.t).n)+'</span></div></a>';}).join('')+'</div></div>';
 }
 /* ---------- ladder: where they ranked before vs now, with the 10 closest on each side ---------- */
-var RKL={drtg:'defense',ortg:'offense',net:'net rating',p3:'3-point shooting',tpm:'made threes',tov:'ball security',pts:'scoring',ts:'true shooting',usg:'usage rate',pra:'points + rebounds + assists',min:'minutes',ast:'assists',astp:'assist rate',fta:'free throw attempts'};
+var RKL={reb:'rebounding',p2:'2-point shooting',fga:'shot attempts',drtg:'defense',ortg:'offense',net:'net rating',p3:'3-point shooting',tpm:'made threes',tov:'ball security',pts:'scoring',ts:'true shooting',usg:'usage rate',pra:'points + rebounds + assists',min:'minutes',ast:'assists',astp:'assist rate',fta:'free throw attempts'};
 function ladderRows(kind,k,which){var L=rkPool(kind)[which].filter(function(x){return x[k]!=null&&(k!=='p3'||x.tpa>=2)&&(k!=='ts'||x.fga>=6);}).map(function(x){return {x:x,v:x[k]};});
   L.sort(function(a,b){return LOWB[k]?a.v-b.v:b.v-a.v;});L.forEach(function(z,i){z.r=i&&Math.abs(z.v-L[i-1].v)<1e-9?L[i-1].r:i+1;});return L;}
 function chLadder(kind,rows,id,nb){
@@ -3015,6 +3145,7 @@ function chLadder(kind,rows,id,nb){
 var WHYV={L:'Likely a factor',S:'Small factor',N:'Not the reason',C:'Who’s on the floor'};
 function wx(pic,a,b,cls){return '<span class="wx">'+pic+'<b>'+a+'</b><em class="'+(cls||'')+'">'+b+'</em></span>';}
 function teamWhy(s){
+  s.flags={};
   var t=s.t,N=nick(t),TN='The '+N,pri=s.sp.pri,rec=s.sp.rec,np=pri.length,nr=rec.length,def=s.kind==='def',up=s.up,A=allTeamAgg(),cards=[];
   var hs=function(p){return '<span class="ld-hs" style="background:'+teamOf(p.Team).c+'">'+img(headSm(p.nba_id),'')+'</span>';};
   var lastW=TRW==='season'?'second-half':'last '+nr,firstW=TRW==='season'?'first-half':'first '+np;
@@ -3023,6 +3154,7 @@ function teamWhy(s){
   var oppAvg=function(gs){var v=gs.map(function(o){var a=A[ab(o)];return a?a.net:null;}).filter(function(v){return v!=null;});return v.length?avg(v):null;};
   var ob=oppAvg(pri),oa=oppAvg(rec),sgn=function(v){return (v>0?'+':v<0?'−':'')+f1(Math.abs(v));};
   if(ob!=null&&oa!=null){var easier=oa<ob,dif=Math.abs(oa-ob),helps=easier===up,v=helps&&dif>=3?'L':helps&&dif>=1.5?'S':'N';
+    if(v==='L')s.flags.sched=1;
     cards.push({v:v,t:v==='N'?'Not the schedule':(easier?'Easier schedule':'Tougher schedule'),
       p:'Their '+lastW+' opponents have an average season net rating of '+sgn(oa)+' points per 100 possessions, compared with '+sgn(ob)+' for their '+firstW+' (0 is an average team). '+(dif<1.5?'About the same level of competition, so the schedule doesn’t explain it.':(easier?'They’ve been playing weaker teams':'They’ve been playing stronger teams')+(v==='N'?', which works against the change, so it isn’t the reason.':', which explains part of the change.')),
       x:rec.slice().reverse().map(function(o){var a=A[ab(o)];if(!a)return '';var rr=rkOne(all,'net',a.net);return wx(img(logoT(ab(o)),'wx-lg'),ab(o),sgn(a.net)+(rr?' · '+ordn(rr.r):''),a.net>=0?'':'');}).join(''),
@@ -3030,9 +3162,9 @@ function teamWhy(s){
   /* 2. opponent three-point shooting (needs box scores) */
   var o3=function(gs){var m=0,a=0,ok=0;gs.forEach(function(o){if(o.ob){m+=o.ob[2];a+=o.ob[3];ok++;}});return ok===gs.length&&a?m/a*100:null;};
   var pb=o3(pri),pa=o3(rec);
-  if(def&&pb!=null&&pa!=null){var lg3_=lg3(),d3=pa-pb,helps3=up?d3<0:d3>0,v3=helps3&&Math.abs(d3)>=4?'L':helps3&&Math.abs(d3)>=2?'S':'N';
-    cards.push({v:v3,t:v3==='N'?'Not opponent shooting luck':(up?'Opponents missing threes':'Opponents making threes'),
-      p:'Opponents made '+f1(pa)+'% of their threes in the '+lastW+', compared with '+f1(pb)+'% in the '+firstW+' (league average '+f1(lg3_)+'%). '+(v3==='N'?'That isn’t a big enough swing to explain it.':'Defenses have limited control over whether open threes go in, so some of this is likely luck that could even out.'),
+  if(def&&pb!=null&&pa!=null){var lg3_=lg3(),d3=pa-pb,helps3=up?d3<0:d3>0,v3=helps3&&Math.abs(d3)>=4?'L':helps3&&Math.abs(d3)>=2?'S':'N',nowFar=Math.abs(pa-lg3_)>=CL.thot,against=!helps3&&Math.abs(d3)>=2;
+    cards.push({v:v3,t:against?(d3>0?'Opponents shot better, and it didn’t matter':'Opponents shot worse, and it didn’t matter'):v3==='N'?'Not opponent shooting':(up?'Opponents missing threes':'Opponents making threes'),
+      p:'Opponents made '+f1(pa)+'% of their threes in the '+lastW+', compared with '+f1(pb)+'% in the '+firstW+' (league average '+f1(lg3_)+'%). '+(against?'That moved against the change, so the defense '+(up?'improved in spite of it.':'slipped in spite of it.'):v3==='N'?'That isn’t a big enough swing to explain it.':nowFar?'Defenses have limited control over whether threes go in, and opponents are far from league average right now, so some of this could even out.':'Opponents are close to league average now. The earlier stretch was the unusual one, so this is the level to expect.'),
       x:wx('','Before',f1(pb)+'%')+wx('','Now',f1(pa)+'%',helps3===up?'g':'r')+wx('','League',f1(lg3_)+'%')});}
   /* 3. absences, then rotation choices among players who suited up */
   var mates=D.filter(function(p){return p.Team===t&&GL[String(p.nba_id)];});
@@ -3042,28 +3174,30 @@ function teamWhy(s){
   var out=rot.filter(function(z){return z.b.mp>=15&&z.b.gp>=Math.min(2,np)&&nr-z.a.gp>=Math.max(2,Math.ceil(nr*0.4));}).sort(function(x,y){return y.b.mp-x.b.mp;});
   var back=rot.filter(function(z){return z.a.mp>=15&&z.a.gp>=Math.max(2,nr-1)&&np-z.b.gp>=Math.max(2,Math.ceil(np*0.5));});
   if(out.length||back.length){var vo=up?(back.length&&back[0].a.mp>=24?'L':back.length?'S':'N'):(out[0]&&out[0].b.mp>=24?'L':out.length?'S':'N');
-    var outTxt=out.map(function(z){var N2=lastName(z.p.Player),miss=nr-z.a.gp;return N2+' (averaged '+f1(z.b.mp)+' minutes) has missed '+miss+' of the '+lastW+' games'+(z.a.gp===0||!playedLast(z.p)?' and is still out, most likely injured':'');});
+    var outTxt=out.map(function(z){var N2=lastName(z.p.Player),miss=nr-z.a.gp;return N2+' (averaged '+f1(z.b.mp)+' minutes) has missed '+miss+' of the '+lastW+' games'+(z.a.gp===0||!playedLast(z.p)?' and didn’t play in the latest one':'');});
     var backTxt=back.map(function(z){return lastName(z.p.Player)+' is back, playing '+f1(z.a.mp)+' minutes a game after missing '+(np-z.b.gp)+' of the '+firstW+' games';});
-    cards.push({v:vo,t:up?(back.length?'Getting players back':'Winning without key players'):'Missing key players',
+    if(vo==='L')s.flags.abs=(out.length?listNames(out.map(function(z){return {q:z.p};}))+' missed time in this stretch.':'')+(back.length?(out.length?' ':'')+listNames(back.map(function(z){return {q:z.p};}))+(back.length>1?' are':' is')+' back.':'');
+    cards.push({v:vo,t:out.length&&back.length?'Who’s in and out':back.length?'Getting players back':up?'Winning without key players':'Missing key players',
       p:outTxt.concat(backTxt).slice(0,3).join('. ')+'. '+(up&&out.length&&!back.length?'They’ve improved despite the absences, so this doesn’t explain the jump.':'Who’s available is often the biggest reason a team’s numbers swing.')+' (Absences come from box scores. Our data doesn’t include official injury reasons.)',
       x:out.map(function(z){return wx(hs(z.p),esc(lastName(z.p.Player)),'Out '+(nr-z.a.gp)+' of '+nr,'r');}).concat(back.map(function(z){return wx(hs(z.p),esc(lastName(z.p.Player)),'Back','g');})).join(''),xl:'Availability in the '+lastW+' games'});}
   var OUT={};out.concat(back).forEach(function(z){OUT[z.p.nba_id]=1;});
   var mov=rot.filter(function(z){return !OUT[z.p.nba_id]&&z.a.gp>=Math.max(1,nr-1)&&z.b.gp>=Math.max(1,np-1)&&Math.abs(z.a.mp-z.b.mp)>=5;}).sort(function(x,y){return Math.abs(y.a.mp-y.b.mp)-Math.abs(x.a.mp-x.b.mp);}).slice(0,4);
   var vr=mov.some(function(z){return Math.abs(z.a.mp-z.b.mp)>=8&&Math.max(z.a.mp,z.b.mp)>=20;})?'L':mov.length?'S':'N';
   var ph=function(z){return lastName(z.p.Player)+' is playing '+f1(z.a.mp)+' minutes a game, '+(z.a.mp>z.b.mp?'up':'down')+' from '+f1(z.b.mp);};
-  cards.push({v:vr,t:vr==='N'?'Same rotation':'Rotation changes',
-    p:vr==='N'?'Among players who suited up, nobody’s minutes moved more than 5 a game.':ph(mov[0])+(mov[1]?', and '+ph(mov[1]):'')+'. These are coaching choices, not absences, and new lineups often change a team’s results.',
+  var anyOut=out.length||back.length;
+  cards.push({v:vr,t:vr==='N'?(anyOut?'No other rotation changes':'Same rotation'):'Rotation changes',
+    p:vr==='N'?'Among players who suited up for nearly every game, nobody’s minutes moved more than 5 a game.':ph(mov[0])+(mov[1]?', and '+ph(mov[1]):'')+'. '+(anyOut?'With teammates in and out of the lineup, some of this is filling in.':'Nobody in the rotation missed much time, so these look like coaching choices.')+' Blowouts and foul trouble move minutes for a few games too.',
     x:mov.map(function(z){var d=z.a.mp-z.b.mp;return wx(hs(z.p),esc(lastName(z.p.Player)),(d>0?'+':'−')+f1(Math.abs(d))+' min');}).join(''),xl:mov.length?'Change in minutes per game played':''});
   /* 4. who's on the floor for it: plus-minus swings */
   var pmv=rot.filter(function(z){return z.a.gp>=2&&z.b.gp>=2&&z.a.mp>=12;}).sort(function(x,y){return up?(y.a.pm-y.b.pm)-(x.a.pm-x.b.pm):(x.a.pm-x.b.pm)-(y.a.pm-y.b.pm);}).slice(0,3);
   if(pmv.length){var z0=pmv[0],sg=function(v){return (v>0?'+':v<0?'−':'')+f1(Math.abs(v));};
     cards.push({v:'C',t:(up?'Biggest plus-minus jumps':'Biggest plus-minus drops'),
-      p:TN+' are '+sg(z0.a.pm)+' per game with '+lastName(z0.p.Player)+' on the floor in the '+lastW+', compared with '+sg(z0.b.pm)+' before.'+(def?' His steals + blocks went from '+f1(z0.b.sb)+' to '+f1(z0.a.sb)+' a game.':'')+' Plus-minus is noisy over a few games, but it shows who was out there when it turned.',
+      p:TN+' are '+sg(z0.a.pm)+' per game with '+lastName(z0.p.Player)+' on the floor in the '+lastW+', compared with '+sg(z0.b.pm)+' before. Plus-minus is noisy over a few games and depends on who else is on the floor, so read it as who was out there, not who caused it.',
       x:pmv.map(function(z){return wx(hs(z.p),esc(lastName(z.p.Player)),sg(z.b.pm)+' → '+sg(z.a.pm),(z.a.pm>z.b.pm)?'g':'r');}).join(''),xl:'Plus-minus per game, before → now'});}
   /* 5. home and road */
-  var hm=function(gs){return gs.filter(function(o){return /^vs/.test(o.o);}).length;},ha=hm(rec),hb=hm(pri),dh=ha/nr-hb/np,vh=(up?dh:-dh)>=0.4?'S':'N';
-  cards.push({v:vh,t:vh==='N'?'Not home vs road':(dh>0?'More home games':'More road games'),
-    p:ha+' of their '+lastW+' games were at home, compared with '+hb+' of their '+firstW+'. '+(vh==='N'?'The home/road mix didn’t shift enough to matter.':'Home court usually helps a little, so this is a small piece of it.'),x:''});
+  var hm=function(gs){return gs.filter(function(o){return /^vs/.test(o.o);}).length;},ha=hm(rec),hb=hm(pri),dh=ha/nr-hb/np,hh=(up?dh:-dh),vh=hh>=0.25?'S':'N';
+  cards.push({v:vh,t:Math.abs(dh)<0.25?'Not home vs road':(dh>0?'More home games':'More road games'),
+    p:ha+' of their '+lastW+' games '+(ha===1?'was':'were')+' at home, compared with '+hb+' of their '+firstW+'. '+(Math.abs(dh)<0.25?'The home/road mix didn’t shift enough to matter.':hh>0?'Home court usually helps a little, so this is a small piece of it.':'That works against the change, so it isn’t the reason.'),x:''});
   var ord={L:0,S:1,C:2,N:3};cards.sort(function(a,b){return ord[a.v]-ord[b.v];});
   return '<section class="why"><h2 class="ar-h2">What’s behind it</h2><p class="ar-p">We checked the usual explanations for a swing like this. Here’s what the numbers say about each one.</p><div class="why-g">'
     +cards.map(function(c){return '<div class="why-c v-'+c.v+'"><span class="why-v">'+WHYV[c.v]+'</span><b class="why-t">'+esc(c.t)+'</b><p>'+esc(c.p)+'</p>'+(c.x?(c.xl?'<div class="why-xl">'+esc(c.xl)+'</div>':'')+'<div class="why-x">'+c.x+'</div>':'')+'</div>';}).join('')+'</div></section>';
@@ -3126,9 +3260,10 @@ function showBigNight(key){
   if(!x){$('vStory').innerHTML=h+'<div class="tr-empty">Game not found.</div></div></div>';return;}
   var n=g.length,av=function(i){return g.reduce(function(s,y){return s+y[i];},0)/n;},hi=x[4]>=Math.max.apply(null,g.map(function(y){return y[4];}))&&n>=3,N=lastName(p.Player),opp=teamOf(x[1].split(' ').pop()).n;
   var fgp=x[11]?x[10]/x[11]*100:0,sfg=av(11)?av(10)/av(11)*100:0;
-  h+='<div class="kick g">Big night · '+esc(nick(p.Team))+'</div><h1 class="ar-h">'+esc(bnHead(p,x))+'</h1><p class="ar-dek">'+(hi?'His most points this season':'One of his best games this season')+', on '+x[10]+'-of-'+x[11]+' shooting'+(x[15]>=10?' with '+x[14]+'-of-'+x[15]+' from the line':'')+'. The '+esc(nick(p.Team))+' '+(x[2]==='W'?'won':'lost')+'.</p>'+byline(x[0]+' '+x[1],p);
+  var prk=g.filter(function(y){return y[4]>x[4];}).length+1;
+  h+='<div class="kick g">Big night · '+esc(nick(p.Team))+'</div><h1 class="ar-h">'+esc(bnHead(p,x))+'</h1><p class="ar-dek">'+(hi?'His most points this season':'His '+ordn(prk)+'-highest scoring game of '+n+' this season')+', on '+x[10]+'-of-'+x[11]+' shooting'+(x[15]>=10?' with '+x[14]+'-of-'+x[15]+' from the line':'')+'. The '+esc(nick(p.Team))+' '+(x[2]==='W'?'won':'lost')+'.</p>'+byline(x[0]+' '+x[1],p);
   h+=bigCard(p,x);
-  h+='<p class="ar-p"><b>'+esc(p.Player)+' scored '+x[4]+' points '+oppName(x[1])+' on '+x[0]+'</b>, '+(x[4]>av(4)?f1(x[4]-av(4))+' more than his season average of '+f1(av(4)):'')+'. He added '+x[5]+' rebounds and '+x[6]+' assists in '+x[3]+' minutes.</p>';
+  h+='<p class="ar-p"><b>'+esc(p.Player)+' scored '+x[4]+' points '+oppName(x[1])+' on '+x[0]+'</b>'+(x[4]>av(4)?', '+f1(x[4]-av(4))+' more than his season average of '+f1(av(4)):', against a season average of '+f1(av(4)))+'. He added '+x[5]+' rebounds and '+x[6]+' assists in '+x[3]+' minutes.</p>';
   var sm=window.innerWidth<700;
   h+='<div class="fg-a ar-fig">'+chTape('<b>'+x[0]+'</b><span>'+esc(x[1])+'</span>','<b>Season</b><span>average, '+n+' games</span>',[
     {l:'POINTS',a:x[4],b:av(4),fa:x[4],fb:f1(av(4)),good:1},{l:'REBOUNDS',a:x[5],b:av(5),fa:x[5],fb:f1(av(5)),good:1},{l:'ASSISTS',a:x[6],b:av(6),fa:x[6],fb:f1(av(6)),good:1},
@@ -3219,17 +3354,17 @@ function teamThreeScatter(t,s){
   if(pts.length<6)return '';
   var N=nick(t),rk=rankIn(s.R.p3,yy,1);
   return scatFig('The '+N+' made '+f1(s.R.p3)+'% of their threes over the '+trLab().toLowerCase()+', '+ordn(rk)+' in the NBA',(s.R.p3>=s.B.p3?'Up':'Down')+' from '+f1(s.B.p3)+'% before. Each logo is a team’s '+trLab().toLowerCase()+'. Further right = takes more threes per game; higher = makes a bigger share of them. Dashed lines = league average. The arrow shows the '+N+' before → now.',
-    chScatter({pts:pts,xl:'Three-point attempts per game (more →)',yl:'Three-point % (higher ↑)',avg:[avg(xx),avg(yy)],quad:['ACCURATE, FEW THREES','SHOOT A LOT + MAKE A LOT','COLD, FEW THREES','SHOOT A LOT, MISS A LOT'],qc:['n','g','r','n'],fy:function(v){return Math.round(v)+'%';},
+    chScatter({pts:pts,xl:'Three-point attempts per game (more →)',yl:'Three-point % (higher ↑)',avg:[avg(xx),avg(yy)],quad:['ACCURATE, FEW THREES','SHOOT A LOT + MAKE A LOT','LOW %, FEW THREES','SHOOT A LOT, MISS A LOT'],qc:['n','g','r','n'],fy:function(v){return Math.round(v)+'%';},
       arrow:{x1:s.B.tpa,y1:s.B.p3,x2:s.R.tpa,y2:s.R.p3,logo:logoT(t),tip:N+' before: '+f1(s.B.tpa)+' three-point attempts per game, '+f1(s.B.p3)+'% made'}}));
 }
 /* league backdrop (season) + this player's move from before to now */
 function playerScatter(s){
-  var p=s.p,R=s.R,B=s.B,N=lastName(p.Player),v=s.v,d=s.drv,cfg;
-  var three=v==='LUCK'||v==='COLD'||(v==='NORMAL'&&d!=='ts');
-  if(three)cfg={xl:'Three-point attempts per game',yl:'Three-point %',fx:null,fy:function(x){return Math.round(x)+'%';},gx:function(q){return q['3PA_PG'];},gy:function(q){return q['3P%']*100;},q:function(q){return q['3PA_PG']>=2;},px:[B.tpa,R.tpa],py:[B.p3||0,R.p3||0],t:'Three-point volume vs accuracy',xs:'takes more threes per game',ys:'makes a bigger share of them',quad:['ACCURATE, FEW THREES','SHOOTS A LOT + MAKES A LOT','COLD, FEW THREES','SHOOTS A LOT, MISSES A LOT'],qc:['n','g','r','n']};
-  else if(d==='pass')cfg={xl:'Usage rate (% of team plays he finishes)',yl:'Assist rate %',gx:function(q){return q['USG%']*100;},gy:function(q){return q['AST%']*100;},px:[B.usg,R.usg],py:[B.astp,R.astp],t:'Usage vs playmaking',xs:'finishes more of his team’s plays',ys:'sets up more teammate baskets',quad:['PASS-FIRST, SMALLER ROLE','BIG ROLE, PLAYMAKER','SMALL ROLE, FEW ASSISTS','BIG ROLE, SCORER FIRST'],qc:['n','g','n','n']};
-  else if(v==='OPPORTUNITY'||d==='min')cfg={xl:'Minutes per game',yl:'Points + rebounds + assists per game',gx:function(q){return q.MP_PG;},gy:function(q){return q.PTS_PG+q.TRB_PG+q.AST_PG;},px:[B.min,R.min],py:[B.pra,R.pra],t:'Minutes vs production',xs:'plays more minutes',ys:'more points, rebounds and assists',quad:['PRODUCTIVE IN FEW MINUTES','BIG MINUTES, BIG NUMBERS','BENCH ROLE','BIG MINUTES, LOW OUTPUT'],qc:['n','g','n','r']};
-  else if(d==='tov')cfg={xl:'Usage rate (% of team plays he finishes)',yl:'Turnovers per game (fewer ↑)',invY:1,gx:function(q){return q['USG%']*100;},gy:function(q){return q.TOV_PG;},px:[B.usg,R.usg],py:[B.tov,R.tov],t:'Usage vs turnovers',xs:'finishes more of his team’s plays',ys:'fewer turnovers',quad:['SMALL ROLE, CAREFUL','BIG ROLE, CAREFUL','SMALL ROLE, CARELESS','BIG ROLE, CARELESS'],qc:['n','g','r','n']};
+  var p=s.p,R=s.R,B=s.B,N=lastName(p.Player),v=s.v,d=s.cause,cfg;
+  var three=d==='acc3';
+  if(three)cfg={xl:'Three-point attempts per game',yl:'Three-point %',fx:null,fy:function(x){return Math.round(x)+'%';},gx:function(q){return q['3PA_PG'];},gy:function(q){return q['3P%']*100;},q:function(q){return q['3PA_PG']>=2;},px:[B.tpa,R.tpa],py:[B.p3||0,R.p3||0],t:'Three-point volume vs accuracy',xs:'takes more threes per game',ys:'makes a bigger share of them',quad:['ACCURATE, FEW THREES','SHOOTS A LOT + MAKES A LOT','LOW %, FEW THREES','SHOOTS A LOT, MISSES A LOT'],qc:['n','g','r','n']};
+  else if(d==='ast')cfg={xl:'Usage rate (% of team plays he finishes)',yl:'Assist rate %',gx:function(q){return q['USG%']*100;},gy:function(q){return q['AST%']*100;},px:[B.usg,R.usg],py:[B.astp,R.astp],t:'Usage vs playmaking',xs:'finishes more of his team’s plays',ys:'sets up more teammate baskets',quad:['PASS-FIRST, SMALLER ROLE','BIG ROLE, PLAYMAKER','SMALL ROLE, FEW ASSISTS','BIG ROLE, SCORER FIRST'],qc:['n','g','n','n']};
+  else if(d==='min'||d==='reb')cfg={xl:'Minutes per game',yl:'Points + rebounds + assists per game',gx:function(q){return q.MP_PG;},gy:function(q){return q.PTS_PG+q.TRB_PG+q.AST_PG;},px:[B.min,R.min],py:[B.pra,R.pra],t:'Minutes vs production',xs:'plays more minutes',ys:'more points, rebounds and assists',quad:['PRODUCTIVE IN FEW MINUTES','BIG MINUTES, BIG NUMBERS','BENCH ROLE','BIG MINUTES, LOW OUTPUT'],qc:['n','g','n','r']};
+  else if(d==='tov_unused')cfg={xl:'Usage rate (% of team plays he finishes)',yl:'Turnovers per game (fewer ↑)',invY:1,gx:function(q){return q['USG%']*100;},gy:function(q){return q.TOV_PG;},px:[B.usg,R.usg],py:[B.tov,R.tov],t:'Usage vs turnovers',xs:'finishes more of his team’s plays',ys:'fewer turnovers',quad:['SMALL ROLE, CAREFUL','BIG ROLE, CAREFUL','SMALL ROLE, CARELESS','BIG ROLE, CARELESS'],qc:['n','g','r','n']};
   else cfg={xl:'Usage rate (% of team plays he finishes)',yl:'True shooting %',gx:function(q){return q['USG%']*100;},gy:function(q){return q['TS%']*100;},fy:function(x){return Math.round(x)+'%';},px:[B.usg,R.usg],py:[B.ts,R.ts],t:'Usage vs efficiency',xs:'finishes more of his team’s plays',ys:'scores more efficiently',quad:['EFFICIENT, SMALL ROLE','BIG ROLE + EFFICIENT','SMALL ROLE, INEFFICIENT','BIG ROLE, INEFFICIENT'],qc:['n','g','r','n']};
   var pool=D.filter(function(q){return q.MP_PG>=20&&q.G>=3&&q!==p&&(!cfg.q||cfg.q(q));}),xx=[],yy=[];
   if(pool.length<20)return '';
@@ -3247,21 +3382,21 @@ function playerScatter(s){
 }
 
 /* ================= THE LIST: analysis features ================= */
-function oppAb(x){return x[1].split(' ').pop();}
+function oppOf(x){return x[1].split(' ').pop();}
 function topDefSet(){var A=allTeamAgg();return Object.keys(A).filter(function(k){return A[k]&&A[k].n>=3;}).sort(function(a,b){return A[a].drtg-A[b].drtg;}).slice(0,10);}
 var FEAT={};
 FEAT.def=function(){
   var top=topDefSet(),S={},out=[];top.forEach(function(t){S[t]=1;});
-  D.forEach(function(p){var g=GL[String(p.nba_id)];if(!g||g.length<6)return;var vs=g.filter(function(x){return S[oppAb(x)];}),ot=g.filter(function(x){return !S[oppAb(x)];});
+  D.forEach(function(p){var g=GL[String(p.nba_id)];if(!g||g.length<6)return;var vs=g.filter(function(x){return S[oppOf(x)];}),ot=g.filter(function(x){return !S[oppOf(x)];});
     if(vs.length<3||ot.length<3)return;var T=pAgg(p,g);if(T.min<24)return;out.push({p:p,A:pAgg(p,vs),B:pAgg(p,ot),nv:vs.length,no:ot.length});});
   if(out.length<5)return null;
   var rows=out.slice().sort(function(a,b){return b.A.pts-a.A.pts;}).slice(0,10),r=rows[0],N=lastName(r.p.Player);
   var drop=out.filter(function(x){return x.B.pts>=18;}).sort(function(a,b){return (a.A.pts-a.B.pts)-(b.A.pts-b.B.pts);}).slice(0,5);
   var A=allTeamAgg();
   return {key:'def',kick:'The List · Elite defenses',h:N+' scores '+f0(r.A.pts)+' a night against the NBA’s top 10 defenses',
-    k:'That’s the most of any player. He’s at '+pct1(r.A.ts)+' true shooting in those '+r.nv+' games, compared with '+pct1(r.B.ts)+' against everyone else.',
+    k:'That’s the most of any player with 24+ minutes a night and at least 3 games against them. He’s at '+pct1(r.A.ts)+' true shooting in those '+r.nv+' games, compared with '+pct1(r.B.ts)+' against everyone else.',
     lede:'<b>The 10 best defenses in the league are '+top.map(function(t){return nick(t);}).slice(0,3).join(', ')+' and seven others</b>, ranked by points allowed per 100 possessions. Here’s who has scored the most against them.',
-    nut:'Plenty of players pile up points against bad teams. Scoring against the best defenses is harder to fake, and it’s a decent preview of who holds up in the playoffs.',
+    nut:'Plenty of players pile up points against bad teams. Scoring against the best defenses is a tougher test. Most players have only a handful of games against them so far, so treat this as an early read.',
     rows:rows,mini:rows.slice(0,5).map(function(x){return {n:x.p.Player,t:x.p.Team,v:x.A.pts,lab:f1(x.A.pts)};}),
     chart:function(W){return chFig('Points per game against top-10 defenses','Bar = vs the 10 best defenses. Hollow dot = vs everyone else. Players with 3+ games in each group and 24+ minutes a night.',chRank(rows.map(function(x){return {n:x.p.Player,t:x.p.Team,v:x.A.pts,v2:x.B.pts,lab:f1(x.A.pts),tip:x.p.Player+': '+f1(x.A.pts)+' vs top-10 defenses ('+x.nv+' games), '+f1(x.B.pts)+' vs the rest'};}),{W:W,big:1,v2:'vs everyone else'}),1);},
     chart2:drop.length?function(W){return chFig('Biggest drop-off against top-10 defenses','Points per game vs the 10 best defenses (bar) and vs everyone else (hollow dot). Players scoring 18+ against the rest.',chRank(drop.map(function(x){return {n:x.p.Player,t:x.p.Team,v:x.A.pts,v2:x.B.pts,lab:f1(x.A.pts),col:'var(--fall)',tip:x.p.Player+': '+f1(x.A.pts)+' vs top-10 defenses, '+f1(x.B.pts)+' vs the rest'};}),{W:W,big:1,v2:'vs everyone else'}),1);}:null,
@@ -3275,9 +3410,9 @@ FEAT.eff=function(){
   if(pool.length<8)return null;
   var q=pool.filter(function(x){return x.p.PTS_PG>=18;}),rows=q.slice().sort(function(a,b){return b.pps-a.pps;}).slice(0,10),r=rows[0],N=lastName(r.p.Player);
   var lg=pool.reduce(function(s,x){return s+x.p.PTS_PG;},0)/pool.reduce(function(s,x){return s+x.tsa;},0);
-  return {key:'eff',kick:'The List · Efficiency',h:N+' scores '+f0(r.p.PTS_PG)+' a night on just '+f0(r.p.FGA_PG)+' shots',
+  return {key:'eff',kick:'The List · Efficiency',h:N+' scores '+f0(r.p.PTS_PG)+' a night on '+f0(r.p.FGA_PG)+' shots',
     k:'That’s '+r.pps.toFixed(2)+' points for every shot attempt, the best of anyone scoring 18 or more. He uses '+f1(r.p['USG%']*100)+'% of his team’s plays.',
-    lede:'<b>Scoring a lot is one thing. Scoring a lot without needing the ball every trip is another.</b> These players get the most points out of every shot, free throw trip and possession they use.',
+    lede:'<b>Scoring a lot is one thing. Doing it without many shots is another.</b> These players get the most points out of every shot and free throw trip they take.',
     nut:'We counted every field goal attempt plus free throw trips (0.44 per free throw, the standard way to turn free throws into possessions), then divided points by that total.',
     rows:rows,mini:rows.slice(0,5).map(function(x){return {n:x.p.Player,t:x.p.Team,v:x.pps,lab:x.pps.toFixed(2)};}),
     chart:function(W){return chFig('Points per game vs shot attempts per game','Every player scoring 15+ points per game. Above the dashed line = more points per shot than average. Logos and names mark the top scorers and the most efficient.',chScatter({pts:pool.map(function(x){var hl=x.p.PTS_PG>=(window.innerWidth<700?24:19)||rows.slice(0,6).indexOf(x)>=0;return {x:x.tsa,y:x.p.PTS_PG,faint:!hl,logo:hl?logoUrl(x.p):null,pl:1,pri:x.p.PTS_PG,lab:hl?lastName(x.p.Player):'',c:x.p.PTS_PG>=x.tsa*lg?'#1f8a4c':'#c2341f',tip:x.p.Player+': '+f1(x.p.PTS_PG)+' points per game on '+f1(x.p.FGA_PG)+' shots and '+f1(x.p.FTA_PG)+' free throws per game'};}),xl:'Shot attempts per game (shots + 0.44 × free throws)',yl:'Points per game',slope:lg,slopeL:'LEAGUE AVERAGE'}),1);},
@@ -3287,14 +3422,14 @@ FEAT.eff=function(){
 };
 FEAT.min=function(){
   var out=[];
-  D.forEach(function(p){var g=GL[String(p.nba_id)];if(!g)return;var sp=trSplit(g);if(!sp||sp.pri.length<3)return;var R=pAgg(p,sp.rec),B=pAgg(p,sp.pri);
+  D.forEach(function(p){var g=GL[String(p.nba_id)];if(!g)return;var sp=trSplit(g);if(!sp||sp.pri.length<CL.base)return;var R=pAgg(p,sp.rec),B=pAgg(p,sp.pri);
     if(R.min<18||B.min<8||R.min-B.min<4||B.pra<=0)return;var mp=R.min/B.min-1,pp=R.pra/B.pra-1;if(pp<mp*1.5||pp<0.25)return;
     out.push({p:p,R:R,B:B,mp:mp,pp:pp,s:pp-mp});});
   if(!out.length)return null;
   var rows=out.sort(function(a,b){return b.s-a.s;}).slice(0,10),r=rows[0],N=lastName(r.p.Player),pc=function(v){return Math.round(v*100)+'%';};
   return {key:'min',when:trLab()+' vs before',kick:'The List · Bigger roles',h:N+' turns '+pc(r.mp)+' more minutes into '+pc(r.pp)+' more production',
     k:'He went from '+f1(r.B.min)+' to '+f1(r.R.min)+' minutes and from '+f1(r.B.pra)+' to '+f1(r.R.pra)+' points, rebounds and assists combined. More minutes explain only part of it.',
-    lede:'<b>More minutes should mean bigger numbers.</b> For these players, the numbers grew much faster than the minutes did, which means they’re also better per minute on the floor.',
+    lede:'<b>More minutes should mean bigger numbers.</b> For these players, the numbers grew much faster than the minutes did, which means they produced more per minute in this stretch.',
     nut:'We compared each player’s '+trLab().toLowerCase()+' with the games before it, and kept only players whose points + rebounds + assists grew at least 1.5 times as fast as their minutes.',
     rows:rows,mini:rows.slice(0,5).map(function(x){return {n:x.p.Player,t:x.p.Team,v:x.pp*100,v2:x.mp*100,lab:'+'+Math.round(x.pp*100)+'%'};}),
     chart:function(W){return chFig('Minutes vs production: how much each went up','Bar = change in points + rebounds + assists. Hollow dot = change in minutes. '+trLab()+' vs before. Ranked by how much faster production grew than minutes.',chRank(rows.map(function(x){return {n:x.p.Player,t:x.p.Team,v:x.pp*100,v2:x.mp*100,lab:'+'+Math.round(x.pp*100)+'%',tip:x.p.Player+': minutes '+f1(x.B.min)+' → '+f1(x.R.min)+' (+'+Math.round(x.mp*100)+'%), pts+reb+ast '+f1(x.B.pra)+' → '+f1(x.R.pra)+' (+'+Math.round(x.pp*100)+'%)'};}),{W:W,big:1,v2:'minutes change',pct:1}),1);},
@@ -3303,7 +3438,7 @@ FEAT.min=function(){
       return chFig('Change in minutes vs change in production','Each dot is a player, '+trLab().toLowerCase()+' vs before. Above the dashed line = production grew faster than minutes. Logos and names mark the biggest movers.',
       chScatter({pts:pool.map(function(x){var hl=top6.indexOf(x.p)>=0;return {x:x.mp,y:x.pp,c:x.pp>=x.mp?'#1f8a4c':'#c2341f',faint:!hl,logo:hl?logoUrl(x.p):null,pl:1,pri:Math.abs(x.pp)+Math.abs(x.mp),lab:hl?lastName(x.p.Player):'',tip:x.p.Player+': minutes '+(x.mp>0?'+':'')+Math.round(x.mp)+'%, production '+(x.pp>0?'+':'')+Math.round(x.pp)+'%'};}),xl:'Change in minutes (%)',yl:'Change in pts + reb + ast (%)',diag:'GREW EVENLY',fx:function(v){return Math.round(v)+'%';},fy:function(v){return Math.round(v)+'%';}}),1);},
     table:{h:['Player','Minutes before','Minutes now','Pts+reb+ast before','Pts+reb+ast now','Per 36 now'],r:rows.map(function(x){return [x.p,f1(x.B.min),f1(x.R.min),f1(x.B.pra),f1(x.R.pra),f1(x.R.pra/x.R.min*36)];})},
-    how:'Window: '+trLab().toLowerCase()+' vs the games before it. Players need 18+ minutes now, a 4+ minute jump, and production growing at least 1.5 times faster than minutes.'};
+    how:'Window: '+trLab().toLowerCase()+' vs the games before it. Players need 18+ minutes now, a 4+ minute jump, and production growing at least 1.5 times faster than minutes. A stretch this short can include a hot shooting run, so check each player’s card.'};
 };
 FEAT.clutch=function(){
   var pool=D.filter(function(p){return (p.CL_GP||0)>=3&&(p.CL_PTS||0)>0;});
@@ -3313,7 +3448,7 @@ FEAT.clutch=function(){
   var eff=pool.filter(function(p){return p.CL_PTS>=12&&(p.CL_FGA||0)+0.44*(p.CL_FTA||0)>=10;}).sort(function(a,b){return ts(b)-ts(a);}).slice(0,6);
   return {key:'clutch',kick:'The List · Clutch',h:N+' leads the NBA with '+r.CL_PTS+' clutch points',
     k:'He’s '+r.CL_FGM+'-of-'+r.CL_FGA+' from the field and '+r.CL_FTM+'-of-'+r.CL_FTA+' at the line in the final five minutes of close games, and his team is '+(r.CL_PM>0?'+':'')+r.CL_PM+' with him out there.',
-    lede:'<b>Clutch time means the last five minutes of the fourth quarter or overtime, with the score within five points.</b> It’s where games are decided, and where the best closers separate themselves.',
+    lede:'<b>Clutch time means the last five minutes of the fourth quarter or overtime, with the score within five points.</b> It’s where close games are decided.',
     nut:'These are season totals. Clutch samples are small early in the season, so a couple of big shots can move a player up the list fast.',
     rows:rows,mini:rows.slice(0,5).map(function(x){return {n:x.Player,t:x.Team,v:x.CL_PTS,lab:String(x.CL_PTS)};}),
     chart:function(W){return chFig('Most clutch points this season','Last 5 minutes, score within 5. Players with 3+ clutch games.',chRank(rows.map(function(x){return {n:x.Player,t:x.Team,v:x.CL_PTS,lab:String(x.CL_PTS),tip:x.Player+': '+x.CL_PTS+' pts on '+x.CL_FGM+'-'+x.CL_FGA+' FG, '+x.CL_FTM+'-'+x.CL_FTA+' FT in '+x.CL_GP+' clutch games'};}),{W:W,big:1}),1);},
@@ -3331,10 +3466,10 @@ function hidPct(p,f,inv,q){var R=hidPool().filter(function(x){return (!q||q(x))&
   var b=0,s=0;R.forEach(function(x){var w=f(x);if(w===v)s++;else if(inv?w>v:w<v)b++;});return Math.max(1,Math.min(99,Math.round((b+s/2)/R.length*100)));}
 function hidList(){
   if(HID)return HID;var out=[];
-  hidPool().forEach(function(p){var m=hidMin(p);if(m<60||(p.G||0)<4||p.NET_RTG==null)return;
+  hidPool().forEach(function(p){var m=hidMin(p);if(m<150||(p.G||0)<4||p.NET_RTG==null||p.NET_RTG<=0||!availNow(p))return;
     var sw=hidSwing(p),pp=hidPct(p,function(x){return x.PTS_PG;}),up=hidPct(p,function(x){return x['USG%'];});
     if(pp==null||up==null||(pp+up)/2>55||pp>60)return;
-    var A=hidAdv(p);if(!A)return;
+    var A=hidAdv(p);if(!A||A.min<40||(sw!=null&&sw<5))return;
     out.push({p:p,m:m,sw:sw,score:A.avg,adv:A,pp:pp,up:up});});
   return HID=out.filter(function(o){return o.score>=75;}).sort(function(a,b){return b.score-a.score||b.m-a.m;}).slice(0,10);
 }
@@ -3348,7 +3483,6 @@ function hidDek(o){var p=o.p;return 'That’s points per 100 possessions'+(o.sw!
 function hidWhy(p){
   var per=function(k){return function(x){return x.MP_PG?(x[k]||0)/x.MP_PG*36:null;};},S36=function(x){return x.MP_PG?((x.STL_PG||0)+(x.BLK_PG||0))/x.MP_PG*36:null;};
   var C=[
-    {n:hidPct(p,function(x){return x['TS%'];},0,Q.shoot),t:'Doesn’t waste shots: '+pct1(p['TS%']*100)+' true shooting'},
     {n:hidPct(p,function(x){return x.ORTG;}),tm:1,t:'The offense hums: '+f1(p.ORTG)+' points per 100 possessions with him on the floor'},
     {n:hidPct(p,function(x){return x.DRTG;},1),tm:1,t:'The defense locks in: '+f1(p.DRTG)+' points allowed per 100 possessions with him on the floor'},
     {n:hidPct(p,per('ORB_PG')),t:'Extra possessions: '+f1(per('ORB_PG')(p))+' offensive rebounds per 36 minutes'},
@@ -3356,8 +3490,7 @@ function hidWhy(p){
     {n:hidPct(p,S36),t:'Disrupts plays: '+f1(S36(p))+' steals + blocks per 36 minutes'},
     {n:p.DEFL36!=null?hidPct(p,function(x){return x.DEFL36;}):null,t:'Active hands: '+f1(p.DEFL36||0)+' deflections per 36 minutes'},
     {n:p.CONT36!=null?hidPct(p,function(x){return x.CONT36;}):null,t:'Contests everything: '+f1(p.CONT36||0)+' contested shots per 36 minutes'},
-    {n:hidPct(p,per('TOV_PG'),1),t:'Takes care of the ball: '+f1(per('TOV_PG')(p))+' turnovers per 36 minutes'},
-    {n:hidPct(p,function(x){return x['3P%'];},0,function(x){return (x['3PA_PG']||0)*(x.G||0)>=20;}),t:'Makes defenses pay: '+pct1(p['3P%']*100)+' from three'}
+    {n:hidPct(p,per('TOV_PG'),1),t:'Takes care of the ball: '+f1(per('TOV_PG')(p))+' turnovers per 36 minutes'}
   ].filter(function(c){return c.n!=null&&c.n>=70;}).sort(function(a,b){return b.n-a.n;});
   var team=C.filter(function(c){return c.tm;}),own=C.filter(function(c){return !c.tm;});
   return own.slice(0,4).concat(team).slice(0,Math.max(3,Math.min(4,own.length)));
@@ -3400,28 +3533,28 @@ function showHidden(id){
   if(!o){$('vStory').innerHTML=h+'<div class="tr-empty">This player isn’t on the hidden impact list right now. <a class="link" href="#s/f/hidden">See who is →</a></div></div></div>';return;}
   var N=lastName(p.Player),why=hidWhy(p),rk=hidList().indexOf(o)+1;
   h+='<div class="kick g">Hidden impact · '+esc(nick(p.Team))+'</div><h1 class="ar-h">'+esc(hidHead(o))+'</h1><p class="ar-dek">'+esc(hidDek(o))+'</p>'+byline('Season to date',p);
-  h+='<p class="ar-p"><b>The box score says '+esc(p.Player)+' is a role player: '+f1(p.PTS_PG)+' points, '+f1(p.TRB_PG)+' rebounds and '+f1(p.AST_PG)+' assists in '+f1(p.MP_PG)+' minutes a game.</b> The scoreboard says something else. When he’s on the floor, the '+esc(nick(p.Team))+' outscore opponents by '+f1(Math.abs(p.NET_RTG))+' points per 100 possessions'+(o.sw!=null?', and when he sits they’re '+sg1(p.OFF_NET):'')+'.</p>';
+  h+='<p class="ar-p"><b>The box score says '+esc(p.Player)+' is a role player: '+f1(p.PTS_PG)+' points, '+f1(p.TRB_PG)+' rebounds and '+f1(p.AST_PG)+' assists in '+f1(p.MP_PG)+' minutes a game.</b> The scoreboard says something else. When he’s on the floor, the '+esc(nick(p.Team))+' outscore opponents by '+f1(Math.abs(p.NET_RTG))+' points per 100 possessions'+(o.sw!=null?', and when he sits they’re '+sg1(p.OFF_NET):'')+'. Those numbers also depend on the four teammates and five opponents on the floor with him, so read them as a team result he’s part of, not his alone.</p>';
   h+='<p class="ar-p">He ranks No. '+rk+' on our hidden impact list, which ranks role players by their whole advanced profile: net rating, offensive and defensive rating, true shooting and effective FG%. His average across those five is the '+ordn(Math.round(o.score))+' percentile.</p>';
   h+='<h2 class="ar-h2">His card tells the story</h2><div class="hi-card">'+hidBars(p)+'</div><p class="bt-note">Percentiles match his player card. Green = good, red = bad.</p>';
   if(o.sw!=null){var mx=Math.max(Math.abs(p.ON_NET),Math.abs(p.OFF_NET),1),bar=function(lab,v,min){var w=Math.abs(v)/mx*46;return '<div class="hi-oo"><span>'+lab+'<i>'+min+' min</i></span><div class="hi-ot"><div class="hi-o0"></div><div class="hi-of" style="'+(v>=0?'left:50%':'right:50%')+';width:'+w.toFixed(1)+'%;background:'+(v>=0?'var(--rise)':'var(--fall)')+'"></div></div><b style="color:'+(v>=0?'var(--rise)':'var(--fall)')+'">'+sg1(v)+'</b></div>';};
     h+='<h2 class="ar-h2">With him vs without him</h2><div class="hi-oob">'+bar('With '+N,p.ON_NET,o.m)+bar('Without '+N,p.OFF_NET,p.OFF_MIN||0)+'</div><p class="bt-note">Team points scored minus points allowed, per 100 possessions.</p>';}
-  if(why.length)h+='<h2 class="ar-h2">Why it doesn’t show up in the box score</h2><ul class="hi-why">'+why.map(function(c){return '<li>'+esc(c.t)+'<span>Better than '+c.n+'% of rotation players</span></li>';}).join('')+'</ul>';
+  if(why.length)h+='<h2 class="ar-h2">What he does well beyond scoring</h2><ul class="hi-why">'+why.map(function(c){return '<li>'+esc(c.t)+'<span>Better than '+c.n+'% of rotation players</span></li>';}).join('')+'</ul>';
   h+='<div class="fg-a ar-fig">'+hidGames(p)+'</div>';
-  h+='<div class="ar-watch"><b>What to watch</b>'+(o.m<200?'He’s played '+o.m+' minutes, so these numbers can still swing a lot. If the '+nick(p.Team)+' keep winning his minutes as his playing time grows, it’s real.':'Over '+o.m+' minutes, this is more than a hot week. Watch whether his role grows to match his impact.')+'</div>';
+  h+='<div class="ar-watch"><b>What to watch</b>'+'He’s played '+o.m+' minutes. On-court numbers take far longer than that to settle, so treat this as a strong start, not proof. Watch whether the '+nick(p.Team)+' keep winning his minutes as the sample grows.'+'</div>';
   h+='<div class="fg-a ar-fig">'+hidScatter(p)+'</div>';
-  h+='<p class="ar-how" style="margin-top:22px">How we measured: role players (8+ minutes, 4+ games, 60+ minutes total, scoring and usage at or below the league’s middle), ranked by the average of their card percentiles in net rating, offensive rating, defensive rating, true shooting and effective FG%. Points and other box score numbers don’t count toward the ranking. <a class="link" href="#p'+p.nba_id+'">See his full card →</a> · <a class="link" href="#s/f/hidden">The full list →</a></p>'+relStories('')+'</div></div>';
+  h+='<p class="ar-how" style="margin-top:22px">How we measured: role players (8+ minutes a game, 150+ minutes total, played in 4 of his team’s last 5 games, team at least 5 points per 100 better with him on the floor, modest scoring and usage), ranked by the average of their card percentiles in net rating, offensive rating, defensive rating, true shooting and effective FG%. Points and other box score numbers don’t count toward the ranking. <a class="link" href="#p'+p.nba_id+'">See his full card →</a> · <a class="link" href="#s/f/hidden">The full list →</a></p>'+relStories('')+'</div></div>';
   $('vStory').innerHTML=h;document.title=hidHead(o)+' | NBA Savant';
 }
 FEAT.hidden=function(){
   var L=hidList();if(L.length<3)return null;var r=L[0];
   return {key:'hidden',kick:'The List · Hidden impact',h:'The best advanced numbers among role players: '+lastName(r.p.Player)+' leads the way',
     k:'He averages the '+ordn(Math.round(r.score))+' percentile across net, offensive and defensive rating, true shooting and effective FG%, while scoring '+f1(r.p.PTS_PG)+' points a game.',
-    lede:'<b>Points per game is the first number everyone looks at. It misses a lot.</b> These players don’t score much or call many plays, but their advanced numbers are among the best in the league across the board.',
+    lede:'<b>Points per game is the first number everyone looks at. It misses a lot.</b> These players don’t score much or call many plays, but their teams win their minutes and they score efficiently when they do shoot.',
     nut:'Each one has a story behind it, from defense and rebounding to taking care of the ball and making open shots. Tap a name to read it.',
     rows:L,mini:L.slice(0,5).map(function(x){return {n:x.p.Player,t:x.p.Team,v:x.score,lab:String(Math.round(x.score))};}),
     chart:function(){return hidScatter(null);},
     table:{h:['Player','Advanced score','Net','Off.','Def.','TS%','eFG%','Points','Minutes','Story'],r:L.map(function(x){return [x.p,'<b>'+Math.round(x.score)+'</b>'].concat(x.adv.r).concat([f1(x.p.PTS_PG),x.m,'<a class="link" href="#s/h/'+x.p.nba_id+'">Read →</a>']);})},
-    how:'Role players (8+ minutes, 4+ games, 60+ minutes total, scoring and usage at or below the league’s middle). Ranked by the average of their card percentiles in net rating, offensive rating, defensive rating, true shooting and effective FG%; they need 75 or better to make the list. Box score numbers don’t count toward the ranking.'};
+    how:'Role players (8+ minutes a game, 150+ minutes total, played in 4 of his team’s last 5 games, team at least 5 points per 100 better with him on the floor, modest scoring and usage). Ranked by the average of their card percentiles in net rating, offensive rating, defensive rating, true shooting and effective FG%; they need 75 or better to make the list. Box score numbers don’t count toward the ranking.'};
 };
 function hidHome(){
   var L=hidList();if(!L.length)return '';var o=L[0],p=o.p,sm=window.innerWidth<700;
@@ -3548,12 +3681,12 @@ function buildHome(){
       +'<div class="bd"><b>'+esc(p.Player)+'</b><div class="ln">'+esc(p.Team+' '+x[1]+' · '+x[2]+' · '+x[0])+(hi?' · <em>Season high</em>':'')+'</div><div class="st"><span><b>'+x[5]+'</b>REB</span><span><b>'+x[6]+'</b>AST</span><span><b>'+x[10]+'-'+x[11]+'</b>FG</span><span><b>'+x[12]+'-'+x[13]+'</b>3P</span></div></div></a>';}).join('')+'</div></section>';}
   /* the list */
   var fs=featAll();
-  if(fs.length)h+='<section class="hm-sec"><div class="x-sechd"><h2 class="x-h2">The List</h2><div class="x-meta">Rankings that explain the season</div></div><div class="hm-fc">'+fs.map(featCard).join('')+'</div></section>';
+  if(fs.length)h+='<section class="hm-sec"><div class="x-sechd"><h2 class="x-h2">The List</h2><div class="x-meta">A closer look at who is doing what</div></div><div class="hm-fc">'+fs.map(featCard).join('')+'</div></section>';
   /* heating up / cooling off (compact) */
-  var mv=[];D.forEach(function(p){var g=GL[String(p.nba_id)];if(!g)return;var sp=trSplit(g);if(!sp||sp.pri.length<3)return;var R=pAgg(p,sp.rec),B=pAgg(p,sp.pri);if(R.min<18||B.min<12)return;mv.push({p:p,R:R,B:B,d:R.pra-B.pra});});
+  var mv=[];D.forEach(function(p){var g=GL[String(p.nba_id)];if(!g)return;var sp=trSplit(g);if(!sp||sp.pri.length<CL.base||!availNow(p))return;var R=pAgg(p,sp.rec),B=pAgg(p,sp.pri);if(R.min<18||B.min<12)return;mv.push({p:p,R:R,B:B,d:R.pra-B.pra});});
   var upL=mv.slice().sort(function(a,b){return b.d-a.d;}).slice(0,4),dnL=mv.slice().sort(function(a,b){return a.d-b.d;}).slice(0,4);
   var row=function(o){var u=o.d>=0;return '<a class="hm-mv" href="#p'+o.p.nba_id+'"><div class="x-av" style="background:'+teamOf(o.p.Team).c+'">'+img(logoUrl(o.p),'lg')+img(headSm(o.p.nba_id),'hs')+'</div><span class="nm">'+esc(o.p.Player)+'<i>'+esc(o.p.Team)+' · '+f1(o.B.pra)+' → '+f1(o.R.pra)+'</i></span><b style="color:'+(u?'var(--rise)':'var(--fall)')+'">'+(u?'+':'−')+f1(Math.abs(o.d))+'</b></a>';};
-  if(mv.length)h+='<section class="hm-sec hm-hc"><div><h3 class="hm-h3">Heating up</h3><div class="hm-prs">Pts + reb + ast, '+trLab().toLowerCase()+' vs before</div>'+upL.map(row).join('')+'</div><div><h3 class="hm-h3">Cooling off</h3><div class="hm-prs">Pts + reb + ast, '+trLab().toLowerCase()+' vs before</div>'+dnL.map(row).join('')+'</div></section>';
+  if(mv.length)h+='<section class="hm-sec hm-hc"><div><h3 class="hm-h3">Biggest jumps</h3><div class="hm-prs">Pts + reb + ast, '+trLab().toLowerCase()+' vs before</div>'+upL.map(row).join('')+'</div><div><h3 class="hm-h3">Biggest drops</h3><div class="hm-prs">Pts + reb + ast, '+trLab().toLowerCase()+' vs before</div>'+dnL.map(row).join('')+'</div></section>';
   h+='<section class="hm-sec hm-bsec"><div class="x-sechd"><h2 class="x-h2">Category leaders</h2><div class="x-meta">Per game</div></div><div class="hm-bnr"><div class="rafter"></div><div class="banners" id="banners"></div></div></section>';
   TRW=save;
   el.innerHTML=h;buildBanners();trAnimate(el);
@@ -3679,7 +3812,7 @@ function rkRisers(){
     +siSpark(r.tl,r.lastPre,300,70)+'<div class="rk-jn">Season percentile after every game. Shaded = last '+r.w+' games.</div></a>';};
   var h='<p class="rk-lede"><b>A few great games can move a whole season.</b> If a player sits at the 25th percentile after 30 games and the 50th after 40, those last 10 games had to be far better than the 50th to drag his season up that much. These cards show that jump: where he was, how he’s played lately, and where it left him.</p>';
   h+='<div class="rk-jg"><div><h3 class="hm-h3" style="color:var(--rise)">▲ Biggest risers</h3>'+up.map(card).join('')+'</div><div><h3 class="hm-h3" style="color:var(--fall)">▼ Biggest fallers</h3>'+dn.map(card).join('')+'</div></div>';
-  h+='<p class="bt-note">Percentiles use Joe’s Certified Good Players rating computed from game logs (plus-minus stands in for on/off, steals + blocks for defense), compared with every qualified player at the same point in the season. Recent window = last 10 games, or the last half of his games until he has played 20.</p>';
+  h+='<p class="bt-note">Plus-minus is a team result, so players on teams that just won or lost big move with their team. Percentiles use Joe’s Certified Good Players rating computed from game logs (plus-minus stands in for on/off, steals + blocks for defense), compared with every qualified player at the same point in the season. Recent window = last 10 games, or the last half of his games until he has played 20.</p>';
   return h;
 }
 function rkTeams(){
@@ -3705,6 +3838,126 @@ function siPlayerBox(p){
   return h+'</div></div>';
 }
 
+/* ================= CLAIM CHECKER =================
+   Re-tests every conclusion the site writes against the numbers, using rules that are separate from the code that wrote it.
+   Open #/audit to see the results. Every rule here mirrors a line in the CLAIM RULES above. */
+function auditClaims(){
+  var F=[],N={},keep=TRW;
+  var bad=function(type,who,rule,detail){F.push({type:type,who:who,rule:rule,detail:detail});},cnt=function(k){N[k]=(N[k]||0)+1;};
+  ['5','10','season'].forEach(function(w){TRW=w;RKC={};
+    D.forEach(function(p){var s=playerStories(p)[0];if(!s)return;var o=pWrite(s),R=s.R,B=s.B,C=s.C,who=p.Player+' ('+trLab()+')',txt=[o.h,o.k,o.nut,o.h2,o.b2,o.watch].join(' '),nb=norm3(p).v;cnt('Player trend stories');
+      var dPTS=R.pts-B.pts,dTS=R.ts-B.ts,dMIN=R.min-B.min,dPRA=R.pra-B.pra,dir=s.up?1:-1;
+      var sum=Object.keys(C).reduce(function(a,k){return a+C[k];},0);
+      if(Math.abs(sum-dPRA)>0.05)bad('player',who,'Parts must add up to the change',f1(sum)+' vs '+f1(dPRA));
+      if(s.sp.pri.length<CL.base)bad('player',who,'Baseline needs 5+ games',s.sp.pri.length+' games');
+      if(/hot three-point|rides \d+% three/.test(o.h)&&!(R.n3>=CL.minAtt&&R.p3-nb>=CL.hot))bad('player',who,'“Hot” threes must be 5+ points above his norm on 10+ attempts',pct1(R.p3)+' vs norm '+pct1(nb));
+      if(/threes (go cold|stop falling)/.test(o.h)&&!(R.n3>=CL.minAtt&&nb-R.p3>=CL.hot))bad('player',who,'“Cold” threes must be 5+ points below his norm on 10+ attempts',pct1(R.p3||0)+' vs norm '+pct1(nb));
+      if(/finds his three-point shot again/.test(o.h)&&!(B.p3!==null&&nb-B.p3>=CL.hot&&Math.abs(R.p3-nb)<CL.hot))bad('player',who,'“Back to normal” needs cold before and near his norm now',pct1(B.p3||0)+' → '+pct1(R.p3||0)+', norm '+pct1(nb));
+      if(/cools off after a hot shooting start/.test(o.h)&&!(B.p3!==null&&B.p3-nb>=CL.hot&&Math.abs(R.p3-nb)<CL.hot))bad('player',who,'“Cools off” needs hot before and near his norm now',pct1(B.p3||0)+' → '+pct1(R.p3||0)+', norm '+pct1(nb));
+      /* the cause named in the headline must be the biggest piece and at least 40% of the push */
+      var HC=[[/minutes a night|fewer minutes|more minutes/,'min'],[/on more shots|on fewer shots|share of the shots/,'shots'],[/three-point|threes/,'acc3'],[/twos|two-point/,'acc2'],[/at the line|free throws dry up|getting to the line/,null],[/grabs|rebounds fall/,'reb'],[/assists fall|raises his assists/,'ast']];
+      HC.forEach(function(x){if(!x[1]||!x[0].test(o.h))return;var k=x[1];if(s.metric==='min'&&k==='min')return;if(s.v==='OPPORTUNITY'&&/with .+ out$/.test(o.h)&&k==='shots')return;
+        var V=s.metric==='ts'?s.TSP:C,keys=Object.keys(V),push=keys.filter(function(q){return V[q]*dir>0.05;}),tot=push.reduce(function(a,q){return a+Math.abs(V[q]);},0);push.sort(function(a,q){return Math.abs(V[q])-Math.abs(V[a]);});var big=push[0];
+        if(big!==k||Math.abs(V[k])/tot<CL.share||(push[1]&&Math.abs(V[push[1]])>=CL.tie*Math.abs(V[big])))bad('player',who,'Headline cause must be the biggest piece, 40%+ of the change and clear of the runner-up','headline says '+k+', biggest is '+big+' ('+Math.round(Math.abs(V[k]||0)/tot*100)+'%)');
+        var need={acc3:'n3',acc2:'n2'}[k];if(need&&(R[need]<CL.att[k]||B[need]<CL.att[k]))bad('player',who,'Shooting causes need enough attempts in both stretches',B[need]+' and '+R[need]+' attempts');});
+      if(/ with .+ out/.test(o.h)){if(!s.mates.length)bad('player',who,'“With X out” needs an absent teammate','none found');
+        s.mates.forEach(function(m){var rd={};s.sp.rec.forEach(function(x){rd[x[0]]=1;});var pl=(GL[String(m.q.nba_id)]||[]).filter(function(x){return rd[x[0]]&&x[3]>0;}).length;if(pl>=s.sp.rec.length/2)bad('player',who,'A teammate called out must have missed more than half the stretch',m.q.Player+' played '+pl+' of '+s.sp.rec.length);});}
+      if(/No teammate at his position who plays 18\+ minutes missed/.test(txt)&&absentMates(p,s.sp.rec,s.sp.pri).filter(function(m){return m.pos;}).length)bad('player',who,'“No teammate missed” must be true','an absent teammate exists');
+      if(/on more shots/.test(o.h)&&!(R.tsa-B.tsa>=1&&dPTS>=1))bad('player',who,'“On more shots” needs more shots and more points',f1(B.tsa)+' → '+f1(R.tsa));
+      if(/on fewer shots/.test(o.h)&&!(R.tsa-B.tsa<=-1&&dPTS<=-1))bad('player',who,'“On fewer shots” needs fewer shots and fewer points',f1(B.tsa)+' → '+f1(R.tsa));
+      if(/true shooting held near/.test(txt)&&Math.abs(dTS)>=3)bad('player',who,'“Held” means within 3 points',f1(B.ts)+' → '+f1(R.ts));
+      if(/true shooting rose from/.test(txt)&&dTS<3)bad('player',who,'“Rose” means 3+ points',f1(B.ts)+' → '+f1(R.ts));
+      if(/true shooting dipped from/.test(txt)&&dTS>-3)bad('player',who,'“Dipped” means 3+ points',f1(B.ts)+' → '+f1(R.ts));
+      if(/\b(only|just) \d/.test(txt))bad('player',who,'No “only” or “just” in front of a number',txt.match(/\b(only|just) \d[^ ]*/)[0]);
+      if(/climbs to \d+ points/.test(o.h)&&dPTS<=0)bad('player',who,'“Climbs” needs scoring to be up',f1(B.pts)+' → '+f1(R.pts));
+      if(/(slides|slips) to \d+/.test(o.h)&&dPTS>=0)bad('player',who,'“Slides/slips” needs scoring to be down',f1(B.pts)+' → '+f1(R.pts));
+      if(/lifts his true shooting/.test(o.h)&&dTS<=0)bad('player',who,'“Lifts” needs true shooting to be up',f1(B.ts)+' → '+f1(R.ts));
+      if(/true shooting falls/.test(o.h)&&dTS>=0)bad('player',who,'“Falls” needs true shooting to be down',f1(B.ts)+' → '+f1(R.ts));
+      if(s.sp.rec.length<10&&!/early sign/.test(o.b2))bad('player',who,'Fewer than 10 games must be called an early sign','');
+      if(!availNow(p))bad('player',who,'No story for a player who missed his team’s latest game or 2 of its last 5','');
+      s.mates.forEach(function(m){if(s.up&&m.miss!=null){var pd={};s.sp.pri.forEach(function(x){pd[x[0]]=1;});var pl=(GL[String(m.q.nba_id)]||[]).filter(function(x){return pd[x[0]]&&x[3]>0;}).length;if(pl<s.sp.pri.length*0.7)bad('player',who,'An absent teammate must have played most of the earlier stretch',m.q.Player+' played '+pl+' of '+s.sp.pri.length);}});
+      var m=txt.match(/, (above|below|right at) the [\d.]+% league average/);if(m&&((m[1]==='above')!==(R.ts>=s.LTS+1)||(m[1]==='below')!==(R.ts<=s.LTS-1)))bad('player',who,'Above/below league average must match',f1(R.ts)+' vs '+f1(s.LTS));
+      if(/early sign/.test(txt)!==(s.sp.rec.length<10)&&/What it means|Role or shooting/.test(o.h2)&&!/Filling in/.test(o.h2)&&!(s.cause==='min'&&!s.up&&s.mates.length===0&&false))if(/early sign/.test(txt)&&s.sp.rec.length>=10)bad('player',who,'“Early sign” is for fewer than 10 games',s.sp.rec.length+' games');
+    });
+    Object.keys(teamGames()).forEach(function(t){var s=teamStories(t)[0];if(!s)return;var o=tWrite(s),R=s.R,B=s.B,who=nick(t)+' ('+trLab()+')',LG=lg3(),ng=s.sp.rec.length,SR=s.SR,SB=s.SB;cnt('Team trend stories');
+      if(s.sp.pri.length<CL.base)bad('team',who,'Baseline needs 5+ games',s.sp.pri.length+' games');
+      if(s.P&&SR&&SB){var sum=Object.keys(s.P).reduce(function(a,k){return a+s.P[k];},0),d=(SR.pts-SB.pts)*(s.side==='def'?-1:1);if(Math.abs(sum-d)>0.1)bad('team',who,'Parts must add up to the change',f1(sum)+' vs '+f1(d));
+        var dir=s.up?1:-1,push=Object.keys(s.P).filter(function(k){return s.P[k]*dir>0.3;}),tot=push.reduce(function(a,k){return a+Math.abs(s.P[k]);},0),big=push.sort(function(a,q){return Math.abs(s.P[q])-Math.abs(s.P[a]);})[0];
+        var TC=[[/three|threes/,'acc3'],[/twos/,'acc2'],[/turnovers/,'tov'],[/second chances/,'oreb'],[/free throw shooting|miss free throws|make their free throws/,'accft']];
+        push.sort(function(a,q){return Math.abs(s.P[q])-Math.abs(s.P[a]);});big=push[0];
+        TC.forEach(function(x){if(!x[0].test(o.h))return;if(big!==x[1]||Math.abs(s.P[x[1]])/tot<CL.share||(push[1]&&Math.abs(s.P[push[1]])>=CL.tie*Math.abs(s.P[big])))bad('team',who,'Headline cause must be the biggest piece and 40%+ of the change','headline says '+x[1]+', biggest is '+big);});
+        if(/threes catch fire/.test(o.h)&&SR.p3<LG+CL.thot)bad('team',who,'“Surge” needs 4+ points above league average',pct1(SR.p3));
+        if(/their threes stop falling/.test(o.h)&&SR.p3>LG-CL.thot)bad('team',who,'“Stop falling” needs 4+ points below league average',pct1(SR.p3));
+        if(/opponents go cold/.test(o.h)&&SR.p3>LG-CL.thot)bad('team',who,'Opponents “cold” needs 4+ points below league average',pct1(SR.p3));
+        if(/opponents heat up/.test(o.h)&&SR.p3<LG+CL.thot)bad('team',who,'Opponents “heat up” needs 4+ points above league average',pct1(SR.p3));
+        if(/hot shooting (ends|cools)/.test(o.h)&&SB.p3<LG+CL.thot)bad('team',who,'“Hot shooting ends” needs hot before',pct1(SB.p3));
+        if(/cold shooting ends|threes come back/.test(o.h)&&SB.p3>LG-CL.thot)bad('team',who,'“Cold shooting ends” needs cold before',pct1(SB.p3));}
+      var m=o.h.match(/(win|lose) (\d+) of (\d+)/);if(m&&((m[1]==='win'?R.w:R.l)!==+m[2]||ng!==+m[3]))bad('team',who,'Record in the headline must match',R.w+'-'+R.l);
+      m=o.h.match(/(win|lose) (\d+) straight/);if(m&&(+m[2]!==ng||(m[1]==='win'?R.w:R.l)!==ng))bad('team',who,'A streak in the headline must be the stretch the story covers',R.w+'-'+R.l);
+      if(ng<10&&!/early sign/.test(o.b2))bad('team',who,'Fewer than 10 games must be called an early sign','');
+      if(/\b(only|just) \d/.test([o.h,o.k,o.nut,o.b2].join(' ')))bad('team',who,'No “only” or “just” in front of a number','');
+    });
+  });
+  TRW=keep;RKC={};
+  if(typeof auditMore==='function')auditMore(bad,cnt);
+  return {fails:F,counts:N,rules:AUDIT_RULES};
+}
+var AUDIT_RULES=['A change is split into parts that add up exactly, and the headline names the biggest part only if it is 40%+ of the change',
+ '“Hot” / “cold” three-point shooting = 5+ points above / below the player’s own norm on 10+ attempts (teams: 4+ points from league average)',
+ '“Back to normal” = far from the norm before, close to it now','Shooting causes need enough attempts in both stretches (25 threes, 30 twos, 15 free throws)','If the second-biggest part is within 25% of the biggest, no single cause is named','No trend story for a player who missed his team’s latest game or 2 of its last 5','Hidden impact needs 150+ minutes, a recent game, and a team at least 5 points per 100 better with him on the floor',
+ 'The earlier stretch must be at least 5 games; fewer than 10 recent games is called an early sign','“With X out” needs a teammate who missed more than half the stretch after playing most of the earlier one (same position for minutes; a real shot-taker for shots)',
+ 'Up/down words (climbs, slips, lifts, falls, held, rose, dipped, doubles) must match the numbers','Above/below league average must match the numbers','No “only” or “just” in front of a number',
+ 'Records and streaks in headlines must match the game log','Leaderboard words (“most”, “leads”, “best”) must be true for the stated group','Superlatives and “more/fewer than average” in betting reasons must match the ranks'];
+function showAudit(){
+  var A=auditClaims(),tot=Object.keys(A.counts).reduce(function(a,k){return a+A.counts[k];},0);
+  var h='<div class="xp"><div class="x-top"><div><div class="x-eb">Through '+esc(META.updated||'')+'</div><h1 class="x-h1">Claim check</h1></div></div>';
+  h+='<p class="rk-lede"><b>'+(A.fails.length?A.fails.length+' problem'+(A.fails.length>1?'s':'')+' found':'All clear')+'.</b> We re-tested '+tot+' articles and callouts against the numbers behind them, in every view (last 5, last 10, season).</p>';
+  h+='<div class="bt-tw"><table class="bt-t"><thead><tr><th>Article type</th><th>Checked</th></tr></thead><tbody>'+Object.keys(A.counts).map(function(k){return '<tr><td>'+esc(k)+'</td><td>'+A.counts[k]+'</td></tr>';}).join('')+'</tbody></table></div>';
+  if(A.fails.length)h+='<h2 class="ar-h2">Problems</h2><div class="bt-tw"><table class="bt-t"><thead><tr><th>Article</th><th>Rule broken</th><th>Numbers</th></tr></thead><tbody>'+A.fails.map(function(f){return '<tr><td>'+esc(f.who)+'</td><td>'+esc(f.rule)+'</td><td>'+esc(f.detail)+'</td></tr>';}).join('')+'</tbody></table></div>';
+  h+='<h2 class="ar-h2">The rules</h2><ul class="hi-why">'+A.rules.map(function(r){return '<li>'+esc(r)+'</li>';}).join('')+'</ul></div>';
+  $('vStory').innerHTML=h;document.title='Claim check | NBA Savant';
+}
+
+/* checks for everything that isn't a trend story: The List, hidden impact, big nights, betting reasons, rankings */
+function auditMore(bad,cnt){
+  var keep=TRW;TRW='5';RKC={};
+  /* The List: every "most / leads / best" must be true for the stated group, recomputed from scratch */
+  featAll().forEach(function(f){cnt('The List features');var lead=f.h.split(' ')[0],who='The List: '+f.key;
+    if(f.key==='def'){var top={};topDefSet().forEach(function(t){top[t]=1;});var best=null;D.forEach(function(p){var g=GL[String(p.nba_id)];if(!g||g.length<6)return;var vs=g.filter(function(x){return top[oppOf(x)];});if(vs.length<3||g.length-vs.length<3)return;if(g.reduce(function(a,x){return a+x[3];},0)/g.length<24)return;var v=vs.reduce(function(a,x){return a+x[4];},0)/vs.length;if(!best||v>best.v)best={p:p,v:v};});
+      if(!best||lastName(best.p.Player)!==lead)bad('list',who,'“Most” must be true for the stated group',best?best.p.Player+' has the most':'');}
+    if(f.key==='eff'){var b2=null;D.forEach(function(p){if(!(p.PTS_PG>=18&&p.G>=3&&p.FGA_PG>0))return;var v=p.PTS_PG/(p.FGA_PG+0.44*p.FTA_PG);if(!b2||v>b2.v)b2={p:p,v:v};});if(!b2||lastName(b2.p.Player)!==lead)bad('list',who,'“Best” must be true for the stated group',b2?b2.p.Player:'');}
+    if(f.key==='clutch'){var b3=null;D.forEach(function(p){if(!((p.CL_GP||0)>=3))return;if(!b3||p.CL_PTS>b3.CL_PTS)b3=p;});if(!b3||(lastName(b3.Player)!==lead&&b3.CL_PTS!==f.rows[0].CL_PTS))bad('list',who,'“Leads” must be true for the stated group',b3?b3.Player:'');}
+    if(f.key==='min')f.rows.forEach(function(x){if(!(x.pp>=1.5*x.mp&&x.R.min-x.B.min>=4))bad('list',who,'Production must grow 1.5x faster than minutes',x.p.Player);});
+    if(f.key==='hidden')f.rows.forEach(function(x){var A=hidAdv(x.p);if(!A||A.avg<75)bad('list',who,'Hidden impact needs a 75+ advanced score',x.p.Player);});
+    if(/\b(only|just) \d/.test([f.h,f.k,f.lede.replace(/<[^>]+>/g,''),f.nut].join(' ')))bad('list',who,'No “only” or “just” in front of a number','');});
+  /* hidden impact stories */
+  hidList().forEach(function(o){cnt('Hidden impact stories');var p=o.p,who='Hidden impact: '+p.Player,h=hidHead(o);
+    if(h.indexOf(f1(p.PTS_PG))<0||h.indexOf(sg1(p.NET_RTG))<0)bad('hidden',who,'Headline numbers must match his card','');
+    if(!(p.NET_RTG>0)&&/\+/.test(h))bad('hidden',who,'A “+” net rating must be positive',f1(p.NET_RTG));
+    if(o.m<150||(o.sw!=null&&o.sw<5)||!availNow(p))bad('hidden',who,'Needs 150+ minutes, a recent game and a +5 on/off swing',o.m+' min');
+    hidWhy(p).forEach(function(c){if(c.n<70)bad('hidden',who,'“Does well” items must beat 70% of rotation players',c.t);});});
+  /* big-night stories */
+  bestGames().g.forEach(function(o){cnt('Big night stories');var g=GL[String(o.p.nba_id)],mx=Math.max.apply(null,g.map(function(y){return y[4];})),hi=o.x[4]>=mx&&g.length>=3;
+    if(hi&&o.x[4]<mx)bad('night','Big night: '+o.p.Player,'“Most points this season” must be true','');});
+  /* betting: every reason bullet must agree with the numbers behind it */
+  try{var L=learnRun(),C=betCtx(BET.cut);
+    L.tonight.forEach(function(c){var o=c.o,who='Betting: '+o.p.Player+' '+BSTAT[c.k];cnt('Betting calls and reasons');
+      if((c.pj>c.line)!==c.over)bad('bet',who,'Over/under must follow the projection',f1(c.pj)+' vs '+c.line);
+      c.R.forEach(function(r){var t=r.t;
+        if(/^Minutes trending up/.test(t)&&!(o.lm>o.sm))bad('bet',who,'“Trending up” needs last-5 minutes above season',t);
+        if(/^Minutes trending down/.test(t)&&!(o.lm<o.sm))bad('bet',who,'“Trending down” needs last-5 minutes below season',t);
+        if(/^Likely to cool/.test(t)&&!(o.p3s-o.p3r>=0.02))bad('bet',who,'“Likely to cool” needs his 3P% 2+ points above the estimate',t);
+        if(/^Room to climb/.test(t)&&!(o.p3r-o.p3s>=0.02))bad('bet',who,'“Room to climb” needs his 3P% 2+ points below the estimate',t);
+        if(/^(Soft|Tough) matchup/.test(t)){var kk=c.k==='ast'?'ast':'pts',fr=fRank(C,kk,o.opp);if(fr&&!(/^Soft/.test(t)?fr.r<=10:fr.r>fr.n-10))bad('bet',who,'“Soft/tough matchup” needs a top-10 or bottom-10 opponent',t);}
+        if(/^Teammates out/.test(t)&&!o.outs.length)bad('bet',who,'“Teammates out” needs someone out',t);
+        if(/\b(only|just) \d/.test(t))bad('bet',who,'No “only” or “just” in front of a number',t);});});
+    L.picks.forEach(function(c){cnt('Betting picks');if(c.p<BETP.th)bad('bet','Pick: '+c.o.p.Player,'Picks must clear the 60% bar',Math.round(c.p*100)+'%');});
+  }catch(e){bad('bet','Betting','Checker error',String(e));}
+  /* rankings: risers and fallers */
+  try{siJumps().forEach(function(r){cnt('Risers and fallers');if(Math.abs((r.to-r.from)-r.jump)>0.01)bad('rank','Riser: '+r.p.Player,'Jump must equal now minus before','');});}catch(e){bad('rank','Rankings','Checker error',String(e));}
+  TRW=keep;RKC={};
+}
+
 /* ================= TEAM PAGES ================= */
 var TEAM_STATS=[
  {k:'net',n:'Net rating',sub:'Points per 100 possessions, scored minus allowed',fm:function(v){return sg1(v);}},
@@ -3713,7 +3966,7 @@ var TEAM_STATS=[
  {k:'p3',n:'3-point %',sub:'Share of threes made'},
  {k:'tov',n:'Turnover rate',sub:'Turnovers per 100 possessions',inv:1},
  {k:'ftr',n:'Free throw rate',sub:'Free throws per 100 shots'},
- {k:'ast',n:'Assist rate',sub:'Share of baskets that were assisted'},
+ {k:'ast',n:'Assist rate',sub:'Share of baskets that were assisted. Not good or bad, just style',neutral:1},
  {k:'oreb',n:'Offensive rebounds',sub:'Per game'},
  {k:'pace',n:'Pace',sub:'Possessions per game. Not good or bad, just style',neutral:1},
  {k:'tpa',n:'3-point attempts',sub:'Per game. Not good or bad, just style',neutral:1}
@@ -3762,9 +4015,9 @@ function showTeam(t){
   if(mv.length){
     var hot=mv.filter(function(x){return x.d>0;}).sort(function(a,b){return b.d-a.d;}).slice(0,3),cold=mv.filter(function(x){return x.d<0;}).sort(function(a,b){return a.d-b.d;}).slice(0,3);
     var row=function(x){var c=x.d>0?'var(--rise)':'var(--fall)';return '<div class="tp-hc" data-id="'+x.p.nba_id+'">'+xav(x.p)+'<div style="min-width:0;flex:1"><div class="ell" style="font-weight:800">'+esc(x.p.Player)+'</div><div class="tp-hs">PTS+REB+AST '+f1(x.B.pra)+' → '+f1(x.R.pra)+'</div></div><b style="color:'+c+'">'+sg1(x.d)+'</b></div>';};
-    h+='<div class="p-sec"><div class="p-sec-hd"><div class="sec-t">Heating Up / Cooling Off</div><div class="note">Last 5 games vs earlier</div></div><div class="tp-hcw">'
-      +'<div><div class="tp-hh" style="color:var(--rise)">▲ Heating up</div>'+(hot.length?hot.map(row).join(''):'<div class="tr-empty">Nobody yet.</div>')+'</div>'
-      +'<div><div class="tp-hh" style="color:var(--fall)">▼ Cooling off</div>'+(cold.length?cold.map(row).join(''):'<div class="tr-empty">Nobody yet.</div>')+'</div></div></div>';
+    h+='<div class="p-sec"><div class="p-sec-hd"><div class="sec-t">Biggest Jumps / Biggest Drops</div><div class="note">Points + rebounds + assists per game, last 5 games vs earlier. Includes changes in minutes.</div></div><div class="tp-hcw">'
+      +'<div><div class="tp-hh" style="color:var(--rise)">▲ Biggest jumps</div>'+(hot.length?hot.map(row).join(''):'<div class="tr-empty">Nobody yet.</div>')+'</div>'
+      +'<div><div class="tp-hh" style="color:var(--fall)">▼ Biggest drops</div>'+(cold.length?cold.map(row).join(''):'<div class="tr-empty">Nobody yet.</div>')+'</div></div></div>';
   }
   /* game log */
   h+='<div class="p-sec"><div class="p-sec-hd"><div class="sec-t">Game Log</div><div class="note">Newest first</div></div><div class="st-wrap"><table class="gl tp-gl"><tr><th>Date</th><th>Opponent</th><th>Result</th><th>Score</th><th>Margin</th></tr>'
@@ -3838,7 +4091,7 @@ function projPlayers(t,opp,home,md,C,mg){
   return act.map(function(r){
     var mT=r.mb-r.sm,mO=BETP.fr*Math.min(6,freed*wt(r)/S),base=r.sm+mT+mO,mB=b2b&&base>=28?-0.03*base:0,mX=Math.abs(mg||0)>=12&&base>=28?-0.04*base:0,m=Math.min(40,base+mB+mX);
     var tm=r.g.reduce(function(s,x){return s+x[3];},0),g5=r.g.slice(-5),tm5=g5.reduce(function(s,x){return s+x[3];},0)||1,rw=r.g.length>5?BETP.rw:0;
-    var o={p:r.p,t:t,opp:opp,home:home,m:m,sm:r.sm,lm:r.lm,mup:m-r.sm,mT:mT,mO:mO,mB:mB,mX:mX,pace:pace,F:F,b2b:b2b,outs:outs,oShare:oShare,usage:usage,nG:r.g.length,g:r.g,mg:mg,q:r.q,st:r.st,form:{},fx:{}};
+    var o={p:r.p,t:t,opp:opp,home:home,m:m,sm:r.sm,lm:r.lm,mup:m-r.sm,mT:mT,mO:mO,mB:mB,mX:mX,pace:pace,F:F,b2b:b2b,outs:outs,oShare:oShare,usage:usage,nG:r.g.length,g:r.g,mg:mg,q:r.q,st:r.st,hasPr:!!(r.pr&&r.pr[1]),form:{},fx:{}};
     /* season rate, padded with last season's rate (worth up to BETP.pk minutes) when we have it */
     var PI={pts:2,reb:3,ast:4,tpa:6},pk=r.pr&&r.pr[1]?Math.min(BETP.pk,r.pr[1]):0;
     var srate=function(k,sum){return (sum+(pk?pk*r.pr[PI[k]]/r.pr[1]:0)+BETP.rk*(C.lgR[k]||0))/(tm+pk+BETP.rk);};
@@ -3878,24 +4131,30 @@ function bReasons(o,k){
   var ue=ks.indexOf('pts')>=0||ks.indexOf('ast')>=0?mix(function(kk){return kk==='pts'?o.usage:kk==='ast'?1+(o.usage-1)*0.5:1;})-1:0;
   if(ue>0)add(ue,1,'usage','Bigger role: '+outN+(o.outs.length>1?' take ':' takes ')+Math.round(o.oShare*100)+'% of the team’s shots, and some go to him');
   var fe=mix(function(kk){return o.form[kk]||1;})-1;
-  if(Math.abs(fe)>=0.04)add(fe,fe>0?1:-1,'form',(fe>0?'Hot lately: ':'Cold lately: ')+Math.round(Math.abs(fe)/BETP.rw*100)+'% '+(fe>0?'more':'fewer')+' '+nm+' per minute over his last 5 games');
+  if(Math.abs(fe)>=0.04)add(fe,fe>0?1:-1,'form',(fe>0?'Doing more lately: ':'Doing less lately: ')+Math.round(Math.abs(fe)/BETP.rw*100)+'% '+(fe>0?'more':'fewer')+' '+nm+' per minute over his last 5 games');
   var oe=mix(function(kk){return o.F[kk]||1;})-1,ot;
-  if(k==='pts'){var r1=fRank(C,'pts',o.opp);ot=(oe>0?'Soft matchup: ':'Tough matchup: ')+'the '+N+' allow '+f1(C.bl(o.opp,'drtg'))+' points per 100 possessions'+(r1?' ('+mostFew(r1,oe>0)+' in the NBA)':'');}
+  var mlab=function(fr){var ext=fr&&(oe>0?fr.r<=10:fr.r>fr.n-10);return (oe>0?(ext?'Soft matchup: ':'Slightly easier matchup: '):(ext?'Tough matchup: ':'Slightly tougher matchup: '));};
+  if(k==='pts'){var r1=fRank(C,'pts',o.opp);ot=mlab(r1)+'the '+N+' allow '+f1(C.bl(o.opp,'drtg'))+' points per 100 possessions'+(r1?' ('+mostFew(r1,oe>0)+' in the NBA)':'');}
   else if(k==='reb'){var r2=fRank(C,'reb',o.opp),mr=missRank(C,o.opp);ot=(oe>0?'More rebounds available: ':'Fewer rebounds available: ')+'the '+N+' allow '+Math.round(Math.abs(oe)*100)+'% '+(oe>0?'more':'fewer')+' rebounds than average'+(r2?' ('+mostFew(r2,oe>0)+')':'')+(mr&&(oe>0?mr.r<=10:mr.r>=mr.n-9)?' and miss '+mostFew(mr,oe>0)+' shots':'');}
-  else if(k==='ast'){var r3=fRank(C,'ast',o.opp);ot=(oe>0?'Soft matchup: ':'Tough matchup: ')+'the '+N+' allow '+Math.round(Math.abs(oe)*100)+'% '+(oe>0?'more':'fewer')+' assists than average'+(r3?' ('+mostFew(r3,oe>0)+')':'');}
-  else if(k==='tpm'){var r4=fRank(C,'tpa',o.opp);ot=(oe>0?'Open looks: ':'Tough matchup: ')+'the '+N+' allow '+(r4?mostFew(r4,oe>0):'')+' three-point attempts. Defenses control how many threes you take more than how many fall';}
+  else if(k==='ast'){var r3=fRank(C,'ast',o.opp);ot=mlab(r3)+'the '+N+' allow '+Math.round(Math.abs(oe)*100)+'% '+(oe>0?'more':'fewer')+' assists than average'+(r3?' ('+mostFew(r3,oe>0)+')':'');}
+  else if(k==='tpm'){var r4=fRank(C,'tpa',o.opp);ot=(oe>0?'More threes available: ':'Fewer threes available: ')+'the '+N+' allow '+(r4?mostFew(r4,oe>0):(oe>0?'more':'fewer'))+' three-point attempts'+(r4?'':' than average')+'. Defenses control how many threes you take more than how many fall';}
   else{var parts=[];ks.forEach(function(kk){var f=o.F[kk]||1;if((f>1)!==(oe>0)||Math.abs(f-1)<0.02)return;var rr=fRank(C,kk,o.opp);
       parts.push(kk==='pts'?f1(C.bl(o.opp,'drtg'))+' points per 100 possessions'+(rr?' ('+mostFew(rr,oe>0)+')':''):Math.round(Math.abs(f-1)*100)+'% '+(oe>0?'more':'fewer')+' '+(kk==='reb'?'rebounds':'assists')+' than average'+(rr?' ('+mostFew(rr,oe>0)+')':''));});
-    ot=(oe>0?'Soft matchup: ':'Tough matchup: ')+'the '+N+' allow '+(parts.length?parts.join(' and '):(oe>0?'more':'less')+' than average');}
+    ot=(oe>0?'Easier matchup: ':'Tougher matchup: ')+'the '+N+' allow '+(parts.length?parts.join(' and '):(oe>0?'more':'less')+' than average');}
   add(oe,oe>0?1:-1,'opp',ot);
   if(Math.abs(o.pace-1)>=0.015)add(o.pace-1,o.pace>1?1:-1,'pace',(o.pace>1?'Fast game: ':'Slow game: ')+'about '+Math.round(Math.abs(o.pace-1)*100)+'% '+(o.pace>1?'more':'fewer')+' possessions than an average game, so '+(o.pace>1?'more':'fewer')+' chances for everyone');
-  if(k==='tpm'&&o.a3>=10){var re=o.p3r/o.p3s-1;if(isFinite(re))add(re,re>0?1:-1,'reg',re<0?'Likely to cool: he’s making '+Math.round(o.p3s*100)+'% of his threes; shooting streaks fade, so we expect about '+Math.round(o.p3r*100)+'%':'Due to bounce back: he’s making only '+Math.round(o.p3s*100)+'% of his threes; we expect about '+Math.round(o.p3r*100)+'%');}
+  if(k==='tpm'&&o.a3>=10){var re=o.p3r/o.p3s-1;if(isFinite(re)&&Math.abs(o.p3r-o.p3s)>=0.02)add(re,re>0?1:-1,'reg',re<0?(o.p3s-o.p3r>=0.05?'Likely to cool':'A bit above his expected rate')+': he’s making '+Math.round(o.p3s*100)+'% of his threes on '+o.a3+' attempts; his track record and the league average point to about '+Math.round(o.p3r*100)+'%':(o.p3r-o.p3s>=0.05?'Room to climb':'A bit below his expected rate')+': he’s making '+Math.round(o.p3s*100)+'% of his threes on '+o.a3+' attempts; his track record and the league average point to about '+Math.round(o.p3r*100)+'%');}
+  /* the two quieter pieces of every projection, so the bullets account for the whole gap to his season average */
+  var be=mix(function(kk){return o.fx[kk]&&o['s_'+kk]?o.fx[kk].b/o['s_'+kk]:1;})-1;
+  if(o.hasPr&&Math.abs(be)>=0.04)add(be,be>0?1:-1,'prior','Last season counts too: with '+o.nG+' games played this season, we blend in his minutes and per-minute numbers from last season, which moves this '+(be>0?'up':'down')+' about '+Math.round(Math.abs(be)*100)+'%');
+  var ic2=BET.icpt||{},ie=mix(function(kk){return Math.exp(ic2[kk]||0);})-1;
+  if(Math.abs(ie)>=0.03)add(ie,ie>0?1:-1,'corr','Model correction: our '+nm+' projections have run about '+Math.round(Math.abs(ie)*100)+'% '+(ie<0?'high':'low')+' this season, so we '+(ie<0?'trim':'raise')+' them');
   return R.sort(function(a,b){return b.e-a.e;});
 }
 /* exactly three bullets: the biggest reasons that agree with the call, then the biggest one against it, then context */
 function why3(c){
   var o=c.o,k=c.k,dir=c.d>0?1:-1,R=c.R,pro=R.filter(function(r){return r.s===dir;}),con=R.filter(function(r){return r.s!==dir;}),out=pro.slice(0,3);
-  if(out.length<3&&con.length)out.push({s:con[0].s,t:'Working against it: '+con[0].t.replace(/^[^:]+:\s*/,'')});
+  if(out.length<3&&con.length)out.push({s:con[0].s,t:'Working against it: '+con[0].t.charAt(0).toLowerCase()+con[0].t.slice(1)});
   if(out.length<3)out.push({s:0,t:'Season so far: '+f1(o['s_'+k])+' '+BSTAT[k].toLowerCase()+' a game in '+f1(o.sm)+' minutes, over '+o.nG+' games'});
   if(out.length<3){var g=o.g.slice(-10),h=g.filter(function(x){return (glv(x,k)-o['s_'+k])*dir>0;}).length;out.push({s:0,t:'Recent games: '+(dir>0?'above':'below')+' his average in '+h+' of his last '+g.length});}
   return out.slice(0,3);
@@ -4065,7 +4324,7 @@ function pickCard(c,i){
   var o=c.o,k=c.k,ov=c.over,g=o.g.slice(-10),hits=g.filter(function(x){var v=glv(x,k);return ov?v>c.line:v<c.line;}).length,lo=Math.max(0,Math.floor(c.pj-1.54*o['sd_'+k])),hi=Math.ceil(c.pj+1.54*o['sd_'+k]);
   return '<div class="bp">'+'<div class="bp-n">'+(i+1)+'</div>'+pbx(o.p,'bp-hs')+'<div class="bp-b"><div class="bp-top"><a href="#p'+o.p.nba_id+'" class="bp-nm">'+esc(o.p.Player)+'</a><span class="bp-mu">'+img(logoT(o.t),'bp-lg')+(o.home?' vs ':' @ ')+img(logoT(o.opp),'bp-lg')+'<b>'+esc(o.opp)+'</b></span></div>'
     +'<div class="bp-num"><b class="bp-call '+(ov?'g':'r')+'">'+(ov?'Over':'Under')+' '+c.line+'</b><span>'+esc(BSTAT[k].toLowerCase())+'</span><em class="n">We give it a '+Math.round(c.p*100)+'% chance</em></div>'
-    +(lTrack(c)?'<div class="bp-tr">Track record: <b>'+esc(lTrack(c).name.toLowerCase())+'</b> have hit '+Math.round(lTrack(c).h/lTrack(c).n*100)+'% ('+lTrack(c).h+' of '+lTrack(c).n+')</div>':'')+'<div class="bp-meta"><span>Our projection <b>'+f1(c.pj)+'</b></span><span>Season average <b>'+f1(o['s_'+k])+'</b></span><span>'+(ov?'Over':'Under')+' '+c.line+' in <b>'+hits+' of his last '+g.length+'</b></span><span>Likely range <b>'+lo+' to '+hi+'</b></span></div>'
+    +(lTrack(c)?'<div class="bp-tr">Track record: <b>'+esc(lTrack(c).name.toLowerCase())+'</b> have hit '+Math.round(lTrack(c).h/lTrack(c).n*100)+'% ±'+moe(lTrack(c).h,lTrack(c).n)+' ('+lTrack(c).h+' of '+lTrack(c).n+', test run and live combined)</div>':'')+'<div class="bp-meta"><span>Our projection <b>'+f1(c.pj)+'</b></span><span>Season average <b>'+f1(o['s_'+k])+'</b></span><span>'+(ov?'Over':'Under')+' '+c.line+' in <b>'+hits+' of his last '+g.length+'</b></span><span>Likely range <b>'+lo+' to '+hi+'</b></span></div>'
     +'<ul class="bp-why">'+why3(c).map(function(r){return '<li class="'+(r.s>0?'g':r.s<0?'r':'n')+'"><i>'+(r.s>0?'▲':r.s<0?'▼':'•')+'</i>'+esc(r.t)+'</li>';}).join('')+'</ul></div></div>';
 }
 function gameCard(x){
@@ -4074,7 +4333,7 @@ function gameCard(x){
   var b2b=[(x.A[0]&&x.A[0].b2b)?x.aw:null,(x.H[0]&&x.H[0].b2b)?x.hm:null].filter(Boolean);
   return '<a class="bg" href="#b/g/'+bMatch(x)+'"><div class="bg-tip">'+esc(x.tip||'')+'</div><div class="bg-row">'+img(logoT(x.aw),'bg-lg')+'<b>'+x.aw+'</b><em>'+Math.round(x.pa)+'</em></div><div class="bg-row">'+img(logoT(x.hm),'bg-lg')+'<b>'+x.hm+'</b><em>'+Math.round(x.ph)+'</em></div>'
     +'<div class="bg-ft"><span>'+(half(Math.abs(x.mg))?fav+' by '+half(Math.abs(x.mg)):'Pick ’em')+'</span><span>Total '+half(x.tot)+'</span></div>'
-    +(b2b.length||oA.length||oH.length?'<div class="bg-note">'+(b2b.length?b2b.join(', ')+' on a back-to-back. ':'')+(oA.concat(oH).length?'Out: '+oA.concat(oH).slice(0,3).map(function(r){return lastName(r.p.Player);}).join(', '):'')+'</div>':'')+'</a>';
+    +(b2b.length||oA.length||oH.length?'<div class="bg-note">'+(b2b.length?b2b.join(', ')+' on a back-to-back. ':'')+[[x.aw,oA],[x.hm,oH]].filter(function(z){return z[1].length;}).map(function(z){return z[0]+' out: '+z[1].slice(0,3).map(function(r){return lastName(r.p.Player);}).join(', ');}).join('. ')+'</div>':'')+'</a>';
 }
 function projTable(games,filt){
   var rows=[];games.forEach(function(x){if(filt&&bMatch(x)!==filt)return;x.A.concat(x.H).forEach(function(o){if(o.m>=12)rows.push(o);});});
@@ -4082,9 +4341,9 @@ function projTable(games,filt){
   var col=function(id,lab){return '<th class="'+(BSORT.k===id?'on':'')+'"><button type="button" data-bsort="'+id+'">'+lab+'</button></th>';};
   return '<div class="bt-chips"><button type="button" class="x-chip'+(!filt?' on':'')+'" data-bgf="">All games</button>'+games.map(function(x){return '<button type="button" class="x-chip'+(filt===bMatch(x)?' on':'')+'" data-bgf="'+bMatch(x)+'">'+x.aw+' @ '+x.hm+'</button>';}).join('')+'</div>'
     +'<div class="bt-tw"><table class="bt-t"><thead><tr><th>Player</th><th>Opp</th>'+col('m','Min')+col('pts','Pts')+col('reb','Reb')+col('ast','Ast')+col('tpm','3PM')+col('pra','PRA')+col('pr','P+R')+col('pa','P+A')+'</tr></thead><tbody>'
-    +rows.map(function(o){var c=function(kk){var ln=bLine(o,kk),pj=pjOf(o,kk),ov=pj>ln,z=(pj-ln)/o['sd_'+kk],pb=0.5+(ncdf(Math.abs(z)/1.2)-0.5)*0.55,cl=pb>=0.58?(ov?'g':'r'):'';return '<td class="bt-ou '+cl+'" title="Our projection '+f1(pj)+', season average '+f1(o['s_'+kk])+'"><b>'+(ov?'O':'U')+' '+ln+'</b><small>'+Math.round(pb*100)+'%</small></td>';};
+    +rows.map(function(o){var c=function(kk){var ln=bLine(o,kk),pj=pjOf(o,kk),ov=pj>ln,pb=lChance(learnRun().S,kk,pj,o['sd_'+kk],ln,ov).p,cl=pb>=0.58?(ov?'g':'r'):'';return '<td class="bt-ou '+cl+'" title="Our projection '+f1(pj)+', season average '+f1(o['s_'+kk])+'"><b>'+(ov?'O':'U')+' '+ln+'</b><small>'+Math.round(pb*100)+'%</small></td>';};
       return '<tr><td><a class="bt-pl" href="#p'+o.p.nba_id+'">'+'<span class="ld-hs" style="background:'+teamOf(o.t).c+'">'+img(headSm(o.p.nba_id),'')+'</span><b>'+esc(o.p.Player)+'</b><span>'+o.t+(o.q?' · Questionable':'')+'</span></a></td><td>'+(o.home?'vs ':'@ ')+o.opp+'</td><td>'+f1(o.m)+'</td>'+c('pts')+c('reb')+c('ast')+c('tpm')+c('pra')+c('pr')+c('pa')+'</tr>';}).join('')
-    +'</tbody></table></div>'+(cap?'<button type="button" class="x-chip bt-more" data-ball="1">Show all '+nAll+' players</button>':'')+'<p class="bt-note">O = over, U = under. The number is the half-point line that splits his games most evenly; the % is our chance it hits. Green or red = 58%+ on the over or under. Hover for our exact projection. Tap a column to sort.</p>';
+    +'</tbody></table></div>'+(cap?'<button type="button" class="x-chip bt-more" data-ball="1">Show all '+nAll+' players</button>':'')+'<p class="bt-note">O = over, U = under. The number is the half-point line that splits his games most evenly; the % is our chance it hits. Green or red = 58%+ on the over or under. Chances use the same math as our picks. Hover for our exact projection. Tap a column to sort.</p>';
 }
 function teamTrend(t){
   var G=teamGames()[t]||[],A=allTeamAgg(),rec=function(gs){var w=gs.filter(function(o){return o.wl==='W';}).length;return w+'-'+(gs.length-w);};
@@ -4130,7 +4389,7 @@ function buildBetting(){
   if(!sl.games.length){h+='<div class="tr-empty">No upcoming games are in the data yet. Run the update on a game day (1 to 2 hours before tip works best) and tonight’s projections will appear here.</div>';}
   else{
     var P=learnRun().picks;
-    if(P.length){h+='<article class="bt-lead"><div class="kick b">Tonight’s best calls · '+esc(sl.md)+'</div><h1 class="ar-h">'+esc(bHead(P[0]))+'</h1><p class="ar-dek">'+(P.length>1?'The '+P.length+' calls that cleared our bar tonight, best first.':'The one call that cleared our bar tonight.')+' Any stat, over or under: each pick comes from that player’s own projection against the line, and only calls the model gives at least a '+Math.round(BETP.th*100)+'% chance make the list.</p><div class="bp-l">'+P.map(pickCard).join('')+'</div></article>';}
+    if(P.length){h+='<article class="bt-lead"><div class="kick b">Tonight’s best calls · '+esc(sl.md)+'</div><h1 class="ar-h">'+esc(bHead(P[0]))+'</h1><p class="ar-dek">'+(P.length>1?'The '+P.length+' calls that cleared our bar tonight, best first.':'The one call that cleared our bar tonight.')+' Any stat, over or under: each pick comes from that player’s own projection against our own line (not a sportsbook’s), and only calls the model gives at least a '+Math.round(BETP.th*100)+'% chance make the list.</p><div class="bp-l">'+P.map(pickCard).join('')+'</div></article>';}
     else h+='<article class="bt-lead"><div class="kick b">Tonight’s best calls · '+esc(sl.md)+'</div><h1 class="ar-h">No picks tonight</h1><p class="ar-dek">Nothing cleared our bar of a '+Math.round(BETP.th*100)+'% chance. On nights without a real edge, the model sits out. The full projections are below.</p></article>';
     h+='<section class="bt-s"><div class="x-sechd"><h2 class="x-h2">Tonight’s games</h2><div class="x-meta">Projected score · tap a game for the full preview</div></div><div class="bg-g">'+sl.games.map(gameCard).join('')+'</div></section>';
     h+='<section class="bt-s qc-i">'+slateScatter(sl)+'</section>';
@@ -4154,13 +4413,13 @@ function showMatchup(code){
   h+='<div class="bm-sc">'+[[x.aw,x.pa],[x.hm,x.ph]].map(function(z){return '<div class="bm-t">'+img(logoT(z[0]),'bm-lg')+'<b>'+esc(nick(z[0]))+'</b><em>'+Math.round(z[1])+'</em><span>'+(z[0]===x.hm?'Home':'Away')+' · '+(A[z[0]]?A[z[0]].w+'-'+A[z[0]].l:'')+'</span></div>';}).join('<div class="bm-at">@</div>')+'</div>';
   var row=function(l,a,b){return '<tr><td>'+l+'</td><td>'+a+'</td><td>'+b+'</td></tr>';};
   var oA=(x.A[0]||{outs:[]}).outs,oH=(x.H[0]||{outs:[]}).outs,b2A=x.A[0]&&x.A[0].b2b,b2H=x.H[0]&&x.H[0].b2b;
-  h+='<h2 class="ar-h2">Key edges</h2><div class="bt-tw"><table class="bt-t bm-e"><thead><tr><th></th><th>'+img(logoT(x.aw),'bg-lg')+' '+x.aw+'</th><th>'+img(logoT(x.hm),'bg-lg')+' '+x.hm+'</th></tr></thead><tbody>'
+  h+='<h2 class="ar-h2">How they match up</h2><div class="bt-tw"><table class="bt-t bm-e"><thead><tr><th></th><th>'+img(logoT(x.aw),'bg-lg')+' '+x.aw+'</th><th>'+img(logoT(x.hm),'bg-lg')+' '+x.hm+'</th></tr></thead><tbody>'
     +row('Offense (points per 100)',f1(C.bl(x.aw,'ortg'))+' · '+rk(x.aw,'ortg'),f1(C.bl(x.hm,'ortg'))+' · '+rk(x.hm,'ortg'))
     +row('Defense (allowed per 100)',f1(C.bl(x.aw,'drtg'))+' · '+rk(x.aw,'drtg',1),f1(C.bl(x.hm,'drtg'))+' · '+rk(x.hm,'drtg',1))
     +row('Pace (possessions per game)',f1(C.bl(x.aw,'pace'))+' · '+rk(x.aw,'pace'),f1(C.bl(x.hm,'pace'))+' · '+rk(x.hm,'pace'))
-    +row('Rest',b2A?'Back-to-back':'Rested',b2H?'Back-to-back':'Rested')
+    +row('Schedule',b2A?'Second night of a back-to-back':'Not a back-to-back',b2H?'Second night of a back-to-back':'Not a back-to-back')
     +row(META.inj&&META.inj.d===sl.md?'Out (official injury report)':'Out (missed last game)',oA.length?oA.map(function(r){return esc(lastName(r.p.Player));}).join(', '):'Nobody',oH.length?oH.map(function(r){return esc(lastName(r.p.Player));}).join(', '):'Nobody')
-    +'</tbody></table></div><p class="bt-note">Ratings blend season (60%) and last 10 games (40%). NBA rank after each number, 1st = best (for pace, 1st = fastest). Absences come from box scores: a rotation player who missed the last game is treated as out.</p>';
+    +'</tbody></table></div><p class="bt-note">Ratings blend season (60%) and last 10 games (40%). NBA rank after each number, 1st = best (for pace, 1st = fastest). '+(META.inj&&META.inj.d===sl.md?'Absences come from the official NBA injury report (Out or Doubtful).':'No injury report for tonight yet, so a rotation player who missed the last game is treated as out.')+'</p>';
   var P=lPick(learnRun().tonight.filter(function(c){return c.g===code;}),4,BETP.th);if(P.length)h+='<h2 class="ar-h2">Our most confident projections</h2><div class="bp-l">'+P.slice(0,4).map(pickCard).join('')+'</div>';
   h+='<h2 class="ar-h2">Player projections</h2>'+projTable([x],'').replace(/<div class="bt-chips">[\s\S]*?<\/div>/,'');
   h+='<h2 class="ar-h2">Team trends</h2>'+trendTable([x.aw,x.hm]);
@@ -4189,6 +4448,7 @@ function route(){
   else if(tmm&&T[tmm[1]]){show('team');showTeam(tmm[1]);}
   else if((m=/^#s\/(p|t)\/(\w+)(?:\/(5|10|season))?$/.exec(h))){if(m[3])TRW=m[3];show('story');showStory(m[1],m[2]);trAnimate($('vStory'));}
   else if((m=/^#s\/n\/(\d+\/\d+-\d+)$/.exec(h))){show('story');showBigNight(m[1]);trAnimate($('vStory'));}
+  else if(h==='#/audit'){show('story');showAudit();}
   else if((m=/^#s\/h\/(\d+)$/.exec(h))){show('story');showHidden(m[1]);trAnimate($('vStory'));}
   else if((m=/^#s\/f\/(\w+)$/.exec(h))){if(m[1]==='min')TRW='5';show('story');showFeature(m[1]);trAnimate($('vStory'));}
   else if(h.indexOf('#/leaders')===0){
