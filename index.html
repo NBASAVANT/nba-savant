@@ -975,6 +975,23 @@ h2.st-sh.gg{margin-top:38px}
 .rk-b.s{width:28px;height:28px;font-size:12px;box-shadow:none;border:0}
 .rk-cf{display:inline-block;font-style:normal;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:4px 8px;border-radius:6px}
 .rk-cf.g{background:#e3f4ea;color:#1f8a4c}.rk-cf.n{background:#eef1f7;color:#5a6378}.rk-cf.r{background:#fbe9e5;color:#c2341f}
+.fp-pg{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:10px}
+.fp-pk{display:block;border:1px solid var(--rule2);border-radius:14px;padding:14px 16px;color:inherit;background:#fff}
+.fp-pk:hover b{color:var(--blue)}.fp-pk .rk-jh{grid-template-columns:44px minmax(0,1fr)}
+.fp-ks{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0 8px;text-align:center}
+.fp-ks>div{background:var(--tint);border-radius:10px;padding:8px 4px}.fp-ks .rk-b{display:flex;margin:2px auto 0}.fp-fig{margin:18px 0 6px}.fp-ks b{display:block;font-size:22px;font-weight:900;line-height:1.2}
+.fp-ks span{display:block;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--t3);margin-bottom:3px}
+.fp-ks i{display:block;font-style:normal;font-size:11px;color:var(--t3);margin-top:3px}
+.fp-why{font-size:14px;line-height:1.45;margin:6px 0 10px}.fp-whyh{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);margin-bottom:5px}
+.fp-st{display:flex;height:12px;border-radius:6px;overflow:hidden;background:#eef1f7}.fp-st i{display:block;height:100%}
+.fp-stl{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;margin:6px 0 8px;color:var(--t2)}.fp-stl span{display:inline-flex;align-items:center;gap:5px}
+.fp-stl i{width:9px;height:9px;border-radius:2px;display:inline-block}.fp-stl .neg{color:var(--fall)}
+.fp-ch{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.fp-ch span{font-size:12px;font-weight:800;padding:4px 8px;border-radius:6px;background:#eef1f7;color:#5a6378}
+.fp-ch .up{background:#e3f4ea;color:#1f8a4c}.fp-ch .dn{background:#fbe9e5;color:#c2341f}
+.fp-sc{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin:10px 0 14px}
+.fp-sc>div{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--rule2);border-radius:10px;padding:10px 14px;background:#fff}
+.fp-sc b{font-weight:900}.fp-sc .up{color:var(--rise)}.fp-sc .dn{color:var(--fall)}
+@media(max-width:700px){.fp-pg{grid-template-columns:1fr}}
 .rk-jg{display:grid;grid-template-columns:1fr 1fr;gap:28px}
 .rk-j{display:block;border:1px solid var(--rule2);border-radius:14px;padding:14px 16px;margin-bottom:14px;color:inherit;background:#fff}
 .rk-j:hover b{color:var(--blue)}
@@ -1487,7 +1504,7 @@ html.intro #hmMain::after{content:'';position:absolute;inset:0;background:var(--
 <header class="hdr">
   <div class="hdr-l">
     <a class="wm" href="#/">NBA <span>Savant</span></a>
-    <nav class="nav" id="nav"><a href="#/" data-nav="home">Home</a><a href="#/leaders" data-nav="leaders">Leaderboards</a><a href="#/rankings" data-nav="rankings">Rankings</a><a href="#/trends" data-nav="trends">Trends</a><a href="#/betting" data-nav="betting">Betting</a><div class="nav-tm" id="navTm"><button type="button" class="nav-tmb" data-nav="teams" aria-expanded="false">Teams <span class="car">▾</span></button><div class="tm-pan" id="tmPan"></div></div><a href="#/players" data-nav="players">Players</a><a href="#/compare" data-nav="compare" id="navCmp">Compare</a><div class="nav-srch"><label class="srch"><span class="mag"></span><input id="navQ" placeholder="Search players or teams…" autocomplete="off" aria-label="Search players or teams"></label><div class="dd" id="navDD"></div></div></nav>
+    <nav class="nav" id="nav"><a href="#/" data-nav="home">Home</a><a href="#/leaders" data-nav="leaders">Leaderboards</a><a href="#/rankings" data-nav="rankings">Rankings</a><a href="#/trends" data-nav="trends">Trends</a><a href="#/betting" data-nav="betting">Betting</a><a href="#/fantasy" data-nav="fantasy">Fantasy</a><div class="nav-tm" id="navTm"><button type="button" class="nav-tmb" data-nav="teams" aria-expanded="false">Teams <span class="car">▾</span></button><div class="tm-pan" id="tmPan"></div></div><a href="#/players" data-nav="players">Players</a><a href="#/compare" data-nav="compare" id="navCmp">Compare</a><div class="nav-srch"><label class="srch"><span class="mag"></span><input id="navQ" placeholder="Search players or teams…" autocomplete="off" aria-label="Search players or teams"></label><div class="dd" id="navDD"></div></div></nav>
   </div>
   <div class="hdr-r"><span><span id="hdrSeason"></span><span class="upd" id="hdrUpd"></span></span><button class="menu-btn" id="menuBtn" type="button" aria-expanded="false">Menu</button></div>
 </header>
@@ -1532,6 +1549,7 @@ html.intro #hmMain::after{content:'';position:absolute;inset:0;background:var(--
 <main id="vTrends" class="page" hidden></main>
 <main id="vRank" class="page" hidden></main>
 <main id="vBet" class="page" hidden></main>
+<main id="vFan" class="page" hidden></main>
 <main id="vPlayers" class="page" hidden></main>
 <main id="vPlayer" class="page" hidden></main>
 <main id="vTeam" class="page" hidden></main>
@@ -3829,6 +3847,127 @@ function rkTeams(){
   return h;
 }
 document.addEventListener('click',function(e){var sb=e.target.closest('[data-rksort]');if(sb){var k=sb.dataset.rksort;if(RKSORT===k)RKDIR=-RKDIR;else{RKSORT=k;RKDIR=1;}buildRankings();return;}var b=e.target.closest('[data-rkpos]');if(b){RKPOS=b.dataset.rkpos;RKALL=0;buildRankings();return;}if(e.target.closest('[data-rkall]')){RKALL=1;buildRankings();}});
+/* ================= FANTASY (NBA Dynasty points league) ================= */
+/* Scoring from Joe's NBA Dynasty league. Technical (-1) and flagrant (-2) fouls are not in NBA.com game logs, so they can't be counted. */
+var FPW=[['Point scored','+0.5'],['Rebound','+1'],['Offensive rebound','+0.5 more'],['Assist','+1'],['Steal','+2'],['Block','+2'],['Made three','+0.5'],['Made free throw','+0.1'],['Turnover','−1'],['Personal foul','−1'],['Double-double','+1'],['Triple-double','+2 more'],['40+ points','+2'],['50+ points','+2 more'],['20+ rebounds','+2'],['15+ assists','+2']];
+var FPN={sc:'Scoring',rb:'Rebounds',as:'Assists',df:'Steals + blocks',neg:'Turnovers + fouls',bon:'Bonuses'},FPK=['sc','rb','as','df','neg','bon'];
+/* GL row: [date, opp, W/L, MIN, PTS, REB, AST, STL, BLK, TOV, FGM, FGA, 3PM, 3PA, FTM, FTA, OREB, DREB, PF, +/-] */
+function fpParts(x){
+  var pts=x[4],reb=x[5],ast=x[6],stl=x[7],blk=x[8],tov=x[9],tpm=x[12],ftm=x[14],oreb=x[16],pf=x[18];
+  var tens=[pts,reb,ast,stl,blk].filter(function(v){return v>=10;}).length;
+  var o={sc:pts*0.5+tpm*0.5+ftm*0.1,rb:reb+oreb*0.5,as:ast,df:2*stl+2*blk,neg:-tov-pf,
+    bon:(tens>=2?1:0)+(tens>=3?2:0)+(pts>=40?2:0)+(pts>=50?2:0)+(reb>=20?2:0)+(ast>=15?2:0)};
+  o.t=o.sc+o.rb+o.as+o.df+o.neg+o.bon;return o;
+}
+function fpWin(n){return n>=20?10:Math.max(3,Math.floor(n/2));}
+function fpSum(g){var s={g:g.length,m:0,t:0,best:null};FPK.forEach(function(k){s[k]=0;});g.forEach(function(x){var f=fpParts(x);s.m+=x[3];s.t+=f.t;FPK.forEach(function(k){s[k]+=f[k];});if(!s.best||f.t>s.best.t)s.best={t:f.t,d:x[0],o:x[1]};});s.pg=s.g?s.t/s.g:0;s.mpg=s.g?s.m/s.g:0;s.p36=s.m?s.t/s.m*36:0;return s;}
+function fpElig(p){var s={};String(p.Pos||'F').split('-').forEach(function(a){a=a.trim().charAt(0).toUpperCase();if(a==='G'||a==='F'||a==='C')s[a]=1;});if(!Object.keys(s).length)s.F=1;return s;}
+function fpPosL(p){return Object.keys(fpElig(p)).sort(function(a,b){return 'GFC'.indexOf(a)-'GFC'.indexOf(b);}).join('/');}
+var FPC=null;
+function fpAll(){
+  if(FPC)return FPC;
+  var tg=teamGames();
+  FPC=D.map(function(p){var raw=GL[String(p.nba_id)];if(!raw)return null;var g=raw.filter(function(x){return x[3]>0&&(x[2]==='W'||x[2]==='L');});if(!g.length)return null;
+    var o={p:p,g:g,s:fpSum(g),fp:g.map(function(x){return fpParts(x).t;}),q:qualG(p)};
+    var w=fpWin(g.length);o.w=w;if(g.length>=6){o.pre=fpSum(g.slice(0,g.length-w));o.rec=fpSum(g.slice(-w));o.dpg=o.rec.pg-o.pre.pg;}
+    /* totals by his team's games: missed games count as zero, so availability shows up */
+    var T=tg[p.Team]||[],n=T.length,tw=fpWin(n);o.tw=tw;
+    if(n>=2*tw||n>=6){var by={};g.forEach(function(x,i){by[x[0]]=o.fp[i];});var tot=function(L){var s=0,pl=0;L.forEach(function(t){if(by[t.d]!=null){s+=by[t.d];pl++;}});return {t:s,pl:pl,n:L.length};};
+      var recT=T.slice(-tw),preT=T.slice(Math.max(0,n-2*tw),n-tw);if(preT.length===tw){o.tRec=tot(recT);o.tPre=tot(preT);o.dt=o.tRec.t-o.tPre.t;}}
+    return o;}).filter(Boolean);
+  var Q=FPC.filter(function(o){return o.q;}),v=Q.map(function(o){return o.s.pg;}),P=pctArr(v);Q.forEach(function(o,i){o.pct=P[i];});
+  Q.slice().sort(function(a,b){return b.s.pg-a.s.pg;}).forEach(function(o,i){o.rk=i+1;});o_nq=Q.length;
+  return FPC;
+}
+var o_nq=0;
+function fpOf(p){var L=fpAll();for(var i=0;i<L.length;i++)if(L[i].p===p)return L[i];return null;}
+function fpPicks(){
+  var R=siSeason(),out=[];
+  R.forEach(function(si){var f=fpOf(si.a.p);if(!f||f.pct==null)return;if(f.pct>=70&&si.score>=70)out.push({f:f,si:si,sc:(f.pct+si.score)/2});});
+  return out.sort(function(a,b){return b.sc-a.sc;});
+}
+function fpStack(s,W){
+  W=W||100;var pos=FPK.filter(function(k){return s[k]>0;}),tot=pos.reduce(function(a,k){return a+s[k];},0)||1,C={sc:'#1d428a',rb:'#2f7d6d',as:'#6a4fb3',df:'#c98a12',bon:'#0b1530'};
+  return '<div class="fp-st">'+pos.map(function(k){return '<i style="width:'+(s[k]/tot*100).toFixed(1)+'%;background:'+C[k]+'" title="'+FPN[k]+'"></i>';}).join('')+'</div><div class="fp-stl">'+pos.map(function(k){return '<span><i style="background:'+C[k]+'"></i>'+FPN[k]+' '+f1(s[k]/s.g)+'</span>';}).join('')+'<span class="neg">'+FPN.neg+' '+f1(s.neg/s.g)+'</span></div>';
+}
+function fpBars(o,W,H,shade){
+  var fp=o.fp,n=fp.length;if(n<2)return '';W=window.innerWidth<700?320:540;H=window.innerWidth<700?H:Math.round(H*1.3);H=H||80;var mx=Math.max.apply(null,fp.concat([10])),mn=Math.min(0,Math.min.apply(null,fp)),bw=(W-34)/n,Y=function(v){return 6+(1-(v-mn)/(mx-mn))*(H-18);};
+  var s='<svg viewBox="0 0 '+W+' '+H+'" class="rk-sp" role="img" aria-label="Fantasy points in every game">',cut=n-(shade||0);
+  if(shade)s+='<rect x="'+(cut*bw).toFixed(1)+'" y="0" width="'+(shade*bw).toFixed(1)+'" height="'+(H-10)+'" fill="#eef1f7"/>';
+  fp.forEach(function(v,i){var y=Y(Math.max(v,0)),y0=Y(0);s+='<rect x="'+(i*bw+1).toFixed(1)+'" y="'+Math.min(y,y0).toFixed(1)+'" width="'+Math.max(1,bw-2).toFixed(1)+'" height="'+Math.max(1,Math.abs(y0-y)).toFixed(1)+'" fill="'+(i>=cut?'#0b1530':'#b6bdcc')+'"><title>'+esc(o.g[i][0]+' '+o.g[i][1]+': '+f1(v)+' fantasy points')+'</title></rect>';});
+  var ln=function(v,lab,c,i0,i1){var y=Y(v).toFixed(1);return '<line x1="'+(i0*bw).toFixed(1)+'" x2="'+(i1*bw).toFixed(1)+'" y1="'+y+'" y2="'+y+'" stroke="'+c+'" stroke-width="2" stroke-dasharray="4 3"/>'+(lab?'<text x="'+(W-2)+'" y="'+(+y+3)+'" text-anchor="end" style="font-size:9px;font-weight:800;fill:'+c+'">'+lab+'</text>':'');};
+  if(shade&&o.pre){var up=o.rec.pg>=o.pre.pg;s+=ln(o.pre.pg,'','#69718a',0,cut)+ln(o.rec.pg,f1(o.rec.pg),up?'#1f8a4c':'#c2341f',cut,n);}
+  else s+=ln(o.s.pg,f1(o.s.pg),'#1d428a',0,n);
+  return s+'<text x="0" y="'+(H-1)+'" style="font-size:9px;fill:#9aa1b4;font-weight:700">'+esc(o.g[0][0])+'</text><text x="'+(W-34)+'" y="'+(H-1)+'" text-anchor="end" style="font-size:9px;fill:#9aa1b4;font-weight:700">'+esc(o.g[n-1][0])+'</text></svg>';
+}
+var FPTAB='picks',FPPOS='all',FPALL=0,FPSORT='pg',FPDIR=1,FPRM='pg';
+function buildFantasy(tab){
+  FPTAB=tab||FPTAB;var tabs=[['picks','Fred’s picks'],['risers','Risers and fallers'],['leaders','Leaderboard'],['scoring','Scoring']];
+  var h='<div class="xp"><div class="x-top"><div><div class="x-eb">'+esc(META.season)+' · NBA Dynasty points league · through '+esc(META.updated||'')+'</div><h1 class="x-h1">Fantasy</h1></div><div class="rk-q">Qualified = played 60% of his team’s games</div></div>';
+  h+='<div class="x-chips" role="tablist">'+tabs.map(function(x){return '<a class="x-chip'+(x[0]===FPTAB?' on':'')+'" href="#/fantasy'+(x[0]==='picks'?'':'/'+x[0])+'">'+x[1]+'</a>';}).join('')+'</div>';
+  h+=FPTAB==='picks'?fpPicksTab():FPTAB==='risers'?fpRisers():FPTAB==='leaders'?fpLeaders():fpScoring();
+  $('vFan').innerHTML=h+'</div>';
+}
+function fpPicksTab(){
+  var P=fpPicks(),L=fpAll();if(!L.length)return '<div class="tr-empty">Not enough games yet.</div>';
+  var h='<p class="rk-lede"><b>Fred’s picks are players putting up big fantasy numbers and backing them up with strong advanced metrics.</b> To make the list, a player has to rank in the top 30% of qualified players in fantasy points per game <em>and</em> score 70 or better on Joe’s Certified Good Players rating. They’re ordered by the average of the two.</p>';
+  if(!P.length)return h+'<div class="tr-empty">No one clears both bars right now.</div>';
+  h+='<div class="fp-pg">'+P.slice(0,12).map(function(x,i){var f=x.f,si=x.si,p=f.p,cf=siConf(si.a.m),top=SIK.slice().sort(function(a,b){return si.part[b]-si.part[a];}).slice(0,2);
+    return '<a class="fp-pk" href="#p'+p.nba_id+'"><div class="rk-jh">'+xav(p)+'<div><b>'+(i+1)+'. '+esc(p.Player)+'</b><span>'+esc(p.Team)+' · '+fpPosL(p)+' · <em class="rk-cf '+cf.c+'">'+cf.t+'</em></span></div></div>'
+      +'<div class="fp-ks"><div><span>Fantasy points per game</span><b>'+f1(f.s.pg)+'</b><i>'+ordn(f.rk)+' of '+o_nq+'</i></div><div><span>Joe’s rating</span>'+rkBub(si.score)+'<i>'+ordn(si.rk)+' of '+siSeason().length+'</i></div><div><span>Last '+f.w+' games</span><b>'+(f.rec?f1(f.rec.pg):f1(f.s.pg))+'</b><i>fantasy points per game</i></div></div>'
+      +'<div class="fp-why"><b>Advanced strengths:</b> '+top.map(function(k){return SIN[k]+' ('+ordn(Math.round(si.part[k]))+' percentile at his position)';}).join(', ')+'</div>'
+      +'<div class="fp-whyh">Where his fantasy points per game come from</div>'+fpStack(f.s)+fpBars(f,300,64)+'<div class="rk-jn">Fantasy points in every game this season. Dashed line = his average.</div></a>';}).join('')+'</div>';
+  h+=fpScatter(P);
+  h+='<p class="bt-note">Joe’s Certified Good Players rating is the same 1 to 99 rating on the Rankings page (needs 15+ minutes a game). Advanced strengths = his two best rating ingredients. Confidence: Early read under 200 minutes, Building 200 to 500, Proven 500+. Technical and flagrant fouls aren’t in NBA.com game logs, so they aren’t counted.</p>';
+  return h;
+}
+function fpScatter(P){
+  var R=siSeason(),H={};P.slice(0,12).forEach(function(x){H[x.f.p.nba_id]=1;});
+  var pts=R.map(function(si){var f=fpOf(si.a.p);if(!f)return null;var hl=!!H[si.a.p.nba_id];return {x:si.score,y:f.s.pg,c:'#8a93a6',faint:!hl,logo:hl?logoUrl(si.a.p):null,pl:1,pri:hl?100:0,lab:hl?lastName(si.a.p.Player):'',tip:si.a.p.Player+': rating '+si.score+', '+f1(f.s.pg)+' fantasy points per game'};}).filter(Boolean);
+  if(pts.length<10)return '';
+  var ys=pts.map(function(p){return p.y;}).sort(function(a,b){return a-b;}),y70=ys[Math.floor(ys.length*0.7)];
+  return '<div class="fp-fig">'+chFig('Fantasy points vs advanced metrics','Every qualified player with 15+ minutes a game. Logos = Fred’s picks. Dashed lines = a rating of 70 and the top-30% cutoff in fantasy points per game.',
+    chScatter({pts:pts,xl:'Joe’s Certified Good Players rating',yl:'Fantasy points per game',avg:[70,y70],quad:['POINTS, WEAKER METRICS','FRED’S ZONE','BELOW BOTH BARS','METRICS, FEWER POINTS'],qc:['n','g','r','n'],fx:function(v){return Math.round(v);},fy:function(v){return Math.round(v);}}),1)+'</div>';
+}
+function fpRisers(){
+  var L=fpAll().filter(function(o){return o.q&&o.pre&&(o.rec.mpg>=RK_MPG||o.s.mpg>=RK_MPG);});if(L.length<10)return '<div class="tr-empty">Not enough games yet.</div>';
+  var tot=FPRM==='t';if(tot)L=L.filter(function(o){return o.dt!=null;});
+  var key=tot?function(o){return o.dt;}:function(o){return o.dpg;};
+  var up=L.slice().sort(function(a,b){return key(b)-key(a);}).filter(function(o){return key(o)>0;}).slice(0,8),dn=L.slice().sort(function(a,b){return key(a)-key(b);}).filter(function(o){return key(o)<0;}).slice(0,8);
+  var card=function(o){var d=key(o),u=d>=0,c=u?'var(--rise)':'var(--fall)',p=o.p,box;
+    if(tot)box='<div class="rk-js"><div><span>Previous '+o.tw+' team games</span><b>'+f1(o.tPre.t)+'</b><i>played '+o.tPre.pl+' of '+o.tPre.n+'</i></div><div class="mid"><span>Last '+o.tw+' team games</span><b style="color:'+c+'">'+f1(o.tRec.t)+'</b><i>played '+o.tRec.pl+' of '+o.tRec.n+'</i></div><div><span>Season</span><b>'+f1(o.s.t)+'</b><i>'+o.s.g+' games</i></div></div>';
+    else box='<div class="rk-js"><div><span>Before</span><b>'+f1(o.pre.pg)+'</b><i>per game, '+o.pre.g+' games</i></div><div class="mid"><span>Last '+o.w+' games</span><b style="color:'+c+'">'+f1(o.rec.pg)+'</b><i>per game</i></div><div><span>Season</span><b>'+f1(o.s.pg)+'</b><i>per game</i></div></div>';
+    var parts=FPK.map(function(k){return {k:k,v:o.rec[k]/o.rec.g-o.pre[k]/o.pre.g};}).filter(function(x){return Math.abs(x.v)>=0.5;}).sort(function(a,b){return Math.abs(b.v)-Math.abs(a.v);});
+    var dm=o.rec.mpg-o.pre.mpg;
+    return '<a class="rk-j" href="#p'+p.nba_id+'"><div class="rk-jh">'+xav(p)+'<div><b>'+esc(p.Player)+'</b><span>'+esc(p.Team)+' · '+fpPosL(p)+'</span></div><div class="rk-jv" style="color:'+c+'">'+(u?'+':'−')+f1(Math.abs(d))+'<i>'+(tot?'total fantasy points':'fantasy points per game')+'</i></div></div>'+box
+      +'<div class="fp-ch"><span class="fp-m">Minutes per game '+f1(o.pre.mpg)+' → '+f1(o.rec.mpg)+'</span>'+parts.map(function(x){return '<span class="'+(x.v>=0?'up':'dn')+'">'+FPN[x.k]+' '+sg1(x.v)+'</span>';}).join('')+'</div>'
+      +fpBars(o,300,70,o.w)+'<div class="rk-jn">Fantasy points in every game he played. Shaded = last '+o.w+' games; dashed lines = his average before and during that stretch.</div></a>';};
+  var h='<p class="rk-lede"><b>Who’s scoring more fantasy points lately, and who’s scoring fewer.</b> '+(tot?'<b>Total</b> compares his fantasy points over his team’s last '+L[0].tw+' games with the '+L[0].tw+' team games before that. Missed games count as zero, so injuries and rest show up here.':'<b>Per game</b> compares his average in his last 10 games (or the last half of his games until he has played 20) with his average before them.')+' Under each card, the change is split into where the points came from.</p>';
+  h+='<div class="rk-pos">'+[['pg','Per game'],['t','Total']].map(function(x){return '<button type="button" class="rk-pb'+(FPRM===x[0]?' on':'')+'" data-fprm="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';
+  h+='<div class="rk-jg"><div><h3 class="hm-h3" style="color:var(--rise)">▲ Biggest risers</h3>'+(up.map(card).join('')||'<div class="tr-empty">None</div>')+'</div><div><h3 class="hm-h3" style="color:var(--fall)">▼ Biggest fallers</h3>'+(dn.map(card).join('')||'<div class="tr-empty">None</div>')+'</div></div>';
+  h+='<p class="bt-note">Recent window = last 10 games, or the last half of his games until he has played 20 (Total uses his team’s games the same way). Players must be qualified and play 15+ minutes a game either lately or on the season. Change chips show per-game changes of 0.5 fantasy points or more. Scoring = points, made threes and made free throws. Turnovers + fouls are negative, so a green chip there means fewer of them.</p>';
+  return h;
+}
+function fpLeaders(){
+  var L=fpAll().filter(function(o){return o.q;});if(!L.length)return '<div class="tr-empty">Not enough games yet.</div>';
+  if(FPPOS!=='all')L=L.filter(function(o){return fpElig(o.p)[FPPOS];});
+  var sv=function(o){var si=siOf(o.p);return FPSORT==='pg'?o.s.pg:FPSORT==='t'?o.s.t:FPSORT==='g'?o.s.g:FPSORT==='rec'?(o.rec?o.rec.pg:o.s.pg):FPSORT==='p36'?o.s.p36:FPSORT==='best'?o.s.best.t:FPSORT==='mpg'?o.s.mpg:FPSORT==='si'?(si?si.raw:-1):0;};
+  L=L.slice().sort(function(a,b){if(FPSORT==='name')return (FPDIR>0?1:-1)*a.p.Player.localeCompare(b.p.Player);return FPDIR*(sv(b)-sv(a))||b.s.pg-a.s.pg;});
+  var show=FPALL?L:L.slice(0,50);
+  var th=function(k,lab){var on=FPSORT===k;return '<th class="'+(on?'on'+((k==='name'?FPDIR>0:FPDIR<0)?' up':''):'')+'"><button type="button" data-fpsort="'+k+'">'+lab+'</button></th>';};
+  var h='<p class="rk-lede"><b>Every qualified player’s fantasy production in NBA Dynasty scoring.</b> Filter by position (players listed at two positions show up in both).</p>';
+  h+='<div class="rk-pos">'+[['all','All'],['G','Guards'],['F','Forwards'],['C','Centers']].map(function(x){return '<button type="button" class="rk-pb'+(FPPOS===x[0]?' on':'')+'" data-fppos="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';
+  h+='<div class="bt-tw"><table class="bt-t rk-t"><thead><tr><th>#</th>'+th('name','Player')+th('pg','Fantasy points per game')+th('t','Total fantasy points')+th('rec','Recent per game')+th('p36','Per 36 minutes')+th('best','Best game')+th('g','Games')+th('mpg','Minutes per game')+th('si','Joe’s rating')+'</tr></thead><tbody>'
+    +show.map(function(o,i){var p=o.p,si=siOf(p),b=o.s.best;return '<tr data-id="'+p.nba_id+'"><td class="rk-n">'+(i+1)+'</td><td><div class="rk-pl">'+xav(p)+'<div><b>'+esc(p.Player)+'</b><span>'+esc(p.Team)+' · '+fpPosL(p)+'</span></div></div></td><td>'+rkBub(o.pct)+' <b>'+f1(o.s.pg)+'</b></td><td>'+f1(o.s.t)+'</td><td>'+f1(o.rec?o.rec.pg:o.s.pg)+(o.rec?'<span class="rk-w2">last '+o.w+'</span>':'')+'</td><td>'+f1(o.s.p36)+'</td><td>'+f1(b.t)+'<span class="rk-w2">'+esc(b.d+' '+b.o)+'</span></td><td>'+o.s.g+'</td><td>'+f1(o.s.mpg)+'</td><td>'+(si?rkBub(si.score,1):'<span class="rk-w2">under 15 min</span>')+'</td></tr>';}).join('')+'</tbody></table></div>';
+  if(!FPALL&&L.length>50)h+='<button type="button" class="hm-prb" data-fpall>Show all '+L.length+' ▾</button>';
+  h+='<p class="bt-note">Tap any column to sort; tap again to flip. Bubble = fantasy points per game percentile among all qualified players (99 = best). Recent per game = last 10 games, or the last half of his games until he has played 20. Joe’s rating needs 15+ minutes a game. Technical and flagrant fouls aren’t in NBA.com game logs, so they aren’t counted.</p>';
+  return h;
+}
+function fpScoring(){
+  return '<p class="rk-lede"><b>Every number on this page uses the NBA Dynasty points league scoring.</b> Fantasy points are calculated from each player’s NBA.com game log, game by game, then added up.</p><div class="fp-sc">'+FPW.map(function(x){return '<div><span>'+x[0]+'</span><b class="'+(x[1].charAt(0)==='−'?'dn':'up')+'">'+x[1]+'</b></div>';}).join('')+'<div><span>Technical foul</span><b class="dn">−1</b></div><div><span>Flagrant foul</span><b class="dn">−2</b></div></div>'
+    +'<p class="bt-note">Bonuses stack: a triple-double earns the +1 double-double bonus and +2 more; a 50-point game earns both +2 bonuses. Double- and triple-doubles count 10+ in points, rebounds, assists, steals and blocks. Technical and flagrant fouls aren’t in NBA.com game logs, so the site can’t count them yet.</p>';
+}
+document.addEventListener('click',function(e){var sb=e.target.closest('[data-fpsort]');if(sb){var k=sb.dataset.fpsort;if(FPSORT===k)FPDIR=-FPDIR;else{FPSORT=k;FPDIR=1;}buildFantasy();return;}var b=e.target.closest('[data-fppos]');if(b){FPPOS=b.dataset.fppos;FPALL=0;buildFantasy();return;}var r=e.target.closest('[data-fprm]');if(r){FPRM=r.dataset.fprm;buildFantasy();return;}if(e.target.closest('[data-fpall]')){FPALL=1;buildFantasy();}});
 function siPlayerBox(p){
   var o=siOf(p),tl=siTimeline()[p.nba_id];if(!o)return '';
   var cf=siConf(o.a.m),pr=siSeason().filter(function(x){return x.a.pos===o.a.pos;}),prk=pr.indexOf(o)+1;
@@ -4433,7 +4572,7 @@ document.addEventListener('click',function(e){
   if(g){BSORT.g=g.dataset.bgf;var tb2=$('btTable');if(tb2)tb2.innerHTML=projTable(betSlate().games,BSORT.g);}
 });
 
-var VIEWS={home:'vHome',rankings:'vRank',leaders:'vLeaders',trends:'vTrends',betting:'vBet',players:'vPlayers',player:'vPlayer',team:'vTeam',story:'vStory'};
+var VIEWS={home:'vHome',rankings:'vRank',leaders:'vLeaders',trends:'vTrends',betting:'vBet',fantasy:'vFan',players:'vPlayers',player:'vPlayer',team:'vTeam',story:'vStory'};
 var built={};
 function go(h){if(location.hash===h)route();else location.hash=h;}
 function show(view){
@@ -4457,6 +4596,7 @@ function route(){
     built.leaders=1;show('leaders');document.title=(lm?LB[lbCat].n+' Leaders':'Leaderboards')+' | NBA Savant';}
   else if((m=/^#\/rankings(?:\/(risers|teams))?$/.exec(h))){show('rankings');buildRankings(m[1]||'players');document.title='Rankings | NBA Savant';}
   else if(h==='#/trends'){buildTrends();show('trends');document.title='Trends | NBA Savant';}
+  else if((m=/^#\/fantasy(?:\/(risers|leaders|scoring))?$/.exec(h))){show('fantasy');buildFantasy(m[1]||'picks');document.title='Fantasy | NBA Savant';}
   else if(h==='#/betting'){buildBetting();show('betting');document.title='Betting | NBA Savant';}
   else if((m=/^#b\/g\/([A-Z]{3}-[A-Z]{3})$/.exec(h))){show('betting');showMatchup(m[1]);document.title='Game preview | NBA Savant';}
   else if(h==='#/players'){if(!built.players){buildPlayers();built.players=1;}show('players');document.title='Players | NBA Savant';}
