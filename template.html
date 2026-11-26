@@ -992,6 +992,8 @@ h2.st-sh.gg{margin-top:38px}
 .fp-sc>div{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--rule2);border-radius:10px;padding:10px 14px;background:#fff}
 .fp-sc b{font-weight:900}.fp-sc .up{color:var(--rise)}.fp-sc .dn{color:var(--fall)}
 @media(max-width:700px){.fp-pg{grid-template-columns:1fr}}
+.sw-g{display:grid;grid-template-columns:1fr 1fr;gap:0 28px}.sw-tn{margin-top:8px;font-size:13px;line-height:1.45;background:var(--tint);border-radius:10px;padding:8px 10px}
+@media(max-width:760px){.sw-g{grid-template-columns:1fr}}
 .rk-jg{display:grid;grid-template-columns:1fr 1fr;gap:28px}
 .rk-j{display:block;border:1px solid var(--rule2);border-radius:14px;padding:14px 16px;margin-bottom:14px;color:inherit;background:#fff}
 .rk-j:hover b{color:var(--blue)}
@@ -4407,7 +4409,7 @@ function learnRun(){
     (META.games||[]).filter(function(g){return g[0]===md;}).forEach(function(g){var x=projGame(g[1],g[3],md,cut);if(!x.C.TG[g[1]]||x.C.TG[g[1]].length<3||!x.C.TG[g[3]]||x.C.TG[g[3]].length<3)return;
       games.push(x);if((x.mg>0)===(g[4]>g[2]))wins++;day=day.concat(lLeans(x,S));
       x.A.concat(x.H).forEach(function(o){var a=lAct(o,md);if(a&&o.m>=15){S.ae+=Math.abs(o.pts-a[4]);S.be+=Math.abs(o.s_pts-a[4]);S.np++;}});});
-    if(!games.length)return;var picks=lPick(day,10,BETP.th);lLearn(S,games,day,md);S.wins+=wins;S.games+=games.length;
+    if(!games.length)return;var picks=lPick(day,10,BETP.th);lLearn(S,games,day,md);swRecord(S,games,md);S.wins+=wins;S.games+=games.length;
     var lock=PLOG.filter(function(z){return z.d===md;});
     S.days.push({md:md,live:mdOrd(md)>=mdOrd(LIVE),locked:!!lock.length,picks:picks.filter(function(c){return c.hit!=null;}),leans:day.length});});
   var sl=betSlate(),tonight=[];BET.cut=sl.md?mdOrd(sl.md):keep;BET.beta=S.beta;BET.icpt=S.icpt;BET.slate=null;sl=betSlate();BET.cut=sl.md?mdOrd(sl.md):keep;
@@ -4435,6 +4437,63 @@ function learnBox(){
   return h;
 }
 
+/* ================= BOOM OR BUST: steady minutes, big swings vs our projection =================
+   Uses the learning loop's walk-forward projections (only what was known before each game).
+   Each miss is first adjusted for minutes: projection x (actual minutes / projected minutes). What's left is the swing minutes don't explain.
+   Swing = how big those leftover misses run, compared with a typical player who has the same projection (typical = c x sqrt(projection), c fit across the league). */
+var SWK=['pts','reb','ast','tpm','pra'],SWSTAT='pts',SWMIN={pts:8,reb:3,ast:2,tpm:1,pra:14};
+function swRecord(S,games,md){
+  S.res=S.res||{};
+  games.forEach(function(x){x.A.concat(x.H).forEach(function(o){var a=lAct(o,md);if(!a||!(a[3]>0)||o.m<15)return;
+    var id=o.p.nba_id,r=S.res[id]||(S.res[id]={p:o.p,g:[]});r.g.push({md:md,opp:o.opp,home:o.home,pm:o.m,am:a[3],pj:{pts:o.pts,reb:o.reb,ast:o.ast,tpm:o.tpm,pra:o.pra},act:{pts:a[4],reb:a[5],ast:a[6],tpm:a[12],pra:a[4]+a[5]+a[6]}});});});
+}
+var SWC={};
+function swData(k){
+  if(SWC[k])return SWC[k];var S=learnRun().S,rows=[];
+  Object.keys(S.res||{}).forEach(function(id){var r=S.res[id],g=r.g;if(g.length<8)return;
+    var am=g.map(function(z){return z.am;}),mm=avg(am),msd=stdv(am),mcv=msd/(mm||1),mmiss=avg(g.map(function(z){return Math.abs(z.am-z.pm);}));
+    if(mm<20||mcv>0.15||mmiss>4.5)return;
+    var pj=avg(g.map(function(z){return z.pj[k];}));if(pj<SWMIN[k])return;
+    var raw=g.map(function(z){return z.act[k]-z.pj[k];}),adj=g.map(function(z){return z.act[k]-z.pj[k]*z.am/z.pm;});
+    var sr=stdv(raw),sa=stdv(adj),bias=avg(adj);
+    rows.push({p:r.p,g:g,mm:mm,msd:msd,mmiss:mmiss,pj:pj,raw:raw,adj:adj,sr:sr,sa:sa,bias:bias,minShare:sr>0?Math.max(0,1-(sa*sa)/(sr*sr)):0});});
+  if(rows.length<10)return SWC[k]=[];
+  var ratios=rows.map(function(r){return r.sa/Math.sqrt(r.pj);}).sort(function(a,b){return a-b;}),c=ratios[Math.floor(ratios.length/2)];
+  rows.forEach(function(r){r.typ=c*Math.sqrt(r.pj);r.idx=r.sa/r.typ;
+    r.over=r.adj.filter(function(v){return v>=r.typ;}).length;r.under=r.adj.filter(function(v){return v<=-r.typ;}).length;
+    var up=r.adj.filter(function(v){return v>=r.typ;}),dn=r.adj.filter(function(v){return v<=-r.typ;});r.upAvg=up.length?avg(up):0;r.dnAvg=dn.length?avg(dn):0;});
+  SWC[k]=rows.sort(function(a,b){return b.idx-a.idx;});SWC[k].c=c;return SWC[k];
+}
+function swChart(r,k){
+  var g=r.g,n=g.length,W=window.innerWidth<700?320:540,H=110,vals=[];g.forEach(function(z){vals.push(z.act[k],z.pj[k]*z.am/z.pm);});
+  var mx=Math.max.apply(null,vals),mn=Math.min.apply(null,vals),pd=(mx-mn)*0.1||1;mx+=pd;mn=Math.max(0,mn-pd);var bw=(W-10)/n,Y=function(v){return 8+(1-(v-mn)/(mx-mn))*(H-24);};
+  var s='<svg viewBox="0 0 '+W+' '+H+'" class="rk-sp" role="img" aria-label="Actual vs projection every game">';
+  g.forEach(function(z,i){var e=z.pj[k]*z.am/z.pm,a=z.act[k],cx=5+i*bw+bw/2,d=a-e,big=Math.abs(d)>=r.typ,c=d>=0?'#1f8a4c':'#c2341f';
+    s+='<line x1="'+(cx-bw*0.32).toFixed(1)+'" x2="'+(cx+bw*0.32).toFixed(1)+'" y1="'+Y(e).toFixed(1)+'" y2="'+Y(e).toFixed(1)+'" stroke="#0b1530" stroke-width="2"/>'
+      +'<line x1="'+cx.toFixed(1)+'" x2="'+cx.toFixed(1)+'" y1="'+Y(e).toFixed(1)+'" y2="'+Y(a).toFixed(1)+'" stroke="'+c+'" stroke-width="'+(big?3:1.5)+'" opacity="'+(big?1:.45)+'"/>'
+      +'<circle cx="'+cx.toFixed(1)+'" cy="'+Y(a).toFixed(1)+'" r="'+(big?4.5:3)+'" fill="'+(big?c:'#fff')+'" stroke="'+c+'" stroke-width="1.5"><title>'+esc(z.md+(z.home?' vs ':' @ ')+z.opp+': '+a+' '+BSTAT[k].toLowerCase()+', projection '+f1(z.pj[k])+' ('+f1(e)+' after his '+Math.round(z.am)+' minutes)')+'</title></circle>';});
+  return s+'<text x="2" y="'+(H-2)+'" style="font-size:9px;fill:#9aa1b4;font-weight:700">'+esc(g[0].md)+'</text><text x="'+(W-2)+'" y="'+(H-2)+'" text-anchor="end" style="font-size:9px;fill:#9aa1b4;font-weight:700">'+esc(g[n-1].md)+'</text></svg>';
+}
+function swTonight(r,k){
+  var L=learnRun(),c=null;(L.tonight||[]).forEach(function(x){if(x.o.p===r.p)c=c||x.o;});if(!c)return '';
+  var pj=c[k],hi=pj*(1+(r.upAvg||r.typ)/r.pj),lo=Math.max(0,pj*(1+(r.dnAvg||-r.typ)/r.pj));
+  return '<div class="sw-tn"><b>Tonight '+(c.home?'vs ':'@ ')+esc(c.opp)+':</b> our projection '+f1(pj)+' in '+f1(c.m)+' minutes. In his big games this season he’s finished about '+f1(r.upAvg||r.typ)+' over projection; in his small ones about '+f1(Math.abs(r.dnAvg||r.typ))+' under. Scaled to tonight, that’s roughly '+f1(hi)+' on a big night and '+f1(lo)+' on a small one.</div>';
+}
+function swingBox(){
+  var R=swData(SWSTAT),k=SWSTAT;
+  var h='<div class="rk-pos">'+SWK.map(function(s){return '<button type="button" class="rk-pb'+(SWSTAT===s?' on':'')+'" data-swk="'+s+'">'+BSTAT[s]+'</button>';}).join('')+'</div>';
+  if(!R.length)return h+'<div class="tr-empty">Not enough graded games yet.</div>';
+  var top=R.slice(0,8),nm=BSTAT[k].toLowerCase();
+  h+='<p class="rk-lede"><b>These players get steady minutes but still land way over or way under our projection.</b> Each game is first adjusted for minutes (if he played 10% more than we projected, his projection goes up 10%), so what’s left is swing that minutes don’t explain. <b>Swing</b> measures how far his games spread out around his usual result, compared with a typical player who has the same projection: 1.5× means a 50% wider spread than normal. A player we just project too low every night doesn’t count as volatile; he has to go both ways. They’re candidates for big-or-small bets (alternate lines, ladders) rather than lines near the middle.</p>';
+  h+='<div class="sw-g">'+top.map(function(r){var p=r.p,lo=Math.min.apply(null,r.g.map(function(z){return z.am;})),hi=Math.max.apply(null,r.g.map(function(z){return z.am;}));
+    return '<a class="rk-j" href="#p'+p.nba_id+'"><div class="rk-jh">'+xav(p)+'<div><b>'+esc(p.Player)+'</b><span>'+esc(p.Team)+' · '+r.g.length+' graded games'+(r.g.length<15?' · <em class="rk-cf n">Early read</em>':'')+'</span></div><div class="rk-jv" style="color:var(--navy)">'+(Math.round(r.idx*10)/10).toFixed(1)+'×<i>normal swing</i></div></div>'
+      +'<div class="rk-js"><div><span>Way over</span><b style="color:var(--rise)">'+r.over+'</b><i>of '+r.g.length+' games</i></div><div class="mid"><span>Average projection</span><b>'+f1(r.pj)+'</b><i>'+esc(nm)+'</i></div><div><span>Way under</span><b style="color:var(--fall)">'+r.under+'</b><i>of '+r.g.length+' games</i></div></div>'
+      +'<div class="fp-ch"><span class="fp-m">Minutes '+f1(r.mm)+' a game (range '+Math.round(lo)+' to '+Math.round(hi)+')</span><span class="fp-m">Off our minutes projection by '+f1(r.mmiss)+' a game</span><span class="fp-m">Minutes explain '+Math.round(r.minShare*100)+'% of his swings</span>'+(Math.abs(r.bias)>=r.typ*0.4?'<span class="fp-m">On average he’s finished '+f1(Math.abs(r.bias))+' '+(r.bias>0?'over':'under')+' our projection</span>':'')+'</div>'
+      +swChart(r,k)+'<div class="rk-jn">Every graded game. Dash = our projection after adjusting for his actual minutes; dot = what he did. Solid dots = way over or under (more than '+f1(r.typ)+', a typical miss at his projection).</div>'+swTonight(r,k)+'</a>';}).join('')+'</div>';
+  h+='<p class="bt-note">Graded games = games since our test run began where we projected him for 15+ minutes, using only what we knew before each game. Qualify: 8+ graded games, 20+ minutes a game, minutes that vary less than 15% game to game, our minutes projection off by 4.5 or fewer a game, and an average projection of at least '+SWMIN[k]+' '+esc(nm)+'. Way over/under = the minutes-adjusted miss is bigger than a typical miss for a player with his projection. Minutes explain = the share of his game-to-game swing that goes away once minutes are accounted for. Small samples swing a lot on their own, so treat early reads as a lean, not proof.</p>';
+  return h;
+}
+document.addEventListener('click',function(e){var b=e.target.closest('[data-swk]');if(b){SWSTAT=b.dataset.swk;var el=$('swBox');if(el)el.innerHTML=swingBox();}});
 /* award ladders from game logs (so we can show movement over the last week) */
 function awardLadder(kind,cut){
   var G=teamGames(),rows=[];
@@ -4535,6 +4594,7 @@ function buildBetting(){
     h+='<section class="bt-s"><div class="x-sechd"><h2 class="x-h2">Player projections</h2><div class="x-meta">Everyone projected for 12+ minutes tonight</div></div><div id="btTable">'+projTable(sl.games,BSORT.g)+'</div></section>';
     var tms=[];sl.games.forEach(function(x){tms.push(x.aw,x.hm);});
     h+='<section class="bt-s"><div class="x-sechd"><h2 class="x-h2">Team trends</h2><div class="x-meta">Tonight’s teams, season so far</div></div>'+trendTable(tms)+'<p class="bt-note">Records against the spread need sportsbook lines, which we don’t use. These come from our own game data.</p></section>';}
+  h+='<section class="bt-s"><div class="x-sechd"><h2 class="x-h2">Boom or bust</h2><div class="x-meta">Steady minutes, big swings vs our projection</div></div><div id="swBox">'+swingBox()+'</div></section>';
   var sc=scorecard();if(sc)h+='<section class="bt-s"><div class="x-sechd"><h2 class="x-h2">Our scorecard</h2><div class="x-meta">How our picks have done</div></div>'+sc+'</section>';
   var lb=learnBox();if(lb)h+='<section class="bt-s"><div class="x-sechd"><h2 class="x-h2">What the model has learned</h2><div class="x-meta">It grades itself every game day and adjusts</div></div>'+lb+'</section>';
   h+='<section class="bt-s"><div class="x-sechd"><h2 class="x-h2">Award races</h2><div class="x-meta">Our ladders from this season’s stats · arrows = moves in the last week</div></div><div class="bl-g">'
