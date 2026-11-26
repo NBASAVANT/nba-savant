@@ -1657,6 +1657,29 @@ html.intro #hmMain::after{content:'';position:absolute;inset:0;background:var(--
 .av.tm img{position:absolute;top:12%;left:12%;width:76%;height:76%;transform:none;object-fit:contain;max-width:none}
 .lk-bi .n32{font-size:26px}
 @media (max-width:700px){.lk-bi .n32{font-size:20px}}
+
+/* redesign round 2 fixes */
+html{overflow-x:clip}
+.hdr{isolation:isolate}
+.hdr::before{content:'';position:absolute;top:0;bottom:-4px;left:50%;width:100vw;transform:translateX(-50%);background:linear-gradient(var(--hb) calc(100% - 4px),var(--hs) 0);z-index:-1;transition:background .2s}
+html:has(#vStory:not([hidden])),html:has(#vStory:not([hidden])) body{background:var(--page)}
+.rc-a{width:auto;height:auto;min-width:0;border-radius:999px;padding:4px 12px;color:#fff;font-family:var(--numf);font-weight:800;font-size:22px;line-height:1.1;box-shadow:0 0 0 3px rgba(255,255,255,.9)}
+.rc.big .rc-a{width:auto;height:auto;padding:6px 18px;font-size:40px;border-radius:999px;box-shadow:0 0 0 4px #fff}
+.tl-ph.tm{right:18px;bottom:18px;width:auto;height:auto;opacity:1}
+.tl-lg{display:flex;align-items:center;justify-content:center;width:104px;height:104px;border-radius:50%;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.tl-lg img{width:72%!important;height:72%!important;object-fit:contain}
+@media (max-width:700px){
+  .rc-a{font-size:18px;padding:3px 10px}
+  .rc.big .rc-a{font-size:28px;padding:4px 14px}
+  .tl-lg{width:76px;height:76px}.tl-ph.tm{right:14px;bottom:14px}
+}
+
+@media (max-width:700px){
+  .rc.big{gap:8px}
+  .rc.big .rc-o{font-size:20px;padding:2px 8px}
+  .rc.big .rc-a{font-size:22px;padding:4px 12px;box-shadow:0 0 0 3px #fff}
+  .rc.big .rc-n{font-size:40px;padding:2px 12px;border-radius:12px}
+}
 </style>
 </head>
 <body>
@@ -4843,7 +4866,7 @@ function keyRow(rows){return (rows||[]).filter(function(q){return q.rk&&RKL[q.k]
 function rkCap(k){var t=RKL[k]||'';return t.charAt(0).toUpperCase()+t.slice(1)+' rank';}
 function tcol(t){var o=teamOf(t),c=o.c||'#17408b',x=o.s||'#ffffff';if(lum(c)>.45){var y=c;c=x;x=y;}if(lum(c)>.45)c='#17408b';return {c:c,s:x};}
 function rkChip(b,a,big){var same=a===b,up=a<b,col=same?'#5b6478':up?'#1f8a4c':'#c2341f';
-  return '<span class="rc'+(big?' big':'')+'"><span class="rc-o">#'+b+'</span><span class="rc-a" style="color:'+col+'">'+(same?'=':up?'▲':'▼')+'</span><span class="rc-n">#'+a+'</span></span>';}
+  return '<span class="rc'+(big?' big':'')+'"><span class="rc-o">#'+b+'</span><span class="rc-a" style="background:'+col+'">'+(same?'=':(up?'▲ ':'▼ ')+Math.abs(b-a))+'</span><span class="rc-n">#'+a+'</span></span>';}
 function whoOf(kind,id){return kind==='t'?'the '+nick(id):lastName(byId[id].Player);}
 function capF(x){return x.charAt(0).toUpperCase()+x.slice(1);}
 function stBanner(kind,id,w,kick,href){
@@ -4896,7 +4919,7 @@ function homeTiles(pS,tS){
   var top=pS.length?{o:pS[0],k:'p'}:{o:tS[0],k:'t'},rest=[],i=pS.length?1:0,j=pS.length?0:1;
   while(rest.length<12&&(i<pS.length||j<tS.length)){if(i<pS.length)rest.push({o:pS[i++],k:'p'});else if(j<tS.length)rest.push({o:tS[j++],k:'t'});if(rest.length%3===2&&j<tS.length)rest.push({o:tS[j++],k:'t'});}
   var tile=function(x){var o=x.o,t=x.k==='p'?o.p.Team:o.t,tc=tcol(t),kr=keyRow(o.w.ksx),f=(o.s.up?'up':'down')+' '+(x.k==='t'?'team':'player');
-    var ph=x.k==='p'?'<span class="tl-ph">'+img(headLg(o.p.nba_id),'hs')+'</span>':'<span class="tl-ph tm">'+img(logoT(t),'')+'</span>';
+    var ph=x.k==='p'?'<span class="tl-ph">'+img(headLg(o.p.nba_id),'hs')+'</span>':'<span class="tl-ph tm"><span class="tl-lg">'+img(logoT(t),'')+'</span></span>';
     return '<a class="tl" data-f="'+f+'" href="'+stHref(o)+'" style="--tlc:'+tc.c+'">'+ph+'<span class="tl-k">'+esc(x.k==='p'?nick(t):teamOf(t).n)+'</span><span class="tl-h">'+esc(o.w.h)+'</span>'
       +(kr&&kr.rk?'<span class="tl-c"><span class="tl-cl">'+esc(rkCap(kr.k))+'</span>'+rkChip(kr.rk.b,kr.rk.a)+'</span>':'')+'</a>';};
   var tk=top.k==='p'?nick(top.o.p.Team):teamOf(top.o.t).n;
